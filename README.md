@@ -52,12 +52,12 @@ MergeMind/
 ## Current baseline
 - `src/data` normalizes `CodeReviewer`, `CodeReviewQA`, and `CoDocBench`
   into one MR-centric schema.
-- `src/context` parses unified diffs, extracts changed identifiers, and adds
-  lightweight structural/repository context.
+- `src/context` parses unified diffs, extracts changed identifiers, and uses
+  Tree-sitter when available before falling back to lightweight parsing.
 - `src/models` implements a local retrieval generator over `CodeReviewer`
-  training examples plus a heuristic reranker.
+  training examples plus a learned logistic reranker with heuristic fallback.
 - `src/validation` computes offline deterministic metrics and supports an
-  optional local heuristic judge hook.
+  optional OpenAI-backed LLM judge.
 - `src/inference` runs the full `context -> generator -> reranker` flow for
   one MR.
 
@@ -80,8 +80,19 @@ Recommended task order:
 6. implement demo inference
 
 ## Local commands
-The repository ships with `sample_data/raw/` so the full MVP can run locally
-without downloading external datasets first.
+Install dependencies first:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Download the real datasets configured in [configs/base.yaml](c:\Users\alex\Desktop\ITMO\MergeMind\configs\base.yaml):
+
+```bash
+python scripts/download_datasets.py
+```
+
+Then run the full pipeline:
 
 ```bash
 python scripts/prepare_data.py
@@ -100,5 +111,10 @@ Artifacts are written under `artifacts/`:
 - The baseline is intentionally simple and fully local.
 - `CodeReviewer` is the primary training dataset.
 - `CodeReviewQA` and `CoDocBench` are validation-side signals in the MVP.
+- `CodeReviewQA` is gated on Hugging Face. To download it, accept the dataset
+  terms and set `HF_TOKEN` or `HUGGINGFACE_TOKEN` before running
+  `python scripts/download_datasets.py`.
+- The default config limits prepared data volume so the pipeline stays runnable
+  on a local machine. You can raise those limits in `configs/base.yaml`.
 - `PyYAML` is not required; config loading uses the local YAML subset parser
   in `src/config.py`.

@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 .env
-artifacts/
-models/
-data/
+/artifacts/
+/models/
+/data/
 .DS_Store

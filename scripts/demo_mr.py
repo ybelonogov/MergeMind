@@ -36,7 +36,7 @@ def main() -> None:
 
     example = MRExample.from_dict(read_json(input_path))
     generator = RetrievalGenerator.load(model_dir / "generator.pkl")
-    reranker = Reranker.load(model_dir / "reranker.json")
+    reranker = Reranker.load(model_dir / "reranker.pkl")
     predictions = run_inference(example, generator, reranker, top_n=int(config["demo"]["top_n"]))
 
     print(f"[demo_mr] example_id={example.example_id}")

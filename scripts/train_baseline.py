@@ -33,11 +33,11 @@ def main() -> None:
     model_dir = resolve_path(PROJECT_ROOT, config["paths"]["model_dir"])
     train_examples = [MRExample.from_dict(row) for row in read_jsonl(prepared_dir / "train.jsonl")]
 
-    generator = RetrievalGenerator.fit(train_examples)
-    reranker = Reranker.from_config(config["model"]["reranker"])
+    generator = RetrievalGenerator.fit(train_examples, config=config.get("model", {}))
+    reranker = Reranker.fit(train_examples, generator, config=config["model"]["reranker"])
 
     generator_path = model_dir / "generator.pkl"
-    reranker_path = model_dir / "reranker.json"
+    reranker_path = model_dir / "reranker.pkl"
     generator.save(generator_path)
     reranker.save(reranker_path)
     write_json(
@@ -46,11 +46,24 @@ def main() -> None:
             "generator_path": str(generator_path),
             "reranker_path": str(reranker_path),
             "train_examples": len(train_examples),
+            "generator_top_examples": generator.top_examples,
+            "generator_max_candidates": generator.max_candidates,
+            "reranker_mode": reranker.mode,
         },
     )
 
     print(f"[train_baseline] model_dir={model_dir}")
-    print(json.dumps({"train_examples": len(train_examples)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "train_examples": len(train_examples),
+                "generator_top_examples": generator.top_examples,
+                "generator_max_candidates": generator.max_candidates,
+                "reranker_mode": reranker.mode,
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

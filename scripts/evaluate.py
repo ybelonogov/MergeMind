@@ -35,7 +35,7 @@ def main() -> None:
     evaluation_dir = resolve_path(PROJECT_ROOT, config["paths"]["evaluation_dir"])
 
     generator = RetrievalGenerator.load(model_dir / "generator.pkl")
-    reranker = Reranker.load(model_dir / "reranker.json")
+    reranker = Reranker.load(model_dir / "reranker.pkl")
 
     validation_examples = [MRExample.from_dict(row) for row in read_jsonl(prepared_dir / "validation.jsonl")]
     test_examples = [MRExample.from_dict(row) for row in read_jsonl(prepared_dir / "test.jsonl")]
@@ -48,6 +48,8 @@ def main() -> None:
         top_n=int(config["validation"]["top_n"]),
         similarity_threshold=float(config["validation"]["similarity_threshold"]),
         use_llm_judge=bool(config["validation"]["use_llm_judge"]),
+        llm_judge_model=str(config["validation"].get("llm_judge_model", "")),
+        llm_judge_max_examples=int(config["validation"].get("llm_judge_max_examples", 25)),
     )
 
     evaluation_dir.mkdir(parents=True, exist_ok=True)
@@ -56,7 +58,20 @@ def main() -> None:
     manifest = read_json(prepared_dir / "manifest.json")
 
     print(f"[evaluate] evaluation_dir={evaluation_dir}")
-    print(json.dumps({"metrics": summary, "data_manifest": manifest}, indent=2))
+    print(
+        json.dumps(
+            {
+                "example_count": summary["example_count"],
+                "top1_similarity": summary["top1_similarity"],
+                "best_similarity_at_k": summary["best_similarity_at_k"],
+                "hit_rate_at_k": summary["hit_rate_at_k"],
+                "mrr_at_k": summary["mrr_at_k"],
+                "judge_backend": summary["judge_backend"],
+                "data_manifest": manifest,
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

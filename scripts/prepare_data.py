@@ -32,7 +32,11 @@ def main() -> None:
         for name, path in config["paths"]["raw"].items()
     }
     prepared_dir = resolve_path(PROJECT_ROOT, config["paths"]["prepared_dir"])
-    summary = prepare_datasets(raw_paths=raw_paths, prepared_dir=prepared_dir)
+    summary = prepare_datasets(
+        raw_paths=raw_paths,
+        prepared_dir=prepared_dir,
+        prepare_config=config.get("prepare", {}),
+    )
 
     print(f"[prepare_data] prepared_dir={prepared_dir}")
     print(json.dumps(summary, indent=2))

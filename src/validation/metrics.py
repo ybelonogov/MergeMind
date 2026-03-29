@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from statistics import mean
 from typing import Any
+
+from openai import OpenAI
 
 from src.data.schema import CandidateComment, MRExample
 from src.inference.pipeline import run_inference
@@ -20,7 +24,7 @@ def _text_similarity(left: str, right: str) -> float:
 class LocalHeuristicJudge:
     threshold: float = 0.35
 
-    def score(self, predictions: list[CandidateComment], gold_comments: list[str]) -> float:
+    def score(self, predictions: list[CandidateComment], gold_comments: list[str], example: MRExample | None = None) -> float:
         if not predictions or not gold_comments:
             return 0.0
         return max(
@@ -30,6 +34,63 @@ class LocalHeuristicJudge:
         )
 
 
+class OpenAILLMJudge:
+    """Optional G-Eval style judge backed by OpenAI Responses API."""
+
+    def __init__(self, model: str) -> None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is required for the LLM judge.")
+        base_url = os.getenv("OPENAI_BASE_URL")
+        self.client = OpenAI(api_key=api_key, base_url=base_url or None)
+        self.model = model
+
+    def score(self, predictions: list[CandidateComment], gold_comments: list[str], example: MRExample | None = None) -> float:
+        if not predictions or not gold_comments:
+            return 0.0
+
+        top_predictions = predictions[:3]
+        prompt = "\n".join(
+            [
+                "You are grading code review comments for usefulness and alignment.",
+                "Return only JSON with a single numeric field: {\"score\": <float between 0 and 1>}.",
+                "Score based on whether the predicted comments identify the same issue as the gold comments,",
+                "are actionable, and are grounded in the diff.",
+                "",
+                f"Title: {example.title if example else ''}",
+                f"Diff:\n{(example.diff if example else '')[:3000]}",
+                "",
+                "Gold comments:",
+                *[f"- {comment}" for comment in gold_comments[:3]],
+                "",
+                "Predicted comments:",
+                *[f"- {candidate.text}" for candidate in top_predictions],
+            ]
+        )
+
+        response = self.client.responses.create(
+            model=self.model,
+            input=prompt,
+            temperature=0,
+        )
+        output_text = getattr(response, "output_text", "") or ""
+        try:
+            payload = json.loads(output_text)
+            return max(0.0, min(1.0, float(payload["score"])))
+        except Exception:
+            return 0.0
+
+
+def _build_judge(
+    use_llm_judge: bool,
+    similarity_threshold: float,
+    llm_judge_model: str = "",
+) -> tuple[Any, str]:
+    if use_llm_judge and llm_judge_model and os.getenv("OPENAI_API_KEY"):
+        return OpenAILLMJudge(model=llm_judge_model), "openai"
+    return LocalHeuristicJudge(threshold=similarity_threshold), "heuristic"
+
+
 def evaluate_examples(
     examples: list[MRExample],
     generator: RetrievalGenerator,
@@ -37,6 +98,8 @@ def evaluate_examples(
     top_n: int,
     similarity_threshold: float,
     use_llm_judge: bool = False,
+    llm_judge_model: str = "",
+    llm_judge_max_examples: int = 25,
 ) -> dict[str, Any]:
     example_summaries: list[dict[str, Any]] = []
     top1_scores: list[float] = []
@@ -44,11 +107,11 @@ def evaluate_examples(
     hits_at_k: list[int] = []
     reciprocal_ranks: list[float] = []
     judge_scores: list[float] = []
-    judge = LocalHeuristicJudge(threshold=similarity_threshold) if use_llm_judge else None
+    judge, judge_backend = _build_judge(use_llm_judge, similarity_threshold, llm_judge_model=llm_judge_model)
 
-    for example in examples:
+    for index, example in enumerate(examples):
         predictions = run_inference(example, generator, reranker, top_n=top_n)
-        gold_comments = [comment.text for comment in example.gold_comments]
+        gold_comments = [comment.text for comment in example.gold_comments if comment.text]
 
         top1_similarity = 0.0
         best_similarity = 0.0
@@ -80,8 +143,8 @@ def evaluate_examples(
             "gold_comments": gold_comments,
         }
 
-        if judge is not None:
-            judge_score = judge.score(predictions, gold_comments)
+        if index < llm_judge_max_examples:
+            judge_score = judge.score(predictions, gold_comments, example)
             judge_scores.append(judge_score)
             record["judge_score"] = judge_score
 
@@ -93,6 +156,7 @@ def evaluate_examples(
         "best_similarity_at_k": mean(best_scores) if best_scores else 0.0,
         "hit_rate_at_k": mean(hits_at_k) if hits_at_k else 0.0,
         "mrr_at_k": mean(reciprocal_ranks) if reciprocal_ranks else 0.0,
+        "judge_backend": judge_backend,
         "examples": example_summaries,
     }
     if judge_scores:

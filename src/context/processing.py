@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
+import warnings
 from pathlib import Path
 
 from src.data.schema import ChangedFile, DiffHunk, MRExample
@@ -43,6 +44,22 @@ PYTHON_KEYWORDS = {
     "with",
     "yield",
 }
+TREE_SITTER_LANGUAGE_MAP = {
+    "python": "python",
+    "javascript": "javascript",
+    "typescript": "typescript",
+    "java": "java",
+    "go": "go",
+}
+TREE_SITTER_SYMBOL_NODES = {
+    "function_definition",
+    "class_definition",
+    "function_declaration",
+    "class_declaration",
+    "method_definition",
+    "lexical_declaration",
+    "variable_declaration",
+}
 
 
 def _infer_language(path: str) -> str:
@@ -80,16 +97,52 @@ def _extract_python_symbols(source: str) -> list[str]:
     return symbols
 
 
-def _extract_tree_sitter_symbols(source: str) -> list[str]:
+def _extract_tree_sitter_symbols(path: str, source: str) -> list[str]:
     try:
-        import tree_sitter  # type: ignore # noqa: F401
+        from tree_sitter_languages import get_parser
     except ImportError:
         return []
-    return []
+
+    language = _infer_language(path)
+    parser_name = TREE_SITTER_LANGUAGE_MAP.get(language)
+    if parser_name is None:
+        return []
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", FutureWarning)
+            parser = get_parser(parser_name)
+    except Exception:
+        return []
+
+    try:
+        tree = parser.parse(source.encode("utf-8"))
+    except Exception:
+        return []
+
+    symbols: list[str] = []
+
+    def visit(node: object) -> None:
+        current = node
+        node_type = getattr(current, "type", "")
+        if node_type in TREE_SITTER_SYMBOL_NODES:
+            for child in getattr(current, "children", []):
+                child_type = getattr(child, "type", "")
+                if child_type in {"identifier", "type_identifier", "property_identifier"}:
+                    symbol = child.text.decode("utf-8", errors="ignore")
+                    if symbol and symbol not in symbols:
+                        symbols.append(symbol)
+                    break
+
+        for child in getattr(current, "children", []):
+            visit(child)
+
+    visit(tree.root_node)
+    return symbols
 
 
 def _extract_structural_symbols(path: str, source: str) -> list[str]:
-    tree_sitter_symbols = _extract_tree_sitter_symbols(source)
+    tree_sitter_symbols = _extract_tree_sitter_symbols(path, source)
     if tree_sitter_symbols:
         return tree_sitter_symbols
 
