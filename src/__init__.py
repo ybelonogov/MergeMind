@@ -1,0 +1,2 @@
+"""MergeMind MVP package."""
+

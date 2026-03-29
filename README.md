@@ -18,7 +18,10 @@ MergeMind/
     plan.md
     literature.md
     datasets.md
+  sample_data/
+    raw/
   src/
+    config.py
     data/
     context/
     models/
@@ -46,6 +49,18 @@ MergeMind/
 - run offline evaluation
 - run demo inference on one MR example
 
+## Current baseline
+- `src/data` normalizes `CodeReviewer`, `CodeReviewQA`, and `CoDocBench`
+  into one MR-centric schema.
+- `src/context` parses unified diffs, extracts changed identifiers, and adds
+  lightweight structural/repository context.
+- `src/models` implements a local retrieval generator over `CodeReviewer`
+  training examples plus a heuristic reranker.
+- `src/validation` computes offline deterministic metrics and supports an
+  optional local heuristic judge hook.
+- `src/inference` runs the full `context -> generator -> reranker` flow for
+  one MR.
+
 ## Iteration 2
 - more agentic workflow
 - CI loop
@@ -64,13 +79,26 @@ Recommended task order:
 5. implement evaluation
 6. implement demo inference
 
-## Initial commands
-Add real commands here once the project environment is set up.
+## Local commands
+The repository ships with `sample_data/raw/` so the full MVP can run locally
+without downloading external datasets first.
 
 ```bash
-# placeholder examples
 python scripts/prepare_data.py
 python scripts/train_baseline.py
 python scripts/evaluate.py
 python scripts/demo_mr.py
+python -m unittest discover -s tests -v
 ```
+
+Artifacts are written under `artifacts/`:
+- `artifacts/data/` - normalized train/validation/test/demo files
+- `artifacts/models/` - retrieval generator and reranker artifacts
+- `artifacts/evaluation/` - offline metrics and predictions
+
+## Notes
+- The baseline is intentionally simple and fully local.
+- `CodeReviewer` is the primary training dataset.
+- `CodeReviewQA` and `CoDocBench` are validation-side signals in the MVP.
+- `PyYAML` is not required; config loading uses the local YAML subset parser
+  in `src/config.py`.
