@@ -1,0 +1,12 @@
+project_name: MergeMind
+pipeline:
+  - datasets
+  - context_processing
+  - models
+  - validation
+model:
+  generator: placeholder
+  reranker: placeholder
+validation:
+  use_llm_judge: true
+  use_tests_ci: true
