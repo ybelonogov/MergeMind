@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import hashlib
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -37,6 +38,11 @@ def _trim_text(text: str, max_chars: int) -> str:
     if max_chars <= 0 or len(text) <= max_chars:
         return text
     return text[:max_chars] + "\n...[truncated]"
+
+
+def _stable_id(*parts: str) -> str:
+    digest = hashlib.sha1("\n".join(parts).encode("utf-8", errors="ignore")).hexdigest()
+    return digest[:16]
 
 
 def _compress_example(example: MRExample, prepare_config: dict[str, Any]) -> MRExample:
@@ -155,14 +161,15 @@ def _normalize_codereviewqa_real(row: dict[str, Any]) -> MRExample:
         "c++": "cpp",
         "csharp": "cs",
     }.get(language, "txt")
-    synthetic_path = f"codereviewqa/{row.get('lang', 'text').lower()}_{hash(row.get('review', '')) & 0xfffffff}.{extension}"
+    row_id = _stable_id(row.get("old", ""), row.get("review", ""), row.get("new", ""))
+    synthetic_path = f"codereviewqa/{row.get('lang', 'text').lower()}_{row_id}.{extension}"
     old_text = row.get("old", "")
     new_text = row.get("new", "")
     diff_text = _build_unified_diff(old_text, new_text, synthetic_path)
 
     return MRExample(
         source_dataset="CodeReviewQA",
-        example_id=f"CodeReviewQA-{hash((old_text, row.get('review', ''), new_text)) & 0xfffffff}",
+        example_id=f"CodeReviewQA-{row_id}",
         split="validation",
         repo="CodeReviewQA",
         title=row.get("type_correct", "Code review reasoning benchmark"),

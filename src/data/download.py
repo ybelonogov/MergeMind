@@ -128,6 +128,6 @@ def download_datasets(config: dict[str, Any], project_root: Path, force: bool = 
         "codocbench": _ensure_codocbench(config, project_root, force=force),
         "codereviewqa": _ensure_codereviewqa(config, project_root, force=force),
     }
-    manifest["all_ready"] = all(entry.get("status") in {"ready"} for entry in manifest.values())
+    manifest["all_ready"] = all(entry.get("status") in {"ready", "downloaded"} for entry in manifest.values())
     write_json(project_root / str(config["paths"]["raw_manifest"]), manifest)
     return manifest
