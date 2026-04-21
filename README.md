@@ -56,8 +56,10 @@ MergeMind/
   Tree-sitter when available before falling back to lightweight parsing.
 - `src/models` implements a local retrieval generator over `CodeReviewer`
   training examples plus a learned logistic reranker with heuristic fallback.
+  It also includes local OpenAI-compatible LLM generator and reranker
+  components for LM Studio / Qwen experiments.
 - `src/validation` computes offline deterministic metrics and supports an
-  optional OpenAI-backed LLM judge.
+  optional OpenAI-backed LLM judge plus a local LM Studio judge.
 - `src/inference` runs the full `context -> generator -> reranker` flow for
   one MR.
 
@@ -102,13 +104,47 @@ python scripts/demo_mr.py
 python -m unittest discover -s tests -v
 ```
 
+## Local Qwen experiments
+Start the LM Studio local server, load the configured Qwen model, then check
+that MergeMind can see it:
+
+```bash
+python scripts/check_llm.py
+```
+
+Run the local LLM pipeline on a small profile:
+
+```bash
+python scripts/evaluate.py --pipeline qwen35_full --profile smoke
+```
+
+Run the A/B experiment table:
+
+```bash
+python scripts/run_experiments.py --profile smoke
+```
+
+Available experiment modes:
+- `baseline_retrieval_logistic`
+- `qwen35_generator_logistic_reranker`
+- `retrieval_generator_qwen35_reranker`
+- `qwen35_generator_qwen35_reranker`
+- `qwen35_full_with_qwen35_judge`
+
+`qwen35_full` is accepted as a short alias for
+`qwen35_generator_qwen35_reranker`.
+
 Artifacts are written under `artifacts/`:
 - `artifacts/data/` - normalized train/validation/test/demo files
 - `artifacts/models/` - retrieval generator and reranker artifacts
 - `artifacts/evaluation/` - offline metrics and predictions
+- `artifacts/runs/` - per-run LLM/A-B experiment artifacts
+- `artifacts/llm_cache.sqlite` - local LLM response cache
 
 ## Notes
 - The baseline is intentionally simple and fully local.
+- The local LLM path uses LM Studio's OpenAI-compatible local endpoint from
+  `configs/base.yaml`; no paid API is required.
 - `CodeReviewer` is the primary training dataset.
 - `CodeReviewQA` and `CoDocBench` are validation-side signals in the MVP.
 - `CodeReviewQA` is gated on Hugging Face. To download it, accept the dataset

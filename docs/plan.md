@@ -48,6 +48,16 @@ Evaluate comments using several signals:
 - evaluate offline
 - run demo on one MR
 
+## Local LLM experiment layer
+After the baseline is available, run local Qwen experiments through LM Studio:
+- Qwen generator with the baseline logistic reranker
+- baseline retrieval generator with a Qwen reranker
+- Qwen generator with a Qwen reranker
+- Qwen generator / reranker with a Qwen judge
+
+Track each run locally with predictions, summary metrics, latency, token usage,
+cache hit rate, parse error rate, and fallback rate.
+
 ## Iteration 2
 - more agentic workflow
 - stronger verification with CI
