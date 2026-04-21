@@ -124,6 +124,18 @@ Run the A/B experiment table:
 python scripts/run_experiments.py --profile smoke
 ```
 
+Inspect a run as a human-readable review report:
+
+```bash
+python scripts/inspect_predictions.py --run qwen35_limit1_after_fix --limit 5
+```
+
+If a run contains several pipeline modes, pass one explicitly:
+
+```bash
+python scripts/inspect_predictions.py --run <run_id> --mode qwen35_full --limit 5
+```
+
 Available experiment modes:
 - `baseline_retrieval_logistic`
 - `qwen35_generator_logistic_reranker`
