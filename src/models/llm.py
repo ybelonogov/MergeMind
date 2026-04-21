@@ -368,9 +368,13 @@ class OpenAICompatibleLLMClient:
         if choices:
             message = getattr(choices[0], "message", None)
             content = getattr(message, "content", "")
-            return content or ""
+            if content:
+                return content
+            reasoning_content = getattr(message, "reasoning_content", "")
+            return reasoning_content or ""
         if isinstance(response, dict):
-            return response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            message = response.get("choices", [{}])[0].get("message", {})
+            return message.get("content") or message.get("reasoning_content") or ""
         return ""
 
     def _extract_usage(self, response: Any) -> dict[str, int]:
