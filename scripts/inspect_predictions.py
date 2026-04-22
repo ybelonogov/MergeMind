@@ -101,8 +101,11 @@ def _split_evidence(evidence: list[str]) -> tuple[list[str], list[str]]:
     reasons = []
     signals = []
     for item in evidence:
-        if item.startswith("reason="):
-            reasons.append(item.removeprefix("reason="))
+        if item.startswith("reason=") or item.startswith("rewrite_reason="):
+            prefix = "reason=" if item.startswith("reason=") else "rewrite_reason="
+            reasons.append(item.removeprefix(prefix))
+        elif item.startswith("essence="):
+            continue
         elif "=" in item:
             signals.append(item)
     return reasons, signals
@@ -111,14 +114,24 @@ def _split_evidence(evidence: list[str]) -> tuple[list[str], list[str]]:
 def _render_prediction(prediction: dict[str, Any], index: int) -> list[str]:
     evidence = list(prediction.get("evidence", []))
     reasons, signals = _split_evidence(evidence)
+    essence = str(prediction.get("essence", "")).strip()
+    severity = str(prediction.get("severity", "")).strip()
+    original_text = str(prediction.get("original_text", "")).strip()
     lines = [
         f"### Prediction {index}",
         f"- generator_score: {_format_score(prediction.get('generator_score'))}",
         f"- reranker_score: {_format_score(prediction.get('reranker_score'))}",
         f"- source_example_id: {prediction.get('source_example_id', '')}",
-        "",
-        str(prediction.get("text", "")).strip(),
     ]
+    if severity:
+        lines.append(f"- severity: {severity}")
+    if essence:
+        lines.append(f"- essence: {essence}")
+    if prediction.get("rewrite_confidence"):
+        lines.append(f"- rewrite_confidence: {_format_score(prediction.get('rewrite_confidence'))}")
+    lines.extend(["", str(prediction.get("text", "")).strip()])
+    if original_text and original_text != str(prediction.get("text", "")).strip():
+        lines.extend(["", "Original before rewrite:", original_text])
     if reasons:
         lines.extend(["", "Reasons:"])
         lines.extend(f"- {reason}" for reason in reasons)

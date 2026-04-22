@@ -24,10 +24,10 @@ from src.config import load_config, resolve_path
 from src.data.io import read_jsonl, write_json, write_jsonl
 from src.data.schema import MRExample
 from src.inference.factory import (
-    QWEN_FULL_JUDGE_MODE,
     build_pipeline_components,
     canonical_pipeline_mode,
     pipeline_uses_llm,
+    pipeline_uses_llm_judge,
     resolve_profile_limit,
 )
 from src.validation.metrics import OpenAICompatibleLLMJudge, evaluate_examples
@@ -135,7 +135,7 @@ def main() -> None:
         generator, reranker, llm_client = build_pipeline_components(pipeline_mode, config, PROJECT_ROOT)
         judge = None
         judge_backend = ""
-        if pipeline_mode == QWEN_FULL_JUDGE_MODE:
+        if pipeline_uses_llm_judge(pipeline_mode):
             judge = OpenAICompatibleLLMJudge(
                 client=llm_client,
                 temperature=float(llm_config.get("temperature_judge", 0.0)),

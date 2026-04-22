@@ -56,12 +56,12 @@ MergeMind/
   Tree-sitter when available before falling back to lightweight parsing.
 - `src/models` implements a local retrieval generator over `CodeReviewer`
   training examples plus a learned logistic reranker with heuristic fallback.
-  It also includes local OpenAI-compatible LLM generator and reranker
-  components for LM Studio / Qwen experiments.
+  It also includes local OpenAI-compatible LLM generator, reranker, and
+  optional final rewriter components for LM Studio / Qwen experiments.
 - `src/validation` computes offline deterministic metrics and supports an
   optional OpenAI-backed LLM judge plus a local LM Studio judge.
 - `src/inference` runs the full `context -> generator -> reranker` flow for
-  one MR.
+  one MR, with an optional `rewriter` step for final human-facing wording.
 
 ## Iteration 2
 - more agentic workflow
@@ -118,6 +118,12 @@ Run the local LLM pipeline on a small profile:
 python scripts/evaluate.py --pipeline qwen35_full --profile smoke
 ```
 
+Run the same pipeline with the final rewrite/summarization agent:
+
+```bash
+python scripts/evaluate.py --pipeline qwen35_rewriter --profile smoke
+```
+
 Run the A/B experiment table:
 
 ```bash
@@ -151,10 +157,17 @@ Available experiment modes:
 - `qwen35_generator_logistic_reranker`
 - `retrieval_generator_qwen35_reranker`
 - `qwen35_generator_qwen35_reranker`
+- `qwen35_full_with_rewriter`
 - `qwen35_full_with_qwen35_judge`
+- `qwen35_full_with_rewriter_and_qwen35_judge`
 
 `qwen35_full` is accepted as a short alias for
 `qwen35_generator_qwen35_reranker`.
+`qwen35_rewriter` runs the full Qwen pipeline and rewrites the selected
+comments into concise final review feedback with `essence`, `severity`, and
+`rewrite_confidence` fields.
+`qwen35_rewriter_judge` additionally runs the local Qwen judge on the rewritten
+comments.
 
 Artifacts are written under `artifacts/`:
 - `artifacts/data/` - normalized train/validation/test/demo files

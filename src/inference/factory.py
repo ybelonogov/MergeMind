@@ -7,7 +7,8 @@ from typing import Any
 
 from src.config import resolve_path
 from src.models.baseline import RetrievalGenerator, Reranker
-from src.models.llm import LLMGenerator, LLMReranker, OpenAICompatibleLLMClient, build_llm_client
+from src.data.schema import CandidateComment, MRExample
+from src.models.llm import LLMGenerator, LLMReranker, LLMRewriter, OpenAICompatibleLLMClient, build_llm_client
 
 BASELINE_MODE = "baseline_retrieval_logistic"
 QWEN_GENERATOR_LOGISTIC_MODE = "qwen35_generator_logistic_reranker"
@@ -15,9 +16,15 @@ RETRIEVAL_QWEN_RERANKER_MODE = "retrieval_generator_qwen35_reranker"
 QWEN_FULL_MODE = "qwen35_generator_qwen35_reranker"
 QWEN_FULL_ALIAS = "qwen35_full"
 QWEN_FULL_JUDGE_MODE = "qwen35_full_with_qwen35_judge"
+QWEN_FULL_REWRITER_MODE = "qwen35_full_with_rewriter"
+QWEN_FULL_REWRITER_ALIAS = "qwen35_rewriter"
+QWEN_FULL_REWRITER_JUDGE_MODE = "qwen35_full_with_rewriter_and_qwen35_judge"
+QWEN_FULL_REWRITER_JUDGE_ALIAS = "qwen35_rewriter_judge"
 
 PIPELINE_ALIASES = {
     QWEN_FULL_ALIAS: QWEN_FULL_MODE,
+    QWEN_FULL_REWRITER_ALIAS: QWEN_FULL_REWRITER_MODE,
+    QWEN_FULL_REWRITER_JUDGE_ALIAS: QWEN_FULL_REWRITER_JUDGE_MODE,
 }
 
 PIPELINE_MODES = {
@@ -27,6 +34,10 @@ PIPELINE_MODES = {
     QWEN_FULL_MODE,
     QWEN_FULL_ALIAS,
     QWEN_FULL_JUDGE_MODE,
+    QWEN_FULL_REWRITER_MODE,
+    QWEN_FULL_REWRITER_ALIAS,
+    QWEN_FULL_REWRITER_JUDGE_MODE,
+    QWEN_FULL_REWRITER_JUDGE_ALIAS,
 }
 
 
@@ -36,7 +47,8 @@ def canonical_pipeline_mode(mode: str) -> str:
 
 
 def pipeline_uses_llm_judge(mode: str) -> bool:
-    return mode == QWEN_FULL_JUDGE_MODE
+    canonical_mode = canonical_pipeline_mode(mode)
+    return canonical_mode in {QWEN_FULL_JUDGE_MODE, QWEN_FULL_REWRITER_JUDGE_MODE}
 
 
 def pipeline_uses_llm(mode: str) -> bool:
@@ -46,6 +58,8 @@ def pipeline_uses_llm(mode: str) -> bool:
         RETRIEVAL_QWEN_RERANKER_MODE,
         QWEN_FULL_MODE,
         QWEN_FULL_JUDGE_MODE,
+        QWEN_FULL_REWRITER_MODE,
+        QWEN_FULL_REWRITER_JUDGE_MODE,
     }
 
 
@@ -76,6 +90,32 @@ def _llm_reranker_config(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _llm_rewriter_config(config: dict[str, Any]) -> dict[str, Any]:
+    llm_config = dict(config.get("llm", {}))
+    return {
+        "temperature": float(llm_config.get("temperature_rewriter", 0.0)),
+        "max_tokens": int(llm_config.get("max_tokens_rewriter", 700)),
+    }
+
+
+class RewritingReranker:
+    """Attach an optional final rewrite step without changing the pipeline shape."""
+
+    def __init__(self, reranker: Any, rewriter: LLMRewriter) -> None:
+        self.reranker = reranker
+        self.rewriter = rewriter
+        self.client = rewriter.client
+        self.mode = "reranker_with_rewriter"
+
+    @property
+    def fallback_count(self) -> int:
+        return int(getattr(self.reranker, "fallback_count", 0)) + int(getattr(self.rewriter, "fallback_count", 0))
+
+    def rerank(self, example: MRExample, candidates: list[CandidateComment], top_n: int = 3) -> list[CandidateComment]:
+        reranked = self.reranker.rerank(example, candidates, top_n=top_n)
+        return self.rewriter.rewrite(example, reranked)
+
+
 def build_pipeline_components(
     mode: str,
     config: dict[str, Any],
@@ -94,6 +134,8 @@ def build_pipeline_components(
         RETRIEVAL_QWEN_RERANKER_MODE,
         QWEN_FULL_MODE,
         QWEN_FULL_JUDGE_MODE,
+        QWEN_FULL_REWRITER_MODE,
+        QWEN_FULL_REWRITER_JUDGE_MODE,
     }:
         shared_client = shared_client or build_llm_client(config, project_root)
 
@@ -121,6 +163,16 @@ def build_pipeline_components(
         return (
             LLMGenerator(shared_client, **_llm_generation_config(config)),
             LLMReranker(shared_client, **_llm_reranker_config(config)),
+            shared_client,
+        )
+
+    if canonical_mode in {QWEN_FULL_REWRITER_MODE, QWEN_FULL_REWRITER_JUDGE_MODE}:
+        assert shared_client is not None
+        reranker = LLMReranker(shared_client, **_llm_reranker_config(config))
+        rewriter = LLMRewriter(shared_client, **_llm_rewriter_config(config))
+        return (
+            LLMGenerator(shared_client, **_llm_generation_config(config)),
+            RewritingReranker(reranker, rewriter),
             shared_client,
         )
 

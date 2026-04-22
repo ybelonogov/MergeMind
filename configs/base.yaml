@@ -56,9 +56,11 @@ llm:
   max_candidates: 8
   temperature_generator: 0.2
   temperature_reranker: 0.0
+  temperature_rewriter: 0.0
   temperature_judge: 0.0
   max_tokens_generator: 700
   max_tokens_reranker: 900
+  max_tokens_rewriter: 700
   max_tokens_judge: 400
   concurrency: 1
   timeout_seconds: 180
@@ -80,6 +82,7 @@ experiments:
     - qwen35_generator_logistic_reranker
     - retrieval_generator_qwen35_reranker
     - qwen35_generator_qwen35_reranker
+    - qwen35_full_with_rewriter
     - qwen35_full_with_qwen35_judge
 demo:
   top_n: 3

@@ -88,6 +88,44 @@ RERANKER_SCHEMA = {
     },
 }
 
+REWRITER_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "rewritten_review_comments",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "rewritten_comments": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "candidate_id": {"type": "integer"},
+                            "rewritten_comment": {"type": "string"},
+                            "essence": {"type": "string"},
+                            "severity": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "reason": {"type": "string"},
+                        },
+                        "required": [
+                            "candidate_id",
+                            "rewritten_comment",
+                            "essence",
+                            "severity",
+                            "confidence",
+                            "reason",
+                        ],
+                        "additionalProperties": False,
+                    },
+                }
+            },
+            "required": ["rewritten_comments"],
+            "additionalProperties": False,
+        },
+    },
+}
+
 JUDGE_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
@@ -105,6 +143,33 @@ JUDGE_SCHEMA = {
     },
 }
 
+NICE_TO_HAVE_TERMS = {
+    "documentation",
+    "docstring",
+    "style",
+    "formatting",
+    "naming convention",
+    "cleanup",
+    "refactor",
+    "consistency",
+}
+
+BUG_RISK_TERMS = {
+    "bug",
+    "break",
+    "crash",
+    "error",
+    "exception",
+    "fail",
+    "incorrect",
+    "regression",
+    "security",
+    "leak",
+    "race",
+    "null",
+    "none",
+}
+
 
 def _bounded(value: Any, default: float = 0.0) -> float:
     try:
@@ -112,6 +177,11 @@ def _bounded(value: Any, default: float = 0.0) -> float:
     except (TypeError, ValueError):
         numeric = default
     return max(0.0, min(1.0, numeric))
+
+
+def _contains_any(text: str, terms: set[str]) -> bool:
+    lowered = text.lower()
+    return any(term in lowered for term in terms)
 
 
 def _strip_code_fence(text: str) -> str:
@@ -595,6 +665,35 @@ class LLMReranker:
             )
         return output
 
+    def _calibrated_score(self, candidate: CandidateComment, item: dict[str, Any], output_position: int) -> float:
+        usefulness = _bounded(item.get("usefulness"), default=0.5)
+        groundedness = _bounded(item.get("groundedness"), default=0.5)
+        actionability = _bounded(item.get("actionability"), default=0.5)
+        specificity = _bounded(item.get("specificity"), default=0.5)
+        component_score = (
+            0.35 * usefulness
+            + 0.30 * groundedness
+            + 0.20 * actionability
+            + 0.15 * specificity
+        )
+        raw_score = _bounded(item.get("score"), default=component_score)
+        score = 0.55 * raw_score + 0.45 * component_score
+
+        candidate_context = " ".join([candidate.text, str(item.get("reason", ""))])
+        if _contains_any(candidate_context, NICE_TO_HAVE_TERMS) and not _contains_any(candidate_context, BUG_RISK_TERMS):
+            score = min(score, 0.68)
+        if groundedness < 0.7:
+            score *= 0.80
+        if usefulness < 0.7:
+            score *= 0.85
+        if actionability < 0.6:
+            score -= 0.08
+
+        # Keep saturated local-model scores honest: later ranked candidates need
+        # stronger evidence to stay near the top.
+        score = min(score, 1.0 - 0.08 * output_position)
+        return _bounded(score)
+
     def rerank(self, example: MRExample, candidates: list[CandidateComment], top_n: int = 3) -> list[CandidateComment]:
         if not candidates:
             return []
@@ -607,13 +706,25 @@ class LLMReranker:
             {
                 "role": "system",
                 "content": (
-                    "You are a strict code review reranker. Prefer comments that are useful, grounded "
-                    "in the diff, actionable, and specific. Return JSON only."
+                    "You are a skeptical senior code reviewer reranking candidate review comments. "
+                    "Only score a comment highly if you would personally leave it on the merge request. "
+                    "Prefer comments that identify concrete correctness, safety, API, data-loss, "
+                    "performance, or maintainability risks grounded in the diff. Return JSON only."
                 ),
             },
             {
                 "role": "user",
                 "content": (
+                    "Use this strict scoring rubric:\n"
+                    "- 0.90-1.00: clear high-value issue, concrete risk, directly grounded, actionable.\n"
+                    "- 0.70-0.89: useful and grounded, but lower severity or missing some context.\n"
+                    "- 0.40-0.69: minor, nice-to-have, documentation/style, or somewhat speculative.\n"
+                    "- 0.10-0.39: generic, weak, mostly restates the diff, or low confidence.\n"
+                    "- 0.00: unrelated, duplicate, hallucinated, or not worth leaving.\n"
+                    "Do not copy generator_score. Do not give multiple candidates the same score unless "
+                    "they are truly equally useful. At most one candidate should exceed 0.90 unless there "
+                    "are multiple independent defects. Documentation, style, and naming-only comments "
+                    "should usually stay below 0.70 unless they prevent a real bug.\n\n"
                     f"Rank the best {top_n} candidates. Use the zero-based candidate_id values exactly.\n\n"
                     f"{_example_prompt(example)}\n\nCandidate comments:\n"
                     + "\n".join(candidate_lines)
@@ -634,7 +745,7 @@ class LLMReranker:
         by_id = {index: candidate for index, candidate in enumerate(candidates)}
         scored: list[CandidateComment] = []
         seen_ids: set[int] = set()
-        for item in ranked:
+        for output_position, item in enumerate(ranked):
             if not isinstance(item, dict):
                 continue
             try:
@@ -645,12 +756,15 @@ class LLMReranker:
                 continue
             seen_ids.add(candidate_id)
             candidate = by_id[candidate_id]
-            score = _bounded(item.get("score"), default=candidate.generator_score)
+            raw_score = _bounded(item.get("score"), default=candidate.generator_score)
+            score = self._calibrated_score(candidate, item, output_position)
             evidence = list(candidate.evidence)
             evidence.extend(
                 [
                     "llm_reranker",
                     f"model={self.client.model}",
+                    f"llm_raw_score={raw_score:.3f}",
+                    f"calibrated_score={score:.3f}",
                     f"usefulness={_bounded(item.get('usefulness')):.3f}",
                     f"groundedness={_bounded(item.get('groundedness')):.3f}",
                     f"actionability={_bounded(item.get('actionability')):.3f}",
@@ -674,3 +788,147 @@ class LLMReranker:
             return self._fallback(candidates, top_n)
         scored.sort(key=lambda candidate: candidate.reranker_score, reverse=True)
         return scored[:top_n]
+
+
+class LLMRewriter:
+    """Rewrite final review comments into concise human-facing feedback."""
+
+    def __init__(
+        self,
+        client: OpenAICompatibleLLMClient,
+        temperature: float = 0.0,
+        max_tokens: int = 700,
+    ) -> None:
+        self.client = client
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.fallback_count = 0
+        self.mode = "llm_rewriter"
+
+    def _fallback(self, candidates: list[CandidateComment]) -> list[CandidateComment]:
+        self.fallback_count += 1
+        output: list[CandidateComment] = []
+        for candidate in candidates:
+            evidence = list(candidate.evidence) + ["llm_rewriter_fallback=true"]
+            output.append(
+                CandidateComment(
+                    text=candidate.text,
+                    generator_score=candidate.generator_score,
+                    reranker_score=candidate.reranker_score,
+                    source_example_id=candidate.source_example_id,
+                    evidence=evidence,
+                    original_text=candidate.original_text,
+                    essence=candidate.essence,
+                    severity=candidate.severity,
+                    rewrite_confidence=candidate.rewrite_confidence,
+                )
+            )
+        return output
+
+    def rewrite(self, example: MRExample, candidates: list[CandidateComment]) -> list[CandidateComment]:
+        if not candidates:
+            return []
+
+        candidate_lines = [
+            "\n".join(
+                [
+                    f"{index}. {candidate.text}",
+                    f"   reranker_score={candidate.reranker_score:.3f}",
+                ]
+            )
+            for index, candidate in enumerate(candidates)
+        ]
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a final code-review editor. Rewrite already-selected comments so they are "
+                    "clear, concise, and useful to a developer. Do not add new facts, new risks, or "
+                    "claims that are not present in the original comment and diff. Return JSON only."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "For each candidate, produce:\n"
+                    "- rewritten_comment: one or two short sentences in a practical code-review style.\n"
+                    "- essence: at most 12 words describing the core issue.\n"
+                    "- severity: one of low, medium, high.\n"
+                    "- confidence: 0..1 for whether the rewrite preserved the original meaning.\n\n"
+                    "Rules:\n"
+                    "- Preserve the original technical meaning.\n"
+                    "- Do not invent missing code paths, tests, bugs, or fixes.\n"
+                    "- If the original comment is already clear, keep it close to the original.\n"
+                    "- Prefer direct, actionable wording over long explanations.\n\n"
+                    f"{_example_prompt(example)}\n\nSelected comments:\n"
+                    + "\n".join(candidate_lines)
+                ),
+            },
+        ]
+        result = self.client.chat_json(
+            role="rewriter",
+            messages=messages,
+            response_schema=REWRITER_SCHEMA,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+        )
+        rewritten = result.payload.get("rewritten_comments", [])
+        if not isinstance(rewritten, list):
+            return self._fallback(candidates)
+
+        by_id = {index: candidate for index, candidate in enumerate(candidates)}
+        used_ids: set[int] = set()
+        output_by_id: dict[int, CandidateComment] = {}
+        for item in rewritten:
+            if not isinstance(item, dict):
+                continue
+            try:
+                candidate_id = int(item.get("candidate_id"))
+            except (TypeError, ValueError):
+                continue
+            if candidate_id in used_ids or candidate_id not in by_id:
+                continue
+            used_ids.add(candidate_id)
+            candidate = by_id[candidate_id]
+            rewritten_text = str(item.get("rewritten_comment", "")).strip() or candidate.text
+            original_text = candidate.original_text or candidate.text
+            essence = str(item.get("essence", "")).strip()
+            severity = str(item.get("severity", "")).strip().lower()
+            if severity not in {"low", "medium", "high"}:
+                severity = "medium"
+            confidence = _bounded(item.get("confidence"), default=0.5)
+            evidence = list(candidate.evidence)
+            evidence.extend(
+                [
+                    "llm_rewriter",
+                    f"model={self.client.model}",
+                    f"rewrite_confidence={confidence:.3f}",
+                    f"rewrite_severity={severity}",
+                ]
+            )
+            if essence:
+                evidence.append(f"essence={essence}")
+            reason = str(item.get("reason", "")).strip()
+            if reason:
+                evidence.append(f"rewrite_reason={reason}")
+            if result.cache_hit:
+                evidence.append("rewrite_cache_hit=true")
+            output_by_id[candidate_id] = CandidateComment(
+                text=rewritten_text,
+                generator_score=candidate.generator_score,
+                reranker_score=candidate.reranker_score,
+                source_example_id=candidate.source_example_id,
+                evidence=evidence,
+                original_text=original_text,
+                essence=essence,
+                severity=severity,
+                rewrite_confidence=confidence,
+            )
+
+        if not output_by_id:
+            return self._fallback(candidates)
+
+        output: list[CandidateComment] = []
+        for index, candidate in enumerate(candidates):
+            output.append(output_by_id.get(index, candidate))
+        return output

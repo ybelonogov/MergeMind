@@ -45,6 +45,10 @@ def main() -> None:
     for index, prediction in enumerate(predictions, start=1):
         evidence = "; ".join(prediction.evidence)
         print(f"{index}. score={prediction.reranker_score:.3f} | {prediction.text}")
+        if prediction.essence or prediction.severity:
+            print(f"   essence={prediction.essence or '<none>'} | severity={prediction.severity or '<none>'}")
+        if prediction.original_text and prediction.original_text != prediction.text:
+            print(f"   original: {prediction.original_text}")
         print(f"   evidence: {evidence}")
 
 

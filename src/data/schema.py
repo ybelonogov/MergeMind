@@ -68,6 +68,10 @@ class CandidateComment:
     reranker_score: float = 0.0
     source_example_id: str = ""
     evidence: list[str] = field(default_factory=list)
+    original_text: str = ""
+    essence: str = ""
+    severity: str = ""
+    rewrite_confidence: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -80,6 +84,10 @@ class CandidateComment:
             reranker_score=float(payload.get("reranker_score", 0.0)),
             source_example_id=payload.get("source_example_id", ""),
             evidence=list(payload.get("evidence", [])),
+            original_text=payload.get("original_text", ""),
+            essence=payload.get("essence", ""),
+            severity=payload.get("severity", ""),
+            rewrite_confidence=float(payload.get("rewrite_confidence", 0.0)),
         )
 
 

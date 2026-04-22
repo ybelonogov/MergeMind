@@ -24,9 +24,9 @@ from src.data.io import read_json, read_jsonl, write_json, write_jsonl
 from src.data.schema import MRExample
 from src.inference.factory import (
     BASELINE_MODE,
-    QWEN_FULL_JUDGE_MODE,
     build_pipeline_components,
     canonical_pipeline_mode,
+    pipeline_uses_llm_judge,
     resolve_profile_limit,
 )
 from src.validation.metrics import OpenAICompatibleLLMJudge
@@ -91,7 +91,7 @@ def main() -> None:
         _assert_llm_ready(llm_client)
     judge = None
     judge_backend = ""
-    if pipeline_mode == QWEN_FULL_JUDGE_MODE:
+    if pipeline_uses_llm_judge(pipeline_mode):
         llm_config = dict(config.get("llm", {}))
         if llm_client is None:
             _, _, llm_client = build_pipeline_components(pipeline_mode, config, PROJECT_ROOT)
@@ -166,6 +166,7 @@ def main() -> None:
                 "hit_rate_at_k": summary["hit_rate_at_k"],
                 "mrr_at_k": summary["mrr_at_k"],
                 "judge_backend": summary["judge_backend"],
+                "judge_score": summary.get("judge_score", 0.0),
                 "avg_latency_sec": summary["avg_latency_sec"],
                 "total_tokens": summary["total_tokens"],
                 "tokens_per_second": summary["tokens_per_second"],

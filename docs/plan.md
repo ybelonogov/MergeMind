@@ -53,6 +53,7 @@ After the baseline is available, run local Qwen experiments through LM Studio:
 - Qwen generator with the baseline logistic reranker
 - baseline retrieval generator with a Qwen reranker
 - Qwen generator with a Qwen reranker
+- Qwen generator / reranker with a Qwen rewriter for concise final comments
 - Qwen generator / reranker with a Qwen judge
 
 Track each run locally with predictions, summary metrics, latency, token usage,

@@ -13,6 +13,7 @@ from src.models.llm import (
     JUDGE_SCHEMA,
     LLMGenerator,
     LLMReranker,
+    LLMRewriter,
     OpenAICompatibleLLMClient,
     SQLiteLLMCache,
     parse_json_payload,
@@ -149,7 +150,56 @@ class LocalLLMComponentTests(unittest.TestCase):
         ranked = reranker.rerank(_example(), candidates, top_n=2)
 
         self.assertEqual(ranked[0].text, "Guard empty items in checkout.")
-        self.assertAlmostEqual(ranked[0].reranker_score, 0.91)
+        self.assertGreater(ranked[0].reranker_score, ranked[1].reranker_score)
+
+    def test_llm_reranker_calibrates_saturated_and_nice_to_have_scores(self) -> None:
+        payload = {
+            "ranked_comments": [
+                {
+                    "candidate_id": 0,
+                    "score": 1.0,
+                    "reason": "Concrete bug risk.",
+                    "usefulness": 1.0,
+                    "groundedness": 1.0,
+                    "actionability": 1.0,
+                    "specificity": 1.0,
+                },
+                {
+                    "candidate_id": 1,
+                    "score": 1.0,
+                    "reason": "Documentation nice-to-have.",
+                    "usefulness": 1.0,
+                    "groundedness": 1.0,
+                    "actionability": 1.0,
+                    "specificity": 1.0,
+                },
+                {
+                    "candidate_id": 2,
+                    "score": 1.0,
+                    "reason": "Useful but ranked later.",
+                    "usefulness": 1.0,
+                    "groundedness": 1.0,
+                    "actionability": 1.0,
+                    "specificity": 1.0,
+                },
+            ]
+        }
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion(json.dumps(payload)))
+        reranker = LLMReranker(client)
+        candidates = [
+            CandidateComment(text="Guard empty items before indexing into the cart.", generator_score=0.5),
+            CandidateComment(text="Consider adding documentation for the cart helper.", generator_score=0.5),
+            CandidateComment(text="Handle empty items consistently in checkout.", generator_score=0.5),
+        ]
+
+        ranked = reranker.rerank(_example(), candidates, top_n=3)
+        doc_candidate = next(candidate for candidate in ranked if "documentation" in candidate.text)
+        later_candidate = next(candidate for candidate in ranked if "consistently" in candidate.text)
+
+        self.assertAlmostEqual(ranked[0].reranker_score, 1.0)
+        self.assertLess(doc_candidate.reranker_score, 0.7)
+        self.assertLess(later_candidate.reranker_score, 0.9)
+        self.assertTrue(any("calibrated_score=" in item for item in ranked[0].evidence))
 
     def test_llm_judge_returns_bounded_score(self) -> None:
         client = OpenAICompatibleLLMClient(
@@ -164,6 +214,50 @@ class LocalLLMComponentTests(unittest.TestCase):
         )
 
         self.assertEqual(score, 1.0)
+
+    def test_llm_rewriter_preserves_original_and_adds_essence(self) -> None:
+        payload = {
+            "rewritten_comments": [
+                {
+                    "candidate_id": 0,
+                    "rewritten_comment": "Guard empty carts before reading the first item.",
+                    "essence": "Empty cart guard",
+                    "severity": "medium",
+                    "confidence": 0.92,
+                    "reason": "Shortened without changing the issue.",
+                }
+            ]
+        }
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion(json.dumps(payload)))
+        rewriter = LLMRewriter(client)
+        candidates = [
+            CandidateComment(
+                text="You should add a guard for empty carts before the checkout code reads the first item.",
+                generator_score=0.8,
+                reranker_score=0.9,
+                evidence=["llm_reranker"],
+            )
+        ]
+
+        rewritten = rewriter.rewrite(_example(), candidates)
+
+        self.assertEqual(rewritten[0].text, "Guard empty carts before reading the first item.")
+        self.assertIn("You should add a guard", rewritten[0].original_text)
+        self.assertEqual(rewritten[0].essence, "Empty cart guard")
+        self.assertEqual(rewritten[0].severity, "medium")
+        self.assertAlmostEqual(rewritten[0].rewrite_confidence, 0.92)
+        self.assertTrue(any(item == "llm_rewriter" for item in rewritten[0].evidence))
+
+    def test_llm_rewriter_falls_back_on_invalid_payload(self) -> None:
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion('{"not_comments": []}'))
+        rewriter = LLMRewriter(client)
+        candidates = [CandidateComment(text="Keep the original comment.", reranker_score=0.7)]
+
+        rewritten = rewriter.rewrite(_example(), candidates)
+
+        self.assertEqual(rewritten[0].text, "Keep the original comment.")
+        self.assertEqual(rewriter.fallback_count, 1)
+        self.assertTrue(any("llm_rewriter_fallback=true" == item for item in rewritten[0].evidence))
 
 
 if __name__ == "__main__":

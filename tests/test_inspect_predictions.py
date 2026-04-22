@@ -68,9 +68,14 @@ class InspectPredictionsScriptTests(unittest.TestCase):
                                 "generator_score": 0.9,
                                 "reranker_score": 0.8,
                                 "source_example_id": "mr-1",
+                                "original_text": "Please add a guard before checkout.",
+                                "essence": "Empty cart guard",
+                                "severity": "medium",
+                                "rewrite_confidence": 0.91,
                                 "evidence": [
                                     "llm_generator",
                                     "reason=The diff touches empty cart handling.",
+                                    "rewrite_reason=Made the wording shorter.",
                                     "usefulness=0.900",
                                 ],
                             }
@@ -102,7 +107,10 @@ class InspectPredictionsScriptTests(unittest.TestCase):
         self.assertIn("MergeMind Prediction Inspection", result.stdout)
         self.assertIn("Guard empty carts.", result.stdout)
         self.assertIn("Add a guard for empty carts before checkout.", result.stdout)
+        self.assertIn("Empty cart guard", result.stdout)
+        self.assertIn("Original before rewrite", result.stdout)
         self.assertIn("The diff touches empty cart handling.", result.stdout)
+        self.assertIn("Made the wording shorter.", result.stdout)
         self.assertIn("```diff", result.stdout)
 
 
