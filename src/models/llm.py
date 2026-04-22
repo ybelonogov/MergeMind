@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import sqlite3
 import time
@@ -410,7 +411,7 @@ class OpenAICompatibleLLMClient:
 
         latencies = [call.latency_seconds for call in self.calls if not call.cache_hit]
         sorted_latencies = sorted(latencies)
-        p95_index = int(0.95 * (len(sorted_latencies) - 1)) if sorted_latencies else 0
+        p95_index = math.ceil(0.95 * len(sorted_latencies)) - 1 if sorted_latencies else 0
         total_tokens = sum(call.usage.get("total_tokens", 0) for call in self.calls)
         total_latency = sum(latencies)
         return {

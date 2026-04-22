@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import time
 from dataclasses import dataclass
@@ -150,7 +151,7 @@ def _p95(values: list[float]) -> float:
     if not values:
         return 0.0
     sorted_values = sorted(values)
-    index = int(0.95 * (len(sorted_values) - 1))
+    index = math.ceil(0.95 * len(sorted_values)) - 1
     return sorted_values[index]
 
 
