@@ -136,6 +136,16 @@ If a run contains several pipeline modes, pass one explicitly:
 python scripts/inspect_predictions.py --run <run_id> --mode qwen35_full --limit 5
 ```
 
+Serve the local monitoring dashboard:
+
+```bash
+python scripts/dashboard.py
+```
+
+Open `http://127.0.0.1:8765` to watch GPU utilization, GPU memory,
+LM Studio model status, experiment progress, latency, token usage, token speed,
+parse error rate, cache hit rate, and recent run artifacts.
+
 Available experiment modes:
 - `baseline_retrieval_logistic`
 - `qwen35_generator_logistic_reranker`

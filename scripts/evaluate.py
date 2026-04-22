@@ -58,6 +58,12 @@ def _assert_llm_ready(llm_client: object) -> None:
         )
 
 
+def _append_progress(path: Path, event: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=True) + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate MergeMind baseline.")
     parser.add_argument("--config", default="configs/base.yaml", help="Path to YAML config.")
@@ -97,6 +103,22 @@ def main() -> None:
         judge_backend = "local_llm"
 
     started_at = datetime.now(timezone.utc)
+    if args.run_id or pipeline_mode != BASELINE_MODE or args.profile or args.limit is not None:
+        run_id = args.run_id or f"evaluate_{started_at.strftime('%Y%m%dT%H%M%SZ')}"
+        output_dir = runs_dir / run_id / pipeline_mode
+    else:
+        output_dir = evaluation_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    progress_path = output_dir / "progress.jsonl"
+    if progress_path.exists():
+        progress_path.unlink()
+
+    def progress_callback(event: dict) -> None:
+        event["pipeline_mode"] = pipeline_mode
+        event["profile"] = args.profile or "all"
+        event["run_id"] = output_dir.parent.name if output_dir.parent != evaluation_dir.parent else "evaluation"
+        _append_progress(progress_path, event)
+
     summary = evaluate_examples(
         examples=all_examples,
         generator=generator,
@@ -108,18 +130,12 @@ def main() -> None:
         llm_judge_max_examples=int(config["validation"].get("llm_judge_max_examples", 25)),
         judge_override=judge,
         judge_backend_override=judge_backend,
+        progress_callback=progress_callback,
     )
     summary["pipeline_mode"] = pipeline_mode
     summary["profile"] = args.profile or "all"
     summary["example_limit"] = limit
 
-    if args.run_id or pipeline_mode != BASELINE_MODE or args.profile or args.limit is not None:
-        run_id = args.run_id or f"evaluate_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-        output_dir = runs_dir / run_id / pipeline_mode
-    else:
-        output_dir = evaluation_dir
-
-    output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "summary.json", summary)
     write_jsonl(output_dir / "predictions.jsonl", summary["examples"])
     write_json(output_dir / "config_snapshot.json", config)
@@ -152,6 +168,7 @@ def main() -> None:
                 "judge_backend": summary["judge_backend"],
                 "avg_latency_sec": summary["avg_latency_sec"],
                 "total_tokens": summary["total_tokens"],
+                "tokens_per_second": summary["tokens_per_second"],
                 "cache_hit_rate": summary["cache_hit_rate"],
                 "parse_error_rate": summary["parse_error_rate"],
                 "data_manifest": manifest,

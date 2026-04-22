@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from statistics import mean
-from typing import Any
+from typing import Any, Callable
 
 from openai import OpenAI
 
@@ -172,8 +172,10 @@ def _collect_llm_metrics(*components: Any, example_count: int) -> dict[str, Any]
         "total_tokens": 0,
         "cache_hit_rate": 0.0,
         "parse_error_rate": 0.0,
+        "llm_total_latency_sec": 0.0,
         "llm_avg_latency_sec": 0.0,
         "llm_p95_latency_sec": 0.0,
+        "tokens_per_second": 0.0,
         "fallback_rate": fallback_count / example_count if example_count else 0.0,
     }
     if not clients:
@@ -185,11 +187,14 @@ def _collect_llm_metrics(*components: Any, example_count: int) -> dict[str, Any]
     merged["prompt_tokens"] = sum(int(item["prompt_tokens"]) for item in stats)
     merged["completion_tokens"] = sum(int(item["completion_tokens"]) for item in stats)
     merged["total_tokens"] = sum(int(item["total_tokens"]) for item in stats)
+    merged["llm_total_latency_sec"] = sum(float(item["llm_total_latency_sec"]) for item in stats)
     if total_calls:
         merged["cache_hit_rate"] = sum(item["cache_hit_rate"] * item["llm_call_count"] for item in stats) / total_calls
         merged["parse_error_rate"] = sum(item["parse_error_rate"] * item["llm_call_count"] for item in stats) / total_calls
         merged["llm_avg_latency_sec"] = sum(item["llm_avg_latency_sec"] * item["llm_call_count"] for item in stats) / total_calls
         merged["llm_p95_latency_sec"] = max(float(item["llm_p95_latency_sec"]) for item in stats)
+    if merged["llm_total_latency_sec"]:
+        merged["tokens_per_second"] = merged["total_tokens"] / merged["llm_total_latency_sec"]
     return merged
 
 
@@ -204,6 +209,7 @@ def evaluate_examples(
     llm_judge_max_examples: int = 25,
     judge_override: Any | None = None,
     judge_backend_override: str = "",
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     example_summaries: list[dict[str, Any]] = []
     top1_scores: list[float] = []
@@ -217,11 +223,13 @@ def evaluate_examples(
         judge, judge_backend = judge_override, judge_backend_override or "local_llm"
     else:
         judge, judge_backend = _build_judge(use_llm_judge, similarity_threshold, llm_judge_model=llm_judge_model)
+    total_examples = len(examples)
 
     for index, example in enumerate(examples):
         started_at = time.perf_counter()
         predictions = run_inference(example, generator, reranker, top_n=top_n)
-        inference_latencies.append(time.perf_counter() - started_at)
+        latency = time.perf_counter() - started_at
+        inference_latencies.append(latency)
         candidate_counts.append(len(predictions))
         gold_comments = [comment.text for comment in example.gold_comments if comment.text]
 
@@ -261,6 +269,23 @@ def evaluate_examples(
             record["judge_score"] = judge_score
 
         example_summaries.append(record)
+        if progress_callback is not None:
+            progress_callback(
+                {
+                    "completed": index + 1,
+                    "total": total_examples,
+                    "example_id": example.example_id,
+                    "source_dataset": example.source_dataset,
+                    "latency_sec": latency,
+                    "prediction_count": len(predictions),
+                    "top1_similarity": top1_similarity,
+                    "best_similarity_at_k": best_similarity,
+                    "hit_at_k": hit_at_k,
+                    "judge_score": record.get("judge_score"),
+                    "llm_metrics": _collect_llm_metrics(generator, reranker, judge, example_count=index + 1),
+                    "timestamp": time.time(),
+                }
+            )
 
     summary = {
         "example_count": len(examples),

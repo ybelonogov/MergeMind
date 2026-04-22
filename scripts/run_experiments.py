@@ -69,6 +69,7 @@ def _metrics_row(summary: dict[str, Any]) -> dict[str, Any]:
         "prompt_tokens",
         "completion_tokens",
         "total_tokens",
+        "tokens_per_second",
         "cache_hit_rate",
         "parse_error_rate",
         "fallback_rate",
@@ -88,6 +89,12 @@ def _assert_llm_ready(llm_client: object) -> None:
             f"Configured model '{status['configured_model']}' is not available at "
             f"{status['base_url']}. Available models: {available}"
         )
+
+
+def _append_progress(path: Path, event: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=True) + "\n")
 
 
 def main() -> None:
@@ -136,6 +143,18 @@ def main() -> None:
             )
             judge_backend = "local_llm"
 
+        mode_dir = run_dir / pipeline_mode
+        mode_dir.mkdir(parents=True, exist_ok=True)
+        progress_path = mode_dir / "progress.jsonl"
+        if progress_path.exists():
+            progress_path.unlink()
+
+        def progress_callback(event: dict[str, Any], current_mode: str = pipeline_mode) -> None:
+            event["pipeline_mode"] = current_mode
+            event["profile"] = args.profile
+            event["run_id"] = run_id
+            _append_progress(progress_path, event)
+
         summary = evaluate_examples(
             examples=examples,
             generator=generator,
@@ -146,12 +165,12 @@ def main() -> None:
             llm_judge_max_examples=int(config["validation"].get("llm_judge_max_examples", 25)),
             judge_override=judge,
             judge_backend_override=judge_backend,
+            progress_callback=progress_callback,
         )
         summary["pipeline_mode"] = pipeline_mode
         summary["profile"] = args.profile
         summary["example_limit"] = limit
 
-        mode_dir = run_dir / pipeline_mode
         write_json(mode_dir / "summary.json", summary)
         write_jsonl(mode_dir / "predictions.jsonl", summary["examples"])
         write_json(mode_dir / "config_snapshot.json", config)

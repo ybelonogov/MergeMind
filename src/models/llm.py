@@ -402,22 +402,28 @@ class OpenAICompatibleLLMClient:
                 "total_tokens": 0,
                 "cache_hit_rate": 0.0,
                 "parse_error_rate": 0.0,
+                "llm_total_latency_sec": 0.0,
                 "llm_avg_latency_sec": 0.0,
                 "llm_p95_latency_sec": 0.0,
+                "tokens_per_second": 0.0,
             }
 
         latencies = [call.latency_seconds for call in self.calls if not call.cache_hit]
         sorted_latencies = sorted(latencies)
         p95_index = int(0.95 * (len(sorted_latencies) - 1)) if sorted_latencies else 0
+        total_tokens = sum(call.usage.get("total_tokens", 0) for call in self.calls)
+        total_latency = sum(latencies)
         return {
             "llm_call_count": len(self.calls),
             "prompt_tokens": sum(call.usage.get("prompt_tokens", 0) for call in self.calls),
             "completion_tokens": sum(call.usage.get("completion_tokens", 0) for call in self.calls),
-            "total_tokens": sum(call.usage.get("total_tokens", 0) for call in self.calls),
+            "total_tokens": total_tokens,
             "cache_hit_rate": mean([float(call.cache_hit) for call in self.calls]),
             "parse_error_rate": mean([float(call.parse_error) for call in self.calls]),
+            "llm_total_latency_sec": total_latency,
             "llm_avg_latency_sec": mean(latencies) if latencies else 0.0,
             "llm_p95_latency_sec": sorted_latencies[p95_index] if sorted_latencies else 0.0,
+            "tokens_per_second": total_tokens / total_latency if total_latency else 0.0,
         }
 
 
