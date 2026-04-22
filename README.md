@@ -118,6 +118,25 @@ Run the local LLM pipeline on a small profile:
 python scripts/evaluate.py --pipeline qwen35_full --profile smoke
 ```
 
+To use Qwen Cloud / DashScope instead of LM Studio, keep the API key in the
+gitignored `.env` file:
+
+```bash
+DASHSCOPE_API_KEY=...
+QWEN_API_KEY=...
+```
+
+Then select the configured cloud provider:
+
+```bash
+python scripts/check_llm.py --llm-provider qwen_cloud --chat
+python scripts/evaluate.py --pipeline qwen35_rewriter_judge --llm-provider qwen_cloud --limit 3
+```
+
+`check_llm.py --chat` verifies both model listing and a tiny JSON completion,
+which catches cases where the key is valid but the account has not activated
+access to a specific model.
+
 Run the same pipeline with the final rewrite/summarization agent:
 
 ```bash

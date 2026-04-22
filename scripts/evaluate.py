@@ -19,7 +19,7 @@ def _bootstrap_path() -> Path:
 
 PROJECT_ROOT = _bootstrap_path()
 
-from src.config import load_config, resolve_path
+from src.config import apply_llm_provider, load_config, load_dotenv, resolve_path
 from src.data.io import read_json, read_jsonl, write_json, write_jsonl
 from src.data.schema import MRExample
 from src.inference.factory import (
@@ -71,9 +71,12 @@ def main() -> None:
     parser.add_argument("--profile", default="", help="Evaluation profile: smoke, main, or full.")
     parser.add_argument("--limit", type=int, default=None, help="Override number of validation/test examples.")
     parser.add_argument("--run-id", default="", help="Optional run id for artifacts/runs output.")
+    parser.add_argument("--llm-provider", default="", help="Optional provider from llm_providers, e.g. qwen_cloud.")
     args = parser.parse_args()
 
+    load_dotenv(PROJECT_ROOT / ".env")
     config = load_config(PROJECT_ROOT / args.config)
+    config = apply_llm_provider(config, args.llm_provider)
     prepared_dir = resolve_path(PROJECT_ROOT, config["paths"]["prepared_dir"])
     evaluation_dir = resolve_path(PROJECT_ROOT, config["paths"]["evaluation_dir"])
     runs_dir = resolve_path(PROJECT_ROOT, config["paths"].get("runs_dir", "artifacts/runs"))
@@ -148,6 +151,7 @@ def main() -> None:
             "git_commit": _git_commit(),
             "model_id": dict(config.get("llm", {})).get("model", ""),
             "base_url": dict(config.get("llm", {})).get("base_url", ""),
+            "llm_provider": dict(config.get("llm", {})).get("provider", ""),
             "started_at": started_at.isoformat(),
             "ended_at": datetime.now(timezone.utc).isoformat(),
         },

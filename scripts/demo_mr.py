@@ -16,7 +16,7 @@ def _bootstrap_path() -> Path:
 
 PROJECT_ROOT = _bootstrap_path()
 
-from src.config import load_config, resolve_path
+from src.config import apply_llm_provider, load_config, load_dotenv, resolve_path
 from src.data.io import read_json
 from src.data.schema import MRExample
 from src.inference.factory import BASELINE_MODE, build_pipeline_components, canonical_pipeline_mode
@@ -28,9 +28,12 @@ def main() -> None:
     parser.add_argument("--config", default="configs/base.yaml", help="Path to YAML config.")
     parser.add_argument("--input", default=None, help="Optional path to a prepared MR example JSON.")
     parser.add_argument("--pipeline", default=BASELINE_MODE, help="Pipeline mode to run.")
+    parser.add_argument("--llm-provider", default="", help="Optional provider from llm_providers, e.g. qwen_cloud.")
     args = parser.parse_args()
 
+    load_dotenv(PROJECT_ROOT / ".env")
     config = load_config(PROJECT_ROOT / args.config)
+    config = apply_llm_provider(config, args.llm_provider)
     prepared_dir = resolve_path(PROJECT_ROOT, config["paths"]["prepared_dir"])
     input_path = resolve_path(PROJECT_ROOT, args.input) if args.input else prepared_dir / "demo.json"
     pipeline_mode = canonical_pipeline_mode(args.pipeline)

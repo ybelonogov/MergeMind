@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 import sqlite3
 import time
@@ -15,6 +16,7 @@ from typing import Any, Callable
 
 from openai import OpenAI
 
+from src.config import load_dotenv
 from src.data.schema import CandidateComment, MRExample
 
 
@@ -313,6 +315,7 @@ class OpenAICompatibleLLMClient:
         cache_path: str | Path | None = None,
         timeout_seconds: int = 180,
         retries: int = 2,
+        response_format_mode: str = "json_schema",
         completion_fn: Callable[..., Any] | None = None,
         list_models_fn: Callable[[], list[str]] | None = None,
     ) -> None:
@@ -321,6 +324,7 @@ class OpenAICompatibleLLMClient:
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.retries = retries
+        self.response_format_mode = response_format_mode
         self.cache = SQLiteLLMCache(cache_path) if cache_path else None
         self._client = OpenAI(base_url=self.base_url, api_key=self.api_key, timeout=self.timeout_seconds)
         self._completion_fn = completion_fn
@@ -348,10 +352,15 @@ class OpenAICompatibleLLMClient:
             "model_available": self.model in models,
         }
 
+    def _response_format(self, response_schema: dict[str, Any]) -> dict[str, Any]:
+        if self.response_format_mode == "json_object":
+            return {"type": "json_object"}
+        return response_schema
+
     def _send_chat_completion(
         self,
         messages: list[dict[str, str]],
-        response_schema: dict[str, Any],
+        response_format: dict[str, Any],
         temperature: float,
         max_tokens: int,
     ) -> Any:
@@ -359,14 +368,14 @@ class OpenAICompatibleLLMClient:
             return self._completion_fn(
                 model=self.model,
                 messages=messages,
-                response_format=response_schema,
+                response_format=response_format,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
         return self._client.chat.completions.create(
             model=self.model,
             messages=messages,
-            response_format=response_schema,
+            response_format=response_format,
             temperature=temperature,
             max_tokens=max_tokens,
             stream=False,
@@ -385,8 +394,10 @@ class OpenAICompatibleLLMClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "timeout_seconds": self.timeout_seconds,
+            "response_format_mode": self.response_format_mode,
         }
-        cache_key = _stable_cache_key(self.model, role, messages, response_schema, params)
+        response_format = self._response_format(response_schema)
+        cache_key = _stable_cache_key(self.model, role, messages, response_format, params)
         cached = self.cache.get(cache_key) if self.cache else None
         if cached is not None:
             result = LLMJSONResponse(
@@ -405,7 +416,7 @@ class OpenAICompatibleLLMClient:
             try:
                 response = self._send_chat_completion(
                     messages=messages,
-                    response_schema=response_schema,
+                    response_format=response_format,
                     temperature=temperature,
                     max_tokens=max_tokens,
                 )
@@ -524,16 +535,23 @@ class OpenAICompatibleLLMClient:
 
 
 def build_llm_client(config: dict[str, Any], project_root: Path) -> OpenAICompatibleLLMClient:
+    load_dotenv(project_root / ".env")
     llm_config = dict(config.get("llm", {}))
     raw_cache_path = Path(str(llm_config.get("cache_path", "artifacts/llm_cache.sqlite")))
     cache_path = raw_cache_path if raw_cache_path.is_absolute() else project_root / raw_cache_path
+    api_key_env = str(llm_config.get("api_key_env", "")).strip()
+    api_key = os.getenv(api_key_env, "") if api_key_env else str(llm_config.get("api_key", "lm-studio"))
+    api_key = os.getenv("MERGEMIND_LLM_API_KEY", api_key)
+    base_url = os.getenv("MERGEMIND_LLM_BASE_URL", str(llm_config.get("base_url", "http://localhost:1234/v1")))
+    model = os.getenv("MERGEMIND_LLM_MODEL", str(llm_config.get("model", "qwen/qwen3.5-9b")))
     return OpenAICompatibleLLMClient(
-        base_url=str(llm_config.get("base_url", "http://localhost:1234/v1")),
-        api_key=str(llm_config.get("api_key", "lm-studio")),
-        model=str(llm_config.get("model", "qwen/qwen3.5-9b")),
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
         cache_path=cache_path,
         timeout_seconds=int(llm_config.get("timeout_seconds", 180)),
         retries=int(llm_config.get("retries", 2)),
+        response_format_mode=str(llm_config.get("response_format", "json_schema")),
     )
 
 

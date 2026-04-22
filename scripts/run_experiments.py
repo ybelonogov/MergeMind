@@ -20,7 +20,7 @@ def _bootstrap_path() -> Path:
 
 PROJECT_ROOT = _bootstrap_path()
 
-from src.config import load_config, resolve_path
+from src.config import apply_llm_provider, load_config, load_dotenv, resolve_path
 from src.data.io import read_jsonl, write_json, write_jsonl
 from src.data.schema import MRExample
 from src.inference.factory import (
@@ -122,9 +122,12 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Override profile example count.")
     parser.add_argument("--run-id", default="", help="Optional run id.")
     parser.add_argument("--modes", nargs="*", default=None, help="Optional explicit pipeline modes.")
+    parser.add_argument("--llm-provider", default="", help="Optional provider from llm_providers, e.g. qwen_cloud.")
     args = parser.parse_args()
 
+    load_dotenv(PROJECT_ROOT / ".env")
     config = load_config(PROJECT_ROOT / args.config)
+    config = apply_llm_provider(config, args.llm_provider)
     limit = resolve_profile_limit(config, profile=args.profile, explicit_limit=args.limit)
     examples = _load_eval_examples(config, limit)
     modes = args.modes or list(config.get("experiments", {}).get("default_modes", []))
@@ -201,6 +204,7 @@ def main() -> None:
                 "git_commit": _git_commit(),
                 "model_id": llm_config.get("model", ""),
                 "base_url": llm_config.get("base_url", ""),
+                "llm_provider": llm_config.get("provider", ""),
                 "started_at": started_at.isoformat(),
                 "ended_at": datetime.now(timezone.utc).isoformat(),
             },

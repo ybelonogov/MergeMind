@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import os
 from pathlib import Path
 from typing import Any
 
@@ -107,6 +109,44 @@ def load_config(path: str | Path) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise ValueError("Top-level config must be a mapping.")
     return parsed
+
+
+def load_dotenv(path: str | Path, override: bool = False) -> None:
+    """Load simple KEY=VALUE secrets from a local .env file."""
+
+    env_path = Path(path)
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if not key:
+            continue
+        if override or key not in os.environ:
+            os.environ[key] = value
+
+
+def apply_llm_provider(config: dict[str, Any], provider_name: str) -> dict[str, Any]:
+    """Return a config copy with a named LLM provider merged into llm settings."""
+
+    if not provider_name:
+        return config
+    providers = dict(config.get("llm_providers", {}))
+    if provider_name not in providers:
+        available = ", ".join(sorted(providers)) or "<none>"
+        raise ValueError(f"Unknown LLM provider '{provider_name}'. Available providers: {available}")
+
+    provider = dict(providers[provider_name])
+    merged = copy.deepcopy(config)
+    merged.setdefault("llm", {})
+    for key, value in provider.items():
+        merged["llm"][key] = value
+    merged["llm"]["provider"] = provider_name
+    return merged
 
 
 def resolve_path(project_root: Path, value: str | Path) -> Path:

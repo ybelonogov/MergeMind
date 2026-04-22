@@ -111,6 +111,23 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertEqual(stats["uncached_total_tokens"], 30)
         self.assertGreaterEqual(stats["uncached_tokens_per_second"], 0.0)
 
+    def test_client_can_use_json_object_response_format(self) -> None:
+        formats = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            formats.append(kwargs["response_format"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(
+            response_format_mode="json_object",
+            completion_fn=completion_fn,
+        )
+
+        response = client.chat_json("generator", [{"role": "user", "content": "json"}], GENERATOR_SCHEMA)
+
+        self.assertFalse(response.parse_error)
+        self.assertEqual(formats[0], {"type": "json_object"})
+
     def test_client_retries_malformed_json(self) -> None:
         calls = {"count": 0}
 
