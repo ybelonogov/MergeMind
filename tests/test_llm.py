@@ -85,6 +85,32 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertTrue(second.cache_hit)
         self.assertEqual(calls["count"], 1)
 
+    def test_client_stats_separate_cached_and_uncached_calls(self) -> None:
+        calls = {"count": 0}
+
+        def completion_fn(**_: object) -> dict:
+            calls["count"] += 1
+            return _completion('{"comments": []}', prompt_tokens=20, completion_tokens=10)
+
+        with TemporaryDirectory() as temp_dir:
+            client = OpenAICompatibleLLMClient(
+                model="qwen/qwen3.5-9b",
+                cache_path=Path(temp_dir) / "cache.sqlite",
+                completion_fn=completion_fn,
+            )
+            messages = [{"role": "user", "content": "review this"}]
+            client.chat_json("generator", messages, GENERATOR_SCHEMA)
+            client.chat_json("generator", messages, GENERATOR_SCHEMA)
+
+        stats = client.stats()
+
+        self.assertEqual(stats["llm_call_count"], 2)
+        self.assertEqual(stats["cached_call_count"], 1)
+        self.assertEqual(stats["uncached_call_count"], 1)
+        self.assertEqual(stats["total_tokens"], 60)
+        self.assertEqual(stats["uncached_total_tokens"], 30)
+        self.assertGreaterEqual(stats["uncached_tokens_per_second"], 0.0)
+
     def test_client_retries_malformed_json(self) -> None:
         calls = {"count": 0}
 
@@ -116,6 +142,27 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertEqual(len(candidates), 1)
         self.assertIn("empty items", candidates[0].text)
         self.assertAlmostEqual(candidates[0].generator_score, 0.8)
+        self.assertEqual(generator.last_raw_generated_count, 1)
+        self.assertEqual(generator.last_deduped_candidate_count, 1)
+        self.assertIn("raw_generated_count=1", candidates[0].evidence)
+
+    def test_llm_generator_prompt_requests_minimum_diverse_candidates(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = LLMGenerator(client, max_candidates=5, min_candidates=3)
+
+        generator.generate(_example())
+
+        self.assertIn("between 3 and 5", seen_prompts[0])
+        self.assertIn("correctness", seen_prompts[0])
+        self.assertIn("missing tests", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
         payload = {
@@ -201,9 +248,47 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertLess(later_candidate.reranker_score, 0.9)
         self.assertTrue(any("calibrated_score=" in item for item in ranked[0].evidence))
 
+    def test_llm_reranker_fills_when_model_returns_too_few_ranked_candidates(self) -> None:
+        payload = {
+            "ranked_comments": [
+                {
+                    "candidate_id": 0,
+                    "score": 0.9,
+                    "reason": "Best issue.",
+                    "usefulness": 0.9,
+                    "groundedness": 0.9,
+                    "actionability": 0.9,
+                    "specificity": 0.9,
+                }
+            ]
+        }
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion(json.dumps(payload)))
+        reranker = LLMReranker(client)
+        candidates = [
+            CandidateComment(text="Guard empty items before indexing into the cart.", generator_score=0.9),
+            CandidateComment(text="Add a negative test for empty carts.", generator_score=0.8),
+            CandidateComment(text="Clarify checkout behavior in docs.", generator_score=0.4),
+        ]
+
+        ranked = reranker.rerank(_example(), candidates, top_n=3)
+
+        self.assertEqual(len(ranked), 3)
+        self.assertEqual(ranked[0].text, "Guard empty items before indexing into the cart.")
+        self.assertTrue(any("llm_reranker_unranked_fill=true" in item for item in ranked[1].evidence))
+
     def test_llm_judge_returns_bounded_score(self) -> None:
         client = OpenAICompatibleLLMClient(
-            completion_fn=lambda **_: _completion('{"score": 1.2, "reason": "same issue"}')
+            completion_fn=lambda **_: _completion(
+                json.dumps(
+                    {
+                        "gold_alignment_score": 1.2,
+                        "valid_alternative_score": 0.3,
+                        "groundedness": 0.9,
+                        "usefulness": 0.8,
+                        "reason": "same issue",
+                    }
+                )
+            )
         )
         judge = OpenAICompatibleLLMJudge(client)
 
@@ -214,6 +299,33 @@ class LocalLLMComponentTests(unittest.TestCase):
         )
 
         self.assertEqual(score, 1.0)
+
+    def test_llm_judge_returns_detailed_scores(self) -> None:
+        client = OpenAICompatibleLLMClient(
+            completion_fn=lambda **_: _completion(
+                json.dumps(
+                    {
+                        "gold_alignment_score": 0.2,
+                        "valid_alternative_score": 0.7,
+                        "groundedness": 0.8,
+                        "usefulness": 0.9,
+                        "reason": "Useful alternative issue.",
+                    }
+                )
+            )
+        )
+        judge = OpenAICompatibleLLMJudge(client)
+
+        result = judge.evaluate(
+            [CandidateComment(text="Add a negative test case.")],
+            ["Rename this helper."],
+            _example(),
+        )
+
+        self.assertEqual(result["judge_score"], 0.7)
+        self.assertEqual(result["gold_alignment_score"], 0.2)
+        self.assertEqual(result["valid_alternative_score"], 0.7)
+        self.assertIn("Useful alternative", result["reason"])
 
     def test_llm_rewriter_preserves_original_and_adds_essence(self) -> None:
         payload = {

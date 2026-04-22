@@ -130,6 +130,10 @@ Run the A/B experiment table:
 python scripts/run_experiments.py --profile smoke
 ```
 
+The default A/B modes compare the baseline, full Qwen pipeline, Qwen rewriter,
+and Qwen rewriter with local judge. Runtime metrics separate inference, judge,
+and total wall latency, plus cached vs uncached LLM calls.
+
 Inspect a run as a human-readable review report:
 
 ```bash
@@ -142,6 +146,12 @@ If a run contains several pipeline modes, pass one explicitly:
 python scripts/inspect_predictions.py --run <run_id> --mode qwen35_full --limit 5
 ```
 
+Compare several modes side by side for the same MR records:
+
+```bash
+python scripts/compare_run.py --run <run_id> --modes baseline_retrieval_logistic qwen35_full qwen35_rewriter qwen35_rewriter_judge --limit 10
+```
+
 Serve the local monitoring dashboard:
 
 ```bash
@@ -149,8 +159,9 @@ python scripts/dashboard.py
 ```
 
 Open `http://127.0.0.1:8765` to watch GPU utilization, GPU memory,
-LM Studio model status, experiment progress, latency, token usage, token speed,
-parse error rate, cache hit rate, and recent run artifacts.
+LM Studio model status, experiment progress, inference/judge/total latency,
+token usage, uncached token speed, parse error rate, cache hit rate, and recent
+run artifacts.
 
 Available experiment modes:
 - `baseline_retrieval_logistic`

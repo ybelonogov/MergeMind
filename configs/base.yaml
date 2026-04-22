@@ -54,6 +54,7 @@ llm:
   model: qwen/qwen3.5-9b
   cache_path: artifacts/llm_cache.sqlite
   max_candidates: 8
+  min_candidates: 3
   temperature_generator: 0.2
   temperature_reranker: 0.0
   temperature_rewriter: 0.0
@@ -79,10 +80,8 @@ evaluation_profiles:
 experiments:
   default_modes:
     - baseline_retrieval_logistic
-    - qwen35_generator_logistic_reranker
-    - retrieval_generator_qwen35_reranker
     - qwen35_generator_qwen35_reranker
     - qwen35_full_with_rewriter
-    - qwen35_full_with_qwen35_judge
+    - qwen35_full_with_rewriter_and_qwen35_judge
 demo:
   top_n: 3

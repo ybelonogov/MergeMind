@@ -129,15 +129,24 @@ REWRITER_SCHEMA = {
 JUDGE_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
-        "name": "review_quality_score",
+        "name": "review_quality_scores",
         "strict": True,
         "schema": {
             "type": "object",
             "properties": {
-                "score": {"type": "number"},
+                "gold_alignment_score": {"type": "number"},
+                "valid_alternative_score": {"type": "number"},
+                "groundedness": {"type": "number"},
+                "usefulness": {"type": "number"},
                 "reason": {"type": "string"},
             },
-            "required": ["score", "reason"],
+            "required": [
+                "gold_alignment_score",
+                "valid_alternative_score",
+                "groundedness",
+                "usefulness",
+                "reason",
+            ],
             "additionalProperties": False,
         },
     },
@@ -468,33 +477,49 @@ class OpenAICompatibleLLMClient:
         if not self.calls:
             return {
                 "llm_call_count": 0,
+                "cached_call_count": 0,
+                "uncached_call_count": 0,
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "total_tokens": 0,
+                "uncached_prompt_tokens": 0,
+                "uncached_completion_tokens": 0,
+                "uncached_total_tokens": 0,
                 "cache_hit_rate": 0.0,
                 "parse_error_rate": 0.0,
                 "llm_total_latency_sec": 0.0,
                 "llm_avg_latency_sec": 0.0,
                 "llm_p95_latency_sec": 0.0,
                 "tokens_per_second": 0.0,
+                "uncached_tokens_per_second": 0.0,
             }
 
-        latencies = [call.latency_seconds for call in self.calls if not call.cache_hit]
+        cached_calls = [call for call in self.calls if call.cache_hit]
+        uncached_calls = [call for call in self.calls if not call.cache_hit]
+        latencies = [call.latency_seconds for call in uncached_calls]
         sorted_latencies = sorted(latencies)
         p95_index = math.ceil(0.95 * len(sorted_latencies)) - 1 if sorted_latencies else 0
         total_tokens = sum(call.usage.get("total_tokens", 0) for call in self.calls)
+        uncached_total_tokens = sum(call.usage.get("total_tokens", 0) for call in uncached_calls)
         total_latency = sum(latencies)
+        uncached_tokens_per_second = uncached_total_tokens / total_latency if total_latency else 0.0
         return {
             "llm_call_count": len(self.calls),
+            "cached_call_count": len(cached_calls),
+            "uncached_call_count": len(uncached_calls),
             "prompt_tokens": sum(call.usage.get("prompt_tokens", 0) for call in self.calls),
             "completion_tokens": sum(call.usage.get("completion_tokens", 0) for call in self.calls),
             "total_tokens": total_tokens,
+            "uncached_prompt_tokens": sum(call.usage.get("prompt_tokens", 0) for call in uncached_calls),
+            "uncached_completion_tokens": sum(call.usage.get("completion_tokens", 0) for call in uncached_calls),
+            "uncached_total_tokens": uncached_total_tokens,
             "cache_hit_rate": mean([float(call.cache_hit) for call in self.calls]),
             "parse_error_rate": mean([float(call.parse_error) for call in self.calls]),
             "llm_total_latency_sec": total_latency,
             "llm_avg_latency_sec": mean(latencies) if latencies else 0.0,
             "llm_p95_latency_sec": sorted_latencies[p95_index] if sorted_latencies else 0.0,
-            "tokens_per_second": total_tokens / total_latency if total_latency else 0.0,
+            "tokens_per_second": uncached_tokens_per_second,
+            "uncached_tokens_per_second": uncached_tokens_per_second,
         }
 
 
@@ -555,6 +580,7 @@ class LLMGenerator:
         self,
         client: OpenAICompatibleLLMClient,
         max_candidates: int = 5,
+        min_candidates: int = 3,
         temperature: float = 0.2,
         max_tokens: int = 700,
     ) -> None:
@@ -563,6 +589,9 @@ class LLMGenerator:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.fallback_count = 0
+        self.min_candidates = max(1, min(min_candidates, self.max_candidates))
+        self.last_raw_generated_count = 0
+        self.last_deduped_candidate_count = 0
 
     def generate(
         self,
@@ -572,19 +601,27 @@ class LLMGenerator:
     ) -> list[CandidateComment]:
         del top_examples
         limit = self.max_candidates if max_candidates is None else max_candidates
+        minimum = min(self.min_candidates, limit)
+        self.last_raw_generated_count = 0
+        self.last_deduped_candidate_count = 0
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are MergeMind, a code review assistant. Generate only useful, specific, "
-                    "actionable review comments grounded in the provided diff. Return JSON only."
+                    "You are MergeMind, a code review assistant. Generate useful, specific, "
+                    "actionable review comments grounded in the provided diff. Prefer recall first: "
+                    "surface several plausible review angles before reranking removes noise. "
+                    "Return JSON only."
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"Generate up to {limit} concise review comments. Avoid duplicates, style nits, "
-                    "and generic advice. Each comment should point to a concrete risk or improvement.\n\n"
+                    f"Generate between {minimum} and {limit} concise review comments when possible. "
+                    "Cover diverse grounded angles such as correctness, API/behavior compatibility, "
+                    "missing tests, edge cases, maintainability, and style only when it affects review value. "
+                    "Avoid duplicates and generic advice. Do not invent issues: if fewer than "
+                    f"{minimum} grounded comments exist, return only the grounded ones.\n\n"
                     f"{_example_prompt(example)}"
                 ),
             },
@@ -600,6 +637,7 @@ class LLMGenerator:
         if not isinstance(comments, list):
             self.fallback_count += 1
             return []
+        self.last_raw_generated_count = len(comments)
 
         candidates: list[CandidateComment] = []
         seen: set[str] = set()
@@ -612,7 +650,7 @@ class LLMGenerator:
                 continue
             seen.add(normalized)
             reason = str(item.get("reason", "")).strip()
-            evidence = ["llm_generator", f"model={self.client.model}"]
+            evidence = ["llm_generator", f"model={self.client.model}", f"raw_generated_count={len(comments)}"]
             if reason:
                 evidence.append(f"reason={reason}")
             if result.cache_hit:
@@ -628,6 +666,7 @@ class LLMGenerator:
             if len(candidates) >= limit:
                 break
 
+        self.last_deduped_candidate_count = len(candidates)
         if not candidates:
             self.fallback_count += 1
         return candidates
@@ -664,6 +703,48 @@ class LLMReranker:
                 )
             )
         return output
+
+    def _fill_missing_ranked(
+        self,
+        scored: list[CandidateComment],
+        candidates: list[CandidateComment],
+        seen_ids: set[int],
+        top_n: int,
+    ) -> list[CandidateComment]:
+        if len(scored) >= top_n:
+            return scored[:top_n]
+
+        remaining = [
+            (index, candidate)
+            for index, candidate in enumerate(candidates)
+            if index not in seen_ids
+        ]
+        remaining.sort(key=lambda item: item[1].generator_score, reverse=True)
+        filled = list(scored)
+        last_score = filled[-1].reranker_score if filled else 0.55
+        for index, candidate in remaining:
+            if len(filled) >= top_n:
+                break
+            fill_score = _bounded(min(candidate.generator_score, max(0.05, last_score - 0.05)))
+            last_score = fill_score
+            evidence = list(candidate.evidence)
+            evidence.extend(
+                [
+                    "llm_reranker_unranked_fill=true",
+                    f"filled_candidate_id={index}",
+                    "reason=LLM reranker returned fewer than requested candidates; filled by generator score.",
+                ]
+            )
+            filled.append(
+                CandidateComment(
+                    text=candidate.text,
+                    generator_score=candidate.generator_score,
+                    reranker_score=fill_score,
+                    source_example_id=candidate.source_example_id,
+                    evidence=evidence,
+                )
+            )
+        return filled[:top_n]
 
     def _calibrated_score(self, candidate: CandidateComment, item: dict[str, Any], output_position: int) -> float:
         usefulness = _bounded(item.get("usefulness"), default=0.5)
@@ -787,7 +868,7 @@ class LLMReranker:
         if not scored:
             return self._fallback(candidates, top_n)
         scored.sort(key=lambda candidate: candidate.reranker_score, reverse=True)
-        return scored[:top_n]
+        return self._fill_missing_ranked(scored, candidates, seen_ids, top_n)
 
 
 class LLMRewriter:

@@ -56,8 +56,9 @@ After the baseline is available, run local Qwen experiments through LM Studio:
 - Qwen generator / reranker with a Qwen rewriter for concise final comments
 - Qwen generator / reranker with a Qwen judge
 
-Track each run locally with predictions, summary metrics, latency, token usage,
-cache hit rate, parse error rate, and fallback rate.
+Track each run locally with predictions, side-by-side comparison reports,
+summary metrics, inference / judge / total wall latency, cached vs uncached
+LLM calls, token usage, cache hit rate, parse error rate, and fallback rate.
 
 ## Iteration 2
 - more agentic workflow

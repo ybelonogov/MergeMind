@@ -134,8 +134,25 @@ def _mode_progress(summary: dict[str, Any], progress: dict[str, Any]) -> dict[st
         "percent": percent,
         "latest_example_id": progress.get("example_id", ""),
         "latest_latency_sec": float(progress.get("latency_sec") or 0.0),
-        "tokens_per_second": float(summary.get("tokens_per_second") or llm_metrics.get("tokens_per_second") or 0.0),
+        "latest_inference_latency_sec": float(progress.get("inference_latency_sec") or progress.get("latency_sec") or 0.0),
+        "latest_judge_latency_sec": float(progress.get("judge_latency_sec") or 0.0),
+        "latest_total_wall_latency_sec": float(progress.get("total_wall_latency_sec") or progress.get("latency_sec") or 0.0),
+        "tokens_per_second": float(
+            summary.get("uncached_tokens_per_second")
+            or llm_metrics.get("uncached_tokens_per_second")
+            or summary.get("tokens_per_second")
+            or llm_metrics.get("tokens_per_second")
+            or 0.0
+        ),
+        "uncached_tokens_per_second": float(
+            summary.get("uncached_tokens_per_second") or llm_metrics.get("uncached_tokens_per_second") or 0.0
+        ),
         "total_tokens": int(summary.get("total_tokens") or llm_metrics.get("total_tokens") or 0),
+        "uncached_total_tokens": int(
+            summary.get("uncached_total_tokens") or llm_metrics.get("uncached_total_tokens") or 0
+        ),
+        "cached_call_count": int(summary.get("cached_call_count") or llm_metrics.get("cached_call_count") or 0),
+        "uncached_call_count": int(summary.get("uncached_call_count") or llm_metrics.get("uncached_call_count") or 0),
         "parse_error_rate": float(summary.get("parse_error_rate") or llm_metrics.get("parse_error_rate") or 0.0),
         "cache_hit_rate": float(summary.get("cache_hit_rate") or llm_metrics.get("cache_hit_rate") or 0.0),
     }
@@ -179,6 +196,16 @@ def collect_runs(runs_dir: Path, limit: int = 12) -> list[dict[str, Any]]:
                     "judge_score": summary.get("judge_score", 0.0),
                     "avg_latency_sec": summary.get("avg_latency_sec", 0.0),
                     "p95_latency_sec": summary.get("p95_latency_sec", 0.0),
+                    "avg_inference_latency_sec": summary.get("avg_inference_latency_sec", summary.get("avg_latency_sec", 0.0)),
+                    "p95_inference_latency_sec": summary.get("p95_inference_latency_sec", summary.get("p95_latency_sec", 0.0)),
+                    "avg_judge_latency_sec": summary.get("avg_judge_latency_sec", 0.0),
+                    "p95_judge_latency_sec": summary.get("p95_judge_latency_sec", 0.0),
+                    "avg_total_wall_latency_sec": summary.get(
+                        "avg_total_wall_latency_sec", summary.get("avg_latency_sec", 0.0)
+                    ),
+                    "p95_total_wall_latency_sec": summary.get(
+                        "p95_total_wall_latency_sec", summary.get("p95_latency_sec", 0.0)
+                    ),
                     "progress": progress_view,
                 }
             )
@@ -287,12 +314,13 @@ function renderRuns(data) {
         <div><span class="pill ${statusClass}">${mode.status}</span> <strong>${mode.mode}</strong> <span class="muted">${mode.profile || ""}</span></div>
         <div class="progress"><div class="bar" style="width:${Math.min(100, p.percent || 0)}%"></div></div>
         <table>
-          <tr><th>progress</th><th>tokens/sec</th><th>tokens</th><th>latency avg/p95</th><th>hit@k</th><th>best sim</th><th>parse/cache</th></tr>
+          <tr><th>progress</th><th>uncached tok/sec</th><th>tokens</th><th>calls cache/live</th><th>latency inf/judge/total</th><th>hit@k</th><th>best sim</th><th>parse/cache</th></tr>
           <tr>
             <td>${p.completed || 0}/${p.total || mode.example_count || 0} (${fmt(p.percent,1)}%)<br><span class="muted">${p.latest_example_id || ""}</span></td>
-            <td>${fmt(p.tokens_per_second,2)}</td>
-            <td>${p.total_tokens || 0}</td>
-            <td>${fmt(mode.avg_latency_sec,2)} / ${fmt(mode.p95_latency_sec,2)}s</td>
+            <td>${fmt(p.uncached_tokens_per_second || p.tokens_per_second,2)}</td>
+            <td>${p.uncached_total_tokens || 0} live<br><span class="muted">${p.total_tokens || 0} logical</span></td>
+            <td>${p.cached_call_count || 0}/${p.uncached_call_count || 0}</td>
+            <td>${fmt(mode.avg_inference_latency_sec,2)} / ${fmt(mode.avg_judge_latency_sec,2)} / ${fmt(mode.avg_total_wall_latency_sec,2)}s</td>
             <td>${fmt(mode.hit_rate_at_k,3)}</td>
             <td>${fmt(mode.best_similarity_at_k,3)}</td>
             <td>${fmt(p.parse_error_rate,3)} / ${fmt(p.cache_hit_rate,3)}</td>

@@ -77,6 +77,7 @@ def _llm_generation_config(config: dict[str, Any]) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
     return {
         "max_candidates": int(llm_config.get("max_candidates", config.get("model", {}).get("max_candidates", 5))),
+        "min_candidates": int(llm_config.get("min_candidates", 3)),
         "temperature": float(llm_config.get("temperature_generator", 0.2)),
         "max_tokens": int(llm_config.get("max_tokens_generator", 700)),
     }
