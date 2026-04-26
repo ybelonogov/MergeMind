@@ -17,7 +17,7 @@ def _bootstrap_path() -> Path:
 
 PROJECT_ROOT = _bootstrap_path()
 
-from src.config import load_config
+from src.config import apply_llm_provider, load_config, load_dotenv
 from src.monitoring.dashboard import make_dashboard_handler
 
 
@@ -27,9 +27,12 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1", help="Dashboard host.")
     parser.add_argument("--port", type=int, default=8765, help="Dashboard port.")
     parser.add_argument("--refresh-seconds", type=int, default=3, help="Browser auto-refresh interval.")
+    parser.add_argument("--llm-provider", default="", help="Optional provider from llm_providers.")
     args = parser.parse_args()
 
+    load_dotenv(PROJECT_ROOT / ".env")
     config = load_config(PROJECT_ROOT / args.config)
+    config = apply_llm_provider(config, args.llm_provider)
     handler = make_dashboard_handler(config, PROJECT_ROOT, refresh_seconds=max(args.refresh_seconds, 1))
     server = ThreadingHTTPServer((args.host, args.port), handler)
     url = f"http://{args.host}:{args.port}"

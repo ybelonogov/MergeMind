@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import time
 import urllib.error
@@ -97,8 +98,10 @@ def collect_gpu_stats() -> dict[str, Any]:
 
 def collect_lmstudio_status(config: dict[str, Any]) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
-    base_url = str(llm_config.get("base_url", "http://localhost:1234/v1")).rstrip("/")
-    configured_model = str(llm_config.get("model", ""))
+    config_model = str(llm_config.get("model", ""))
+    base_url = os.getenv("MERGEMIND_LLM_BASE_URL") or str(llm_config.get("base_url", "http://localhost:1234/v1"))
+    base_url = base_url.rstrip("/")
+    configured_model = os.getenv("MERGEMIND_LLM_MODEL") or config_model
     try:
         with urllib.request.urlopen(f"{base_url}/models", timeout=3) as response:
             payload = json.loads(response.read().decode("utf-8"))
@@ -107,7 +110,10 @@ def collect_lmstudio_status(config: dict[str, Any]) -> dict[str, Any]:
             "ok": False,
             "base_url": base_url,
             "configured_model": configured_model,
+            "config_model": config_model,
+            "env_model_override": bool(os.getenv("MERGEMIND_LLM_MODEL")),
             "available_models": [],
+            "available_model_count": 0,
             "model_available": False,
             "error": str(exc),
         }
@@ -117,7 +123,10 @@ def collect_lmstudio_status(config: dict[str, Any]) -> dict[str, Any]:
         "ok": configured_model in models,
         "base_url": base_url,
         "configured_model": configured_model,
+        "config_model": config_model,
+        "env_model_override": bool(os.getenv("MERGEMIND_LLM_MODEL")),
         "available_models": models,
+        "available_model_count": len(models),
         "model_available": configured_model in models,
         "error": "",
     }
@@ -172,6 +181,8 @@ def collect_runs(runs_dir: Path, limit: int = 12) -> list[dict[str, Any]]:
             "path": str(run_dir),
             "updated_at": run_dir.stat().st_mtime,
             "metrics_table": metrics_table.get("rows", []),
+            "model_ids": [],
+            "llm_providers": [],
             "modes": [],
         }
         mode_dirs = [path for path in run_dir.iterdir() if path.is_dir()]
@@ -180,12 +191,22 @@ def collect_runs(runs_dir: Path, limit: int = 12) -> list[dict[str, Any]]:
             summary = _read_json(mode_dir / "summary.json")
             manifest = _read_json(mode_dir / "run_manifest.json")
             progress = _read_last_jsonl(mode_dir / "progress.jsonl")
+            model_id = str(summary.get("model_id") or manifest.get("model_id") or "")
+            llm_provider = str(summary.get("llm_provider") or manifest.get("llm_provider") or "")
+            base_url = str(summary.get("base_url") or manifest.get("base_url") or "")
+            if model_id and model_id not in run_record["model_ids"]:
+                run_record["model_ids"].append(model_id)
+            if llm_provider and llm_provider not in run_record["llm_providers"]:
+                run_record["llm_providers"].append(llm_provider)
             status = "completed" if summary else ("running" if progress else "pending")
             progress_view = _mode_progress(summary, progress)
             run_record["modes"].append(
                 {
                     "mode": mode_dir.name,
                     "path": str(mode_dir),
+                    "model_id": model_id,
+                    "base_url": base_url,
+                    "llm_provider": llm_provider,
                     "status": status,
                     "profile": summary.get("profile") or manifest.get("profile") or progress.get("profile", ""),
                     "example_count": summary.get("example_count", progress_view["total"]),
@@ -290,17 +311,32 @@ function fmt(n, digits = 2) {
 function card(title, value, detail, cls = "") {
   return `<div class="card"><div class="muted">${title}</div><div class="metric ${cls}">${value}</div><div class="muted">${detail || ""}</div></div>`;
 }
+function selectedRun(data) {
+  if (!runFilter) return null;
+  return (data.runs || []).find(run => run.run_id === runFilter) || null;
+}
 function renderTop(data) {
   const gpu = (data.gpu.gpus || [])[0] || {};
   const lm = data.lmstudio || {};
+  const run = selectedRun(data);
+  const runModel = run && (run.model_ids || []).length ? (run.model_ids || []).join(", ") : "";
   const mem = gpu.memory_total_mb ? `${fmt(gpu.memory_used_mb,0)} / ${fmt(gpu.memory_total_mb,0)} MB` : "n/a";
   const lmClass = lm.ok ? "ok" : "bad";
-  document.getElementById("topCards").innerHTML = [
+  const lmDetail = [
+    `${lm.configured_model || ""} @ ${lm.base_url || ""}`,
+    `${lm.model_available ? "model available" : "model missing"}; ${lm.available_model_count || 0} listed`,
+    lm.env_model_override ? "MERGEMIND_LLM_MODEL override active" : `config default: ${lm.config_model || ""}`,
+  ].join("<br>");
+  const cards = [
     card("GPU utilization", `${fmt(gpu.utilization_gpu,0)}%`, gpu.name || data.gpu.error || "n/a"),
     card("GPU memory", mem, `${fmt((gpu.memory_used_mb || 0) / Math.max(gpu.memory_total_mb || 1, 1) * 100,0)}% used`),
     card("GPU thermals", `${fmt(gpu.temperature_c,0)} C`, `${fmt(gpu.power_w,1)} W`),
-    card("LM Studio", lm.ok ? "OK" : "CHECK", `${lm.configured_model || ""} @ ${lm.base_url || ""}`, lmClass),
-  ].join("");
+    card("LM Studio", lm.ok ? "OK" : "CHECK", lmDetail, lmClass),
+  ];
+  if (runFilter) {
+    cards.push(card("Selected run model", runModel || "pending", runFilter, runModel ? "ok" : "warn"));
+  }
+  document.getElementById("topCards").innerHTML = cards.join("");
 }
 function renderRuns(data) {
   const runs = runFilter
@@ -317,6 +353,7 @@ function renderRuns(data) {
       const statusClass = mode.status === "completed" ? "ok" : (mode.status === "running" ? "warn" : "muted");
       return `<div class="mode">
         <div><span class="pill ${statusClass}">${mode.status}</span> <strong>${mode.mode}</strong> <span class="muted">${mode.profile || ""}</span></div>
+        <div class="muted">model: <code>${mode.model_id || "n/a"}</code> provider: <code>${mode.llm_provider || "n/a"}</code></div>
         <div class="progress"><div class="bar" style="width:${Math.min(100, p.percent || 0)}%"></div></div>
         <table>
           <tr><th>progress</th><th>uncached tok/sec</th><th>tokens</th><th>calls cache/live</th><th>latency inf/judge/total</th><th>hit@k</th><th>best sim</th><th>parse/cache</th></tr>

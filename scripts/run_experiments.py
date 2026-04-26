@@ -58,6 +58,9 @@ def _metrics_row(summary: dict[str, Any]) -> dict[str, Any]:
         "pipeline_mode",
         "profile",
         "example_count",
+        "model_id",
+        "base_url",
+        "llm_provider",
         "top1_similarity",
         "best_similarity_at_k",
         "hit_rate_at_k",
@@ -191,6 +194,9 @@ def main() -> None:
         summary["pipeline_mode"] = pipeline_mode
         summary["profile"] = args.profile
         summary["example_limit"] = limit
+        summary["model_id"] = llm_config.get("model", "")
+        summary["base_url"] = llm_config.get("base_url", "")
+        summary["llm_provider"] = llm_config.get("provider", "")
 
         write_json(mode_dir / "summary.json", summary)
         write_jsonl(mode_dir / "predictions.jsonl", summary["examples"])
