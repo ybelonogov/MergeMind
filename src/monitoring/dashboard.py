@@ -279,7 +279,9 @@ HTML_PAGE = """<!doctype html>
   </section>
 </main>
 <script>
-const refreshSeconds = Number(new URLSearchParams(location.search).get("refresh") || "__REFRESH__");
+const params = new URLSearchParams(location.search);
+const refreshSeconds = Number(params.get("refresh") || "__REFRESH__");
+const runFilter = params.get("run") || "";
 document.getElementById("refreshLabel").textContent = refreshSeconds;
 function fmt(n, digits = 2) {
   const x = Number(n || 0);
@@ -301,9 +303,12 @@ function renderTop(data) {
   ].join("");
 }
 function renderRuns(data) {
-  const runs = data.runs || [];
+  const runs = runFilter
+    ? (data.runs || []).filter(run => run.run_id === runFilter)
+    : (data.runs || []);
   if (!runs.length) {
-    document.getElementById("runs").innerHTML = '<div class="muted">No runs found yet.</div>';
+    const suffix = runFilter ? ` for <code>${runFilter}</code>` : "";
+    document.getElementById("runs").innerHTML = `<div class="muted">No runs found${suffix}.</div>`;
     return;
   }
   document.getElementById("runs").innerHTML = runs.map(run => {
