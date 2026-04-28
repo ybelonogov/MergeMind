@@ -33,7 +33,7 @@ Why it matters:
 ## Iteration 2 / optional
 ### 4. SWE-bench
 Use only for later experiments that move from comment generation
-toward more agentic issue / fix workflows.
+toward issue localization and fix workflows.
 
 ## Internal / project-specific data
 If available, add a custom dataset built from real MR history:

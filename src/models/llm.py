@@ -626,7 +626,7 @@ class LLMGenerator:
             {
                 "role": "system",
                 "content": (
-                    "You are MergeMind, a code review assistant. Generate useful, specific, "
+                    "You are MergeMind, a code review system. Generate useful, specific, "
                     "actionable review comments grounded in the provided diff. Prefer recall first: "
                     "surface several plausible review angles before reranking removes noise. "
                     "Return JSON only."

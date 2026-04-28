@@ -61,7 +61,7 @@ summary metrics, inference / judge / total wall latency, cached vs uncached
 LLM calls, token usage, cache hit rate, parse error rate, and fallback rate.
 
 ## Iteration 2
-- more agentic workflow
+- iterative review workflow
 - stronger verification with CI
 - possible fix generation
 - evaluation on more realistic end-to-end tasks

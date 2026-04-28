@@ -12,7 +12,6 @@ with a high probability of being useful and leading to a real fix.
 ## Project structure
 ```text
 MergeMind/
-  AGENTS.md
   README.md
   docs/
     plan.md
@@ -64,22 +63,10 @@ MergeMind/
   one MR, with an optional `rewriter` step for final human-facing wording.
 
 ## Iteration 2
-- more agentic workflow
+- iterative review workflow
 - CI loop
 - fix suggestions
 - stronger benchmarks for end-to-end workflow
-
-## Suggested working style with Codex
-Use `AGENTS.md` and the files in `docs/` as the source of truth.
-Do not invent a different architecture unless explicitly asked.
-
-Recommended task order:
-1. create repository skeleton
-2. implement data preparation
-3. implement context processing
-4. implement baseline models
-5. implement evaluation
-6. implement demo inference
 
 ## Local commands
 Install dependencies first:
@@ -88,7 +75,7 @@ Install dependencies first:
 python -m pip install -r requirements.txt
 ```
 
-Download the real datasets configured in [configs/base.yaml](c:\Users\alex\Desktop\ITMO\MergeMind\configs\base.yaml):
+Download the real datasets configured in [configs/base.yaml](configs/base.yaml):
 
 ```bash
 python scripts/download_datasets.py
@@ -137,10 +124,18 @@ python scripts/evaluate.py --pipeline qwen35_rewriter_judge --llm-provider qwen_
 which catches cases where the key is valid but the account has not activated
 access to a specific model.
 
-Run the same pipeline with the final rewrite/summarization agent:
+Run the same pipeline with the final rewrite step:
 
 ```bash
 python scripts/evaluate.py --pipeline qwen35_rewriter --profile smoke
+```
+
+Run the same smoke profile with the local Qwen 3.6 27B IQ2 model exposed by
+LM Studio as `qwen3.6-27b@iq2_xxs`:
+
+```bash
+python scripts/check_llm.py --llm-provider local_qwen36_27b_iq2 --chat
+python scripts/run_experiments.py --profile smoke --run-id qwen36_27b_iq2_same_smoke_01 --llm-provider local_qwen36_27b_iq2 --modes baseline_retrieval_logistic qwen35_full qwen35_rewriter qwen35_rewriter_judge
 ```
 
 Run the A/B experiment table:
@@ -198,6 +193,10 @@ comments into concise final review feedback with `essence`, `severity`, and
 `rewrite_confidence` fields.
 `qwen35_rewriter_judge` additionally runs the local Qwen judge on the rewritten
 comments.
+
+The `qwen35_*` names describe pipeline modes, not a hard-coded model version.
+The actual model used in each experiment is recorded in `run_manifest.json`,
+`config_snapshot.json`, and `metrics_table.json` under the run directory.
 
 Artifacts are written under `artifacts/`:
 - `artifacts/data/` - normalized train/validation/test/demo files
