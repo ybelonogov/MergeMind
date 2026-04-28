@@ -1,21 +1,31 @@
-# Literature basis for MergeMind
+# Литературная база MergeMind
 
-## Core task and data
-- **CodeReviewer** — baseline formulation for automated code review; tasks include quality estimation, comment generation, and code refinement.
-- **Desiview / Distilling Desired Comments** — useful for aligning the model on desired review comments instead of all review noise.
+## Основная задача и данные
 
-## Context processing
-- **CoDocBench / Tree-Sitter** — useful for structural parsing of changes and mapping edits to code entities.
+- **CodeReviewer** — базовая постановка automated code review. Включает quality
+  estimation, comment generation и code refinement.
+- **Desiview / Distilling Desired Comments** — полезно для идеи отбора
+  действительно желательных review comments, а не всего шума из ревью.
 
-## Validation
-- **G-Eval** — rubric-based LLM judge for automatic evaluation.
-- **CodeReviewQA** — benchmark for understanding review reasoning, not just text generation.
-- **METAMON** — verifier-style idea using tests/specification consistency.
-- **SWE-CI** — benchmark for more iterative CI-like workflows.
-- **Automated Code Review in Practice** — motivates reranking and noise reduction.
-- **Towards Practical Defect-Focused Automated Code Review** — close to the target system design for later iterations.
+## Обработка контекста
 
-## Reading priority
+- **CoDocBench / Tree-Sitter** — полезны для структурного парсинга изменений,
+  выделения сущностей кода и привязки diff к context retrieval.
+
+## Валидация
+
+- **G-Eval** — пример rubric-based LLM judge для автоматической оценки.
+- **CodeReviewQA** — benchmark для понимания review reasoning, а не только
+  генерации похожего текста.
+- **METAMON** — идея verifier-style проверки через tests/specification
+  consistency.
+- **SWE-CI** — benchmark для более итеративных CI-like workflows.
+- **Automated Code Review in Practice** — мотивация reranking и борьбы с noise.
+- **Towards Practical Defect-Focused Automated Code Review** — близко к целевой
+  системе для следующих итераций.
+
+## Приоритет чтения
+
 1. CodeReviewer
 2. Desiview
 3. CoDocBench / Tree-Sitter

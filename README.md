@@ -1,15 +1,20 @@
 # MergeMind
 
-MergeMind is an MVP for automated merge request review.
-It is designed as a context-aware pipeline that reads MR changes,
-retrieves relevant repository context, generates candidate review comments,
-and ranks them to keep only the most useful ones.
+MergeMind — MVP-система для автоматизированного ревью merge request.
+Она принимает MR/diff, извлекает контекст изменений, генерирует несколько
+кандидатных review-комментариев, ранжирует их и оставляет только наиболее
+полезные.
 
-## Goal
-Build a system that, given MR context, outputs a small number of comments
-with a high probability of being useful and leading to a real fix.
+## Цель
 
-## Project structure
+Построить локально запускаемый пайплайн, который по контексту MR выдает
+1-3 комментария с высокой вероятностью практической пользы для ревью.
+
+Главная идея проекта: не генерировать как можно больше замечаний, а отбирать
+небольшое число конкретных, обоснованных и применимых комментариев.
+
+## Структура проекта
+
 ```text
 MergeMind/
   README.md
@@ -31,190 +36,236 @@ MergeMind/
   tests/
 ```
 
-## Main pipeline
-1. **Datasets**  
-   Collect and normalize MR history, review comments, follow-up commits, and outcomes.
-2. **Context processing**  
-   Parse diffs, map changes to code entities, and retrieve repository context.
-3. **Models**  
-   Generate candidate comments and rerank them by usefulness.
-4. **Validation**  
-   Evaluate comments with judge-based scoring, tests/CI signals, and benchmarks.
+## Основной пайплайн
 
-## MVP scope
-- use ready datasets
-- prepare a unified training / evaluation format
-- build a baseline `generator -> reranker` pipeline
-- run offline evaluation
-- run demo inference on one MR example
+1. **Данные**
+   Загрузка и нормализация истории MR, diff, review comments, follow-up commits
+   и дополнительных сигналов результата.
+2. **Обработка контекста**
+   Парсинг diff, выделение измененных файлов, hunks, идентификаторов и
+   ближайшего repository context.
+3. **Модели**
+   Генерация кандидатных комментариев и ранжирование по полезности,
+   привязке к diff и конкретности.
+4. **Валидация**
+   Оценка через deterministic-метрики, LLM judge, latency/runtime-метрики и
+   ручной просмотр примеров.
 
-## Current baseline
-- `src/data` normalizes `CodeReviewer`, `CodeReviewQA`, and `CoDocBench`
-  into one MR-centric schema.
-- `src/context` parses unified diffs, extracts changed identifiers, and uses
-  Tree-sitter when available before falling back to lightweight parsing.
-- `src/models` implements a local retrieval generator over `CodeReviewer`
-  training examples plus a learned logistic reranker with heuristic fallback.
-  It also includes local OpenAI-compatible LLM generator, reranker, and
-  optional final rewriter components for LM Studio / Qwen experiments.
-- `src/validation` computes offline deterministic metrics and supports an
-  optional OpenAI-backed LLM judge plus a local LM Studio judge.
-- `src/inference` runs the full `context -> generator -> reranker` flow for
-  one MR, with an optional `rewriter` step for final human-facing wording.
+## Что входит в MVP
 
-## Iteration 2
-- iterative review workflow
-- CI loop
-- fix suggestions
-- stronger benchmarks for end-to-end workflow
+- подготовка единого формата MR-примеров;
+- локальный baseline `generator -> reranker`;
+- LLM-пайплайн через LM Studio / Qwen;
+- offline evaluation на validation/test;
+- demo inference на одном MR;
+- dashboard для мониторинга запусков, GPU/LM Studio и артефактов.
 
-## Local commands
-Install dependencies first:
+## Текущее состояние
+
+- `src/data` нормализует `CodeReviewer`, `CodeReviewQA` и `CoDocBench` в
+  единую MR-centric schema.
+- `src/context` парсит unified diff, извлекает измененные файлы, hunks,
+  добавленные/удаленные строки и changed identifiers. Tree-sitter используется
+  как best-effort, при ошибках есть легкий fallback.
+- `src/models` содержит retrieval baseline по историческим примерам
+  `CodeReviewer`, logistic reranker с heuristic fallback, а также локальные
+  LLM-компоненты generator/reranker/rewriter для LM Studio / Qwen.
+- `src/validation` считает similarity, hit@k, MRR, runtime-метрики и
+  поддерживает LLM judge с оценками `gold_alignment`, `valid_alternative`,
+  `groundedness`, `usefulness`.
+- `src/inference` собирает полный flow `context -> generator -> reranker`
+  и опциональный rewrite step для финального человекочитаемого текста.
+
+## Установка
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Download the real datasets configured in [configs/base.yaml](configs/base.yaml):
+## Подготовка данных
+
+Скачать реальные датасеты, описанные в [configs/base.yaml](configs/base.yaml):
 
 ```bash
 python scripts/download_datasets.py
 ```
 
-Then run the full pipeline:
+Подготовить локальные артефакты:
 
 ```bash
 python scripts/prepare_data.py
+```
+
+После подготовки создаются train/validation/test/demo файлы в `artifacts/data/`.
+
+## Baseline без LLM
+
+```bash
 python scripts/train_baseline.py
 python scripts/evaluate.py
 python scripts/demo_mr.py
-python -m unittest discover -s tests -v
 ```
 
-## Local Qwen experiments
-Start the LM Studio local server, load the configured Qwen model, then check
-that MergeMind can see it:
+Этот режим полностью локальный и не требует LM Studio или внешнего API.
+
+## Локальные Qwen-эксперименты
+
+1. Запустить LM Studio Local Server.
+2. Загрузить нужную модель, например `qwen/qwen3.5-9b`.
+3. Проверить, что проект видит локальный endpoint:
 
 ```bash
 python scripts/check_llm.py
 ```
 
-Run the local LLM pipeline on a small profile:
+Запуск LLM-пайплайна на маленьком smoke-профиле:
 
 ```bash
 python scripts/evaluate.py --pipeline qwen35_full --profile smoke
 ```
 
-To use Qwen Cloud / DashScope instead of LM Studio, keep the API key in the
-gitignored `.env` file:
+Запуск пайплайна с rewrite step:
+
+```bash
+python scripts/evaluate.py --pipeline qwen35_rewriter --profile smoke
+```
+
+Запуск пайплайна с rewrite step и локальным judge:
+
+```bash
+python scripts/evaluate.py --pipeline qwen35_rewriter_judge --profile smoke
+```
+
+## Qwen Cloud / DashScope
+
+Ключи хранятся только в `.env`, который не попадает в git:
 
 ```bash
 DASHSCOPE_API_KEY=...
 QWEN_API_KEY=...
 ```
 
-Then select the configured cloud provider:
+Проверка облачного провайдера:
 
 ```bash
 python scripts/check_llm.py --llm-provider qwen_cloud --chat
+```
+
+Пример запуска:
+
+```bash
 python scripts/evaluate.py --pipeline qwen35_rewriter_judge --llm-provider qwen_cloud --limit 3
 ```
 
-`check_llm.py --chat` verifies both model listing and a tiny JSON completion,
-which catches cases where the key is valid but the account has not activated
-access to a specific model.
+## Qwen 3.6 27B через LM Studio
 
-Run the same pipeline with the final rewrite step:
-
-```bash
-python scripts/evaluate.py --pipeline qwen35_rewriter --profile smoke
-```
-
-Run the same smoke profile with the local Qwen 3.6 27B IQ2 model exposed by
-LM Studio as `qwen3.6-27b@iq2_xxs`:
+Если в LM Studio загружена модель `qwen3.6-27b@iq2_xxs`, можно выбрать
+соответствующий provider:
 
 ```bash
 python scripts/check_llm.py --llm-provider local_qwen36_27b_iq2 --chat
 python scripts/run_experiments.py --profile smoke --run-id qwen36_27b_iq2_same_smoke_01 --llm-provider local_qwen36_27b_iq2 --modes baseline_retrieval_logistic qwen35_full qwen35_rewriter qwen35_rewriter_judge
 ```
 
-Run the A/B experiment table:
+Названия режимов `qwen35_*` описывают схему пайплайна, а не жестко зашитую
+версию модели. Фактическая модель сохраняется в `run_manifest.json`,
+`config_snapshot.json` и `metrics_table.json`.
+
+## A/B эксперименты
 
 ```bash
 python scripts/run_experiments.py --profile smoke
 ```
 
-The default A/B modes compare the baseline, full Qwen pipeline, Qwen rewriter,
-and Qwen rewriter with local judge. Runtime metrics separate inference, judge,
-and total wall latency, plus cached vs uncached LLM calls.
+Основные режимы:
 
-Inspect a run as a human-readable review report:
+- `baseline_retrieval_logistic`;
+- `qwen35_generator_logistic_reranker`;
+- `retrieval_generator_qwen35_reranker`;
+- `qwen35_generator_qwen35_reranker`;
+- `qwen35_full_with_rewriter`;
+- `qwen35_full_with_qwen35_judge`;
+- `qwen35_full_with_rewriter_and_qwen35_judge`;
+- `qwen35_full`;
+- `qwen35_rewriter`;
+- `qwen35_rewriter_judge`.
 
-```bash
-python scripts/inspect_predictions.py --run qwen35_limit1_after_fix --limit 5
-```
+`qwen35_rewriter` переписывает выбранные комментарии в короткий review-style
+вид с полями `essence`, `severity`, `rewrite_confidence`.
 
-If a run contains several pipeline modes, pass one explicitly:
+`qwen35_rewriter_judge` дополнительно запускает LLM judge для оценки
+переписанных комментариев.
+
+## Просмотр результатов
+
+Посмотреть predictions одного режима:
 
 ```bash
 python scripts/inspect_predictions.py --run <run_id> --mode qwen35_full --limit 5
 ```
 
-Compare several modes side by side for the same MR records:
+Сравнить несколько режимов по одним и тем же MR:
 
 ```bash
 python scripts/compare_run.py --run <run_id> --modes baseline_retrieval_logistic qwen35_full qwen35_rewriter qwen35_rewriter_judge --limit 10
 ```
 
-Serve the local monitoring dashboard:
+Сформировать markdown-отчет для ручного просмотра:
+
+```bash
+python scripts/compare_run.py --run <run_id> --limit 5 --diff-lines 18 --output artifacts/runs/<run_id>/report_examples_for_figjam.md
+```
+
+## Dashboard
 
 ```bash
 python scripts/dashboard.py
 ```
 
-Open `http://127.0.0.1:8765` to watch GPU utilization, GPU memory,
-LM Studio model status, experiment progress, inference/judge/total latency,
-token usage, uncached token speed, parse error rate, cache hit rate, and recent
-run artifacts.
+Открыть:
 
-Available experiment modes:
-- `baseline_retrieval_logistic`
-- `qwen35_generator_logistic_reranker`
-- `retrieval_generator_qwen35_reranker`
-- `qwen35_generator_qwen35_reranker`
-- `qwen35_full_with_rewriter`
-- `qwen35_full_with_qwen35_judge`
-- `qwen35_full_with_rewriter_and_qwen35_judge`
+```text
+http://127.0.0.1:8765
+```
 
-`qwen35_full` is accepted as a short alias for
-`qwen35_generator_qwen35_reranker`.
-`qwen35_rewriter` runs the full Qwen pipeline and rewrites the selected
-comments into concise final review feedback with `essence`, `severity`, and
-`rewrite_confidence` fields.
-`qwen35_rewriter_judge` additionally runs the local Qwen judge on the rewritten
-comments.
+Dashboard показывает:
 
-The `qwen35_*` names describe pipeline modes, not a hard-coded model version.
-The actual model used in each experiment is recorded in `run_manifest.json`,
-`config_snapshot.json`, and `metrics_table.json` under the run directory.
+- статус LM Studio и выбранной модели;
+- GPU utilization и GPU memory;
+- список последних runs и артефактов;
+- progress активного или последнего эксперимента;
+- quality metrics: `hit@k`, `best_similarity`, `MRR`, judge scores;
+- runtime metrics: inference latency, judge latency, total wall latency;
+- токены, uncached tokens/sec, cache hit rate;
+- parse error rate и fallback rate.
 
-Artifacts are written under `artifacts/`:
-- `artifacts/data/` - normalized train/validation/test/demo files
-- `artifacts/models/` - retrieval generator and reranker artifacts
-- `artifacts/evaluation/` - offline metrics and predictions
-- `artifacts/runs/` - per-run LLM/A-B experiment artifacts
-- `artifacts/llm_cache.sqlite` - local LLM response cache
+## Артефакты
 
-## Notes
-- The baseline is intentionally simple and fully local.
-- The local LLM path uses LM Studio's OpenAI-compatible local endpoint from
-  `configs/base.yaml`; no paid API is required.
-- `CodeReviewer` is the primary training dataset.
-- `CodeReviewQA` and `CoDocBench` are validation-side signals in the MVP.
-- `CodeReviewQA` is gated on Hugging Face. To download it, accept the dataset
-  terms and set `HF_TOKEN` or `HUGGINGFACE_TOKEN` before running
-  `python scripts/download_datasets.py`.
-- The default config limits prepared data volume so the pipeline stays runnable
-  on a local machine. You can raise those limits in `configs/base.yaml`.
-- `PyYAML` is not required; config loading uses the local YAML subset parser
-  in `src/config.py`.
+Все runtime-артефакты пишутся в `artifacts/` и не должны попадать в git:
+
+- `artifacts/data/` — нормализованные train/validation/test/demo данные;
+- `artifacts/models/` — retrieval index и reranker artifacts;
+- `artifacts/evaluation/` — offline predictions и metrics;
+- `artifacts/runs/` — A/B runs, manifests, summaries, reports;
+- `artifacts/llm_cache.sqlite` — SQLite cache LLM-ответов.
+
+## Тесты
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Важные замечания
+
+- `CodeReviewer` — основной тренировочный источник для MVP.
+- `CodeReviewQA` и `CoDocBench` используются как validation-side сигналы и
+  вспомогательные источники.
+- `CodeReviewQA` gated на Hugging Face: перед скачиванием нужно принять условия
+  датасета и задать `HF_TOKEN` или `HUGGINGFACE_TOKEN`.
+- Базовая оценка работает без платного API.
+- LM Studio используется через локальный OpenAI-compatible endpoint из
+  `configs/base.yaml`.
+- Дефолтные лимиты подготовки данных специально небольшие, чтобы пайплайн
+  запускался на локальной машине.
+- `PyYAML` не обязателен: конфиг читается встроенным subset parser в
+  `src/config.py`.

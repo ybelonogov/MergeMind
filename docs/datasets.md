@@ -1,47 +1,73 @@
-# Datasets for MergeMind
+# Датасеты для MergeMind
 
-## Main datasets
+## Основные датасеты
+
 ### 1. CodeReviewer
-Use as the main starting dataset for code review tasks.
-Source:
+
+Основной стартовый датасет для задач automated code review.
+
+Источник:
+
 - Zenodo — https://zenodo.org/records/6900648
-- comment generation split — `Comment_Generation.zip`
-Why it matters:
-- directly related to automated code review
-- includes review-oriented task formulation
-- good baseline for early MVP experiments
+- split для comment generation — `Comment_Generation.zip`
+
+Почему важен:
+
+- напрямую связан с automated code review;
+- содержит постановку задачи генерации review comments;
+- подходит для первого retrieval baseline и early MVP экспериментов.
 
 ### 2. CodeReviewQA
-Use for validation of review understanding.
-Source:
+
+Используется для проверки понимания review reasoning.
+
+Источник:
+
 - Hugging Face — https://huggingface.co/datasets/Tomo-Melb/CodeReviewQA
-- note: gated dataset, requires accepting the access conditions
-Why it matters:
-- checks whether the model understands review reasoning
-- better suited for evaluation than for main training
+- gated dataset, требуется принять условия доступа.
 
-## Auxiliary datasets
+Почему важен:
+
+- проверяет не только генерацию текста, но и понимание причин ревью;
+- больше подходит для validation-side проверки, чем для основного обучения
+  generator.
+
+## Вспомогательные датасеты
+
 ### 3. CoDocBench
-Use as an auxiliary dataset for change alignment and structural parsing experiments.
-Source:
+
+Используется как вспомогательный источник для change alignment и структурного
+анализа изменений.
+
+Источник:
+
 - GitHub — https://github.com/kunpai/codocbench
-- dataset files — `dataset/train.jsonl`, `dataset/test.jsonl`, `dataset/codocbench.jsonl`
-Why it matters:
-- links code changes with related artifacts
-- helpful for diff/entity alignment ideas
+- файлы датасета — `dataset/train.jsonl`, `dataset/test.jsonl`,
+  `dataset/codocbench.jsonl`
 
-## Iteration 2 / optional
+Почему важен:
+
+- связывает изменения в коде с сопутствующими артефактами;
+- полезен для идей diff/entity alignment.
+
+## Следующие итерации
+
 ### 4. SWE-bench
-Use only for later experiments that move from comment generation
-toward issue localization and fix workflows.
 
-## Internal / project-specific data
-If available, add a custom dataset built from real MR history:
-- MR description
-- diff
-- review threads
-- follow-up commits
-- resolved / unresolved outcome
+Рассматривается только для более поздних экспериментов, где проект перейдет от
+генерации review comments к issue localization и fix workflows.
 
-This custom dataset can later become the main source of supervision
-for usefulness and actionability.
+## Внутренние данные проекта
+
+Если появится доступ к реальной истории MR, можно собрать project-specific
+датасет:
+
+- описание MR;
+- diff;
+- review threads;
+- follow-up commits;
+- resolved/unresolved outcome;
+- CI/test signals.
+
+Такой датасет может стать основным источником supervision для usefulness,
+groundedness и actionability.
