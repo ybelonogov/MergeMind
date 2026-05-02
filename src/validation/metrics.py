@@ -169,30 +169,50 @@ class OpenAICompatibleLLMJudge:
         gold_comments: list[str],
         example: MRExample | None = None,
     ) -> dict[str, Any]:
-        if not predictions or not gold_comments:
-            return _normalize_judge_result(None, reason="Missing predictions or gold comments.")
+        if not predictions:
+            return _normalize_judge_result(None, reason="Missing predictions.")
 
-        prompt = "\n".join(
-            [
-                "Grade predicted code review comments for an automated MR review system.",
-                "Return JSON only with these numeric fields from 0.0 to 1.0:",
-                "- gold_alignment_score: whether predictions identify the same concrete issue as the gold comments.",
-                "- valid_alternative_score: whether predictions identify a different but useful grounded review issue.",
-                "- groundedness: whether predictions are supported by the diff and context.",
-                "- usefulness: whether a human reviewer would reasonably leave the comment.",
-                "Use gold_alignment_score for exact benchmark matching, but use valid_alternative_score",
-                "to avoid punishing useful alternative review comments that are not in the gold text.",
-                "",
-                f"Title: {example.title if example else ''}",
-                f"Diff:\n{(example.diff if example else '')[:3000]}",
-                "",
-                "Gold comments:",
-                *[f"- {comment}" for comment in gold_comments[:3]],
-                "",
-                "Predicted comments:",
-                *[f"- {candidate.text}" for candidate in predictions[:3]],
-            ]
-        )
+        if gold_comments:
+            prompt = "\n".join(
+                [
+                    "Grade predicted code review comments for an automated MR review system.",
+                    "Return JSON only with these numeric fields from 0.0 to 1.0:",
+                    "- gold_alignment_score: whether predictions identify the same concrete issue as the gold comments.",
+                    "- valid_alternative_score: whether predictions identify a different but useful grounded review issue.",
+                    "- groundedness: whether predictions are supported by the diff and context.",
+                    "- usefulness: whether a human reviewer would reasonably leave the comment.",
+                    "Use gold_alignment_score for exact benchmark matching, but use valid_alternative_score",
+                    "to avoid punishing useful alternative review comments that are not in the gold text.",
+                    "",
+                    f"Title: {example.title if example else ''}",
+                    f"Diff:\n{(example.diff if example else '')[:3000]}",
+                    "",
+                    "Gold comments:",
+                    *[f"- {comment}" for comment in gold_comments[:3]],
+                    "",
+                    "Predicted comments:",
+                    *[f"- {candidate.text}" for candidate in predictions[:3]],
+                ]
+            )
+        else:
+            prompt = "\n".join(
+                [
+                    "Grade predicted code review comments for a live GitHub Pull Request with no gold comments.",
+                    "Return JSON only with these numeric fields from 0.0 to 1.0:",
+                    "- gold_alignment_score: always 0.0 because no human gold comments are available.",
+                    "- valid_alternative_score: practical review value of the predictions.",
+                    "- groundedness: whether predictions are supported by the diff and repository context.",
+                    "- usefulness: whether a human reviewer would reasonably leave the comment.",
+                    "Be strict: penalize generic, speculative, duplicated, or non-actionable comments.",
+                    "",
+                    f"Title: {example.title if example else ''}",
+                    f"Repository context:\n{(example.repository_context if example else '')[:2500]}",
+                    f"Diff:\n{(example.diff if example else '')[:3500]}",
+                    "",
+                    "Predicted comments:",
+                    *[f"- {candidate.text}" for candidate in predictions[:3]],
+                ]
+            )
         result = self.client.chat_json(
             role="judge",
             messages=[

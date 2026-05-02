@@ -344,6 +344,40 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertEqual(result["valid_alternative_score"], 0.7)
         self.assertIn("Useful alternative", result["reason"])
 
+    def test_llm_judge_scores_live_pr_without_gold_comments(self) -> None:
+        seen_prompt = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompt.append(messages[-1]["content"])
+            return _completion(
+                json.dumps(
+                    {
+                        "gold_alignment_score": 0.0,
+                        "valid_alternative_score": 0.8,
+                        "groundedness": 0.9,
+                        "usefulness": 0.7,
+                        "reason": "Grounded live PR comment without benchmark gold.",
+                    }
+                )
+            )
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        judge = OpenAICompatibleLLMJudge(client)
+
+        result = judge.evaluate(
+            [CandidateComment(text="Add a regression test case.")],
+            [],
+            _example(),
+        )
+
+        self.assertIn("no gold comments", seen_prompt[0])
+        self.assertEqual(result["gold_alignment_score"], 0.0)
+        self.assertEqual(result["judge_score"], 0.8)
+        self.assertEqual(result["groundedness"], 0.9)
+        self.assertIn("Grounded live PR", result["reason"])
+
     def test_llm_rewriter_preserves_original_and_adds_essence(self) -> None:
         payload = {
             "rewritten_comments": [

@@ -10,6 +10,7 @@ paths:
   model_dir: artifacts/models
   evaluation_dir: artifacts/evaluation
   runs_dir: artifacts/runs
+  github_pr_dir: artifacts/github_pr
 pipeline:
   - datasets
   - context_processing

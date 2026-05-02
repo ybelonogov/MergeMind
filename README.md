@@ -171,6 +171,49 @@ python scripts/run_experiments.py --profile smoke --run-id qwen36_27b_iq2_same_s
 версию модели. Фактическая модель сохраняется в `run_manifest.json`,
 `config_snapshot.json` и `metrics_table.json`.
 
+## GitHub PR demo
+
+MergeMind может использовать реальный GitHub Pull Request как live-вход:
+PR загружается read-only, приводится к `MRExample`, затем прогоняется через
+обычный inference pipeline.
+
+В `.env` можно задать токен:
+
+```bash
+GITHUB_TOKEN=...
+```
+
+Для публичных репозиториев токен не обязателен, но с ним выше rate limit.
+Для приватных репозиториев токен должен иметь доступ на чтение репозитория.
+
+Dry-run без публикации комментариев в GitHub:
+
+```bash
+python scripts/review_github_pr.py --url https://github.com/OWNER/REPO/pull/123 --pipeline qwen35_rewriter --llm-provider local --limit-comments 3 --judge
+```
+
+Baseline-вариант без LLM:
+
+```bash
+python scripts/review_github_pr.py --url https://github.com/OWNER/REPO/pull/123 --pipeline baseline_retrieval_logistic
+```
+
+Скрипт печатает top comments в консоль и сохраняет артефакты:
+
+- `artifacts/github_pr/<owner>_<repo>_pull_<number>/example.json`;
+- `artifacts/github_pr/<owner>_<repo>_pull_<number>/predictions.json`.
+- `artifacts/github_pr/<owner>_<repo>_pull_<number>/evaluation.json`;
+- `artifacts/github_pr/<owner>_<repo>_pull_<number>/report.md`.
+
+Если в PR уже есть human review comments, они используются как временный gold
+для `similarity`, `hit@k` и `gold_alignment`. Если comments нет, judge работает
+в live no-gold режиме и оценивает practical usefulness, groundedness и
+общую практическую ценность по diff/context.
+
+На этом этапе режим безопасный: он ничего не публикует обратно в GitHub.
+Следующий возможный шаг — добавить отдельный флаг для draft review после
+ручной проверки качества.
+
 ## A/B эксперименты
 
 ```bash
