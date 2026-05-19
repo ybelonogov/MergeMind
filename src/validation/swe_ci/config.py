@@ -141,6 +141,7 @@ def build_swe_ci_command(config: SweCiRunConfig, task: SweCiTask, task_dir: str 
         ("api_key", "--api_key"),
         ("base_url", "--base_url"),
         ("model_name", "--model_name"),
+        ("agent_name", "--agent_name"),
         ("config_file", "--config_file"),
         ("hf_token", "--hf_token"),
     ):

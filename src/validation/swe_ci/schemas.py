@@ -38,6 +38,7 @@ class SweCiRunConfig:
     api_key: str | None = None
     base_url: str | None = None
     model_name: str | None = None
+    agent_name: str | None = None
     config_file: str | None = None
     hf_token: str | None = None
     mergemind_config_path: Path | None = None

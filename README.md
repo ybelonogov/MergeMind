@@ -265,13 +265,15 @@ SWE-CI рассчитан на Linux/Docker окружение и требует
 Критичные поля обязательны: `task_id`, `repo_name`, `repo_url` или `url`,
 `current_sha`, `target_sha`, `image_sha`, `test_gap`. Дополнительные поля
 сохраняются в `metadata`; например `splitting`, `api_key`, `base_url`,
-`model_name`, `config_file`, `hf_token` используются как CLI-overrides для
-реального `python -m swe_ci.evaluate`.
+`model_name`, `agent_name`, `config_file`, `hf_token` используются как
+CLI-overrides для реального `python -m swe_ci.evaluate`.
 
 Для `setup_swe_ci.py` и `--dry-run` модель не запускается. Поля `--base-url`,
 `--model-name`, `--api-key` нужны реальному SWE-CI coding-agent на этапе
-benchmark run. Если SWE-CI/Docker запущен из WSL и LM Studio открыт в Windows,
-часто удобнее использовать `http://host.docker.internal:1234/v1`, а не
+benchmark run. Для OpenCode backend передавайте `--agent-name opencode`;
+официальный SWE-CI соберет Docker image с `Dockerfile.opencode`. Если
+SWE-CI/Docker запущен из WSL и LM Studio открыт в Windows, часто удобнее
+использовать `http://host.docker.internal:1234/v1`, а не
 `http://localhost:1234/v1`.
 
 Рекомендуемая Windows-схема:
@@ -304,6 +306,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode baseline \
+  --agent-name opencode \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio \
@@ -320,6 +323,10 @@ python scripts/run_swe_ci.py \
   --run-id sweci_review_loop_001 \
   --limit 1 \
   --mode mergemind_review_loop \
+  --agent-name opencode \
+  --base-url http://host.docker.internal:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
   --mergemind-pipeline qwen35_rewriter \
   --mergemind-llm-provider local_qwen36_27b_iq2 \
   --dry-run
@@ -337,6 +344,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode baseline \
+  --agent-name opencode \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio
@@ -354,6 +362,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode mergemind_review_loop \
+  --agent-name opencode \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio \

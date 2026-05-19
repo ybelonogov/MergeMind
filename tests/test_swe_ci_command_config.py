@@ -23,6 +23,7 @@ class SweCiCommandConfigTests(unittest.TestCase):
             api_key="secret-key",
             base_url="http://host.docker.internal:1234/v1",
             model_name="qwen3.6-27b@iq2_xxs",
+            agent_name="opencode",
         )
         task = SweCiTask(
             task_id="task-1",
@@ -42,6 +43,8 @@ class SweCiCommandConfigTests(unittest.TestCase):
         self.assertIn("qwen3.6-27b@iq2_xxs", command)
         self.assertIn("--api_key", command)
         self.assertIn("secret-key", command)
+        self.assertIn("--agent_name", command)
+        self.assertIn("opencode", command)
         self.assertNotIn("secret-key", " ".join(redact_command(command)))
 
 

@@ -54,6 +54,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key", default=None, help="Optional OpenAI-compatible API key for SWE-CI coding-agent.")
     parser.add_argument("--base-url", default=None, help="Optional OpenAI-compatible base URL for SWE-CI coding-agent.")
     parser.add_argument("--model-name", default=None, help="Optional model name for SWE-CI coding-agent.")
+    parser.add_argument("--agent-name", default=None, help="Optional SWE-CI agent backend, for example opencode or iflow.")
     parser.add_argument("--config-file", default=None, help="Optional SWE-CI config file path.")
     parser.add_argument("--hf-token", default=None, help="Optional Hugging Face token for SWE-CI.")
     parser.add_argument("--mergemind-config", default="configs/base.yaml", help="MergeMind config for review-loop mode.")
@@ -78,6 +79,7 @@ def _build_config(args: argparse.Namespace) -> SweCiRunConfig:
         api_key=args.api_key,
         base_url=args.base_url,
         model_name=args.model_name,
+        agent_name=args.agent_name,
         config_file=args.config_file,
         hf_token=args.hf_token,
         mergemind_config_path=PROJECT_ROOT / args.mergemind_config if not Path(args.mergemind_config).is_absolute() else Path(args.mergemind_config),
