@@ -214,6 +214,177 @@ python scripts/review_github_pr.py --url https://github.com/OWNER/REPO/pull/123 
 Следующий возможный шаг — добавить отдельный флаг для draft review после
 ручной проверки качества.
 
+## SWE-CI validation setup
+
+SWE-CI слой нужен как downstream benchmark для проверки гипотезы MergeMind:
+сокращает ли review-style comment число итераций, время и ошибки coding-agent
+в CI-loop. Поддерживаются два режима:
+
+- `baseline` — контрольный запуск официального `swe_ci.evaluate` без
+  комментариев MergeMind.
+- `mergemind_review_loop` — после запуска SWE-CI ищет patch/diff, который
+  сгенерировал coding-agent, строит MRExample без `target_sha`, прогоняет
+  MergeMind review pipeline и сохраняет sidecar-комментарии.
+
+Важно: MergeMind не генерирует комментарии из `target_sha`, потому что это
+gold fix и утечка ответа. Честный review-loop использует только patch/diff,
+полученный после попытки coding-agent.
+
+### Роли подготовки запуска
+
+Роли ниже описывают зоны ответственности при настройке benchmark, а не
+отдельные сервисы в коде:
+
+- **Окружение** — Linux/WSL2, Docker, checkout SWE-CI, зависимости.
+- **Данные** — SWE-CI dataset и маленький `tasks_smoke.jsonl`.
+- **Запуск** — `setup_swe_ci.py`, `run_swe_ci.py --dry-run`, реальные
+  команды `swe_ci.evaluate`.
+- **Мониторинг** — `events.jsonl`, stdout/stderr, pid, duration,
+  CPU/RAM/GPU snapshots.
+- **Отчетность** — `summary.md`, `metrics.json`, `task_results.json`.
+- **QA** — повторяемость запуска, отсутствие fake success и silent fallback.
+
+SWE-CI запускается из отдельного checkout официального репозитория:
+
+```bash
+git clone https://github.com/SKYLENAGE-AI/SWE-CI.git ../SWE-CI
+cd ../SWE-CI
+python -m pip install -r requirements.txt
+```
+
+SWE-CI рассчитан на Linux/Docker окружение и требует заранее подготовленный
+датасет. MergeMind не скачивает автоматически полный SWE-CI датасет, потому что
+он тяжелый. Датасет нужно подготовить по инструкции SWE-CI отдельно.
+
+Минимальный `tasks.jsonl` для smoke-run содержит реальные SWE-CI task metadata:
+
+```json
+{"task_id":"example-task","repo_name":"owner/repo","repo_url":"https://github.com/owner/repo","current_sha":"...","target_sha":"...","image_sha":"...","test_gap":{},"splitting":"default"}
+```
+
+Критичные поля обязательны: `task_id`, `repo_name`, `repo_url` или `url`,
+`current_sha`, `target_sha`, `image_sha`, `test_gap`. Дополнительные поля
+сохраняются в `metadata`; например `splitting`, `api_key`, `base_url`,
+`model_name`, `config_file`, `hf_token` используются как CLI-overrides для
+реального `python -m swe_ci.evaluate`.
+
+Для `setup_swe_ci.py` и `--dry-run` модель не запускается. Поля `--base-url`,
+`--model-name`, `--api-key` нужны реальному SWE-CI coding-agent на этапе
+benchmark run. Если SWE-CI/Docker запущен из WSL и LM Studio открыт в Windows,
+часто удобнее использовать `http://host.docker.internal:1234/v1`, а не
+`http://localhost:1234/v1`.
+
+Рекомендуемая Windows-схема:
+
+- установить WSL2 Ubuntu и включить Docker Desktop WSL integration;
+- держать checkout MergeMind и SWE-CI внутри WSL filesystem, например
+  `~/MergeMind` и `~/SWE-CI`, а не на `/mnt/c`;
+- LM Studio можно оставить в Windows;
+- если `host.docker.internal` не резолвится из WSL, использовать IP Windows
+  host из `/etc/resolv.conf`.
+
+Проверка окружения:
+
+```bash
+python scripts/setup_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs
+```
+
+Dry-run печатает реальные команды, но не считается benchmark run:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_smoke_001 \
+  --limit 3 \
+  --max-iterations 3 \
+  --timeout-seconds 7200 \
+  --mode baseline \
+  --base-url http://host.docker.internal:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --dry-run
+```
+
+Dry-run для review-loop дополнительно показывает post-step MergeMind review:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_review_loop_001 \
+  --limit 1 \
+  --mode mergemind_review_loop \
+  --mergemind-pipeline qwen35_rewriter \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --dry-run
+```
+
+Реальный smoke-run:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_smoke_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 7200 \
+  --mode baseline \
+  --base-url http://host.docker.internal:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio
+```
+
+Реальный smoke-run с MergeMind sidecar review:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_review_loop_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 7200 \
+  --mode mergemind_review_loop \
+  --base-url http://host.docker.internal:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --mergemind-pipeline qwen35_rewriter \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-top-n 3
+```
+
+Артефакты сохраняются в `artifacts/swe_ci_runs/<run_id>/`:
+
+- `run_config.json`, `tasks.json`, `events.jsonl`;
+- `task_results.json`, `metrics.json`, `summary.md`;
+- `logs/<task_id>/stdout.log`;
+- `logs/<task_id>/stderr.log`;
+- `logs/<task_id>/events.jsonl`.
+
+В режиме `mergemind_review_loop` для каждой задачи дополнительно сохраняются:
+
+- `swe_ci_outputs/<task_id>/mergemind_example.json`;
+- `swe_ci_outputs/<task_id>/mergemind_comments.json`;
+- `swe_ci_outputs/<task_id>/mergemind_review.md`.
+
+Если SWE-CI не сохранил patch/diff coding-agent, MergeMind review помечается
+как `skipped`; wrapper не пытается строить комментарии из `target_sha`.
+
+Нормальные ошибки на этапе настройки: нет Docker, SWE-CI repo не установлен,
+датасет не скачан, task manifest неполный, официальный SWE-CI не создал
+результатный файл. В этих случаях wrapper не делает fallback и не выдумывает
+успех: задача помечается `failed` или `timeout`, а причина остается в логах и
+`summary.md`.
+
 ## A/B эксперименты
 
 ```bash
