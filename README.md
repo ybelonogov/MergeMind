@@ -509,6 +509,41 @@ Dashboard показывает:
 - токены, uncached tokens/sec, cache hit rate;
 - parse error rate и fallback rate.
 
+## Monitoring Agent
+
+Для фиксации хода работы и подготовки материалов к отчету есть отдельный
+monitoring agent. Он не запускает эксперименты сам, а собирает текущее
+состояние проекта, git, LM Studio/GPU, A/B runs и SWE-CI artifacts.
+
+Разовый snapshot:
+
+```bash
+python scripts/monitoring_agent.py
+```
+
+Snapshot с прогоном тестов:
+
+```bash
+python scripts/monitoring_agent.py --run-tests
+```
+
+Непрерывная летопись каждые 5 минут:
+
+```bash
+python scripts/monitoring_agent.py --watch --interval-seconds 300
+```
+
+Артефакты пишутся в `artifacts/monitoring/`:
+
+- `chronicle.md` — накопительная MD-летопись;
+- `<snapshot_id>/chronicle.md` — отчет конкретного snapshot;
+- `<snapshot_id>/dashboard.html` и `latest_dashboard.html` — статический
+  dashboard для открытия в браузере;
+- `<snapshot_id>/presentation.md` и `latest_presentation.md` — структура
+  короткой презентации по текущему состоянию;
+- `snapshot.json`, `latest_snapshot.json`, `heartbeat.json` — machine-readable
+  состояние для внешних dashboard/tools.
+
 ## Артефакты
 
 Все runtime-артефакты пишутся в `artifacts/` и не должны попадать в git:
