@@ -22,8 +22,10 @@ from src.validation.swe_ci.config import (
     describe_task_command,
     ensure_run_config_ready,
     experiment_name_for_task,
-    task_output_dir,
+    official_experiment_task_dir,
+    task_dataset_dir,
 )
+from src.validation.swe_ci.dataset import prepare_task_dataset_root
 from src.validation.swe_ci.process_runner import merged_environment, redact_command, run_process
 from src.validation.swe_ci.reporter import append_run_event, run_dir_for, write_report, write_run_inputs
 from src.validation.swe_ci.result_parser import parse_swe_ci_result
@@ -100,7 +102,8 @@ def _print_dry_run(config: SweCiRunConfig) -> int:
         command_info = describe_task_command(config, task, run_dir)
         print(f"\n[run_swe_ci] task_id={command_info['task_id']}")
         print(f"cwd: {command_info['cwd']}")
-        print(f"output_dir: {command_info['output_dir']}")
+        print(f"dataset_root: {task_dataset_dir(run_dir, task)}")
+        print(f"official_task_dir: {official_experiment_task_dir(config, task)}")
         print("command:")
         print(" ".join(redact_command(command_info["command"])))
         if config.mode == "mergemind_review_loop":
@@ -124,9 +127,19 @@ def main() -> int:
     results: list[SweCiTaskRunResult] = []
     for index, task in enumerate(tasks, start=1):
         append_run_event(run_dir, {"event": "task_start", "task_id": task.task_id, "index": index})
-        task_dir = task_output_dir(run_dir, task)
+        dataset_root = prepare_task_dataset_root(config, task, run_dir)
+        task_dir = official_experiment_task_dir(config, task)
         task_log_dir = run_dir / "logs" / _safe_task_id(task.task_id)
-        command = build_swe_ci_command(config, task, task_dir)
+        append_run_event(
+            run_dir,
+            {
+                "event": "swe_ci_dataset_ready",
+                "task_id": task.task_id,
+                "dataset_root": str(dataset_root),
+                "official_task_dir": str(task_dir),
+            },
+        )
+        command = build_swe_ci_command(config, task, dataset_root)
         process_result = run_process(
             command=command,
             task_id=task.task_id,

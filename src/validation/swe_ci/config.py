@@ -119,6 +119,15 @@ def task_output_dir(run_dir: str | Path, task: SweCiTask) -> Path:
     return Path(run_dir) / "swe_ci_outputs" / safe_task_id
 
 
+def task_dataset_dir(run_dir: str | Path, task: SweCiTask) -> Path:
+    safe_task_id = "".join(char if char.isalnum() or char in ("-", "_", ".") else "_" for char in task.task_id)
+    return Path(run_dir) / "swe_ci_datasets" / safe_task_id
+
+
+def official_experiment_task_dir(config: SweCiRunConfig, task: SweCiTask) -> Path:
+    return config.swe_ci_repo_path / "experiments" / experiment_name_for_task(config, task) / task.task_id
+
+
 def experiment_name_for_task(config: SweCiRunConfig, task: SweCiTask) -> str:
     metadata = dict(task.metadata)
     return str(metadata.get("experiment_name") or f"{config.run_id}_{task.task_id}")
@@ -162,10 +171,11 @@ def build_swe_ci_env(swe_ci_repo_path: str | Path) -> dict[str, str]:
 
 
 def describe_task_command(config: SweCiRunConfig, task: SweCiTask, run_dir: str | Path) -> dict[str, Any]:
-    output_dir = task_output_dir(run_dir, task)
+    dataset_dir = task_dataset_dir(run_dir, task)
     return {
         "task_id": task.task_id,
-        "command": build_swe_ci_command(config, task, output_dir),
+        "command": build_swe_ci_command(config, task, dataset_dir),
         "cwd": str(config.swe_ci_repo_path),
-        "output_dir": str(output_dir),
+        "dataset_root": str(dataset_dir),
+        "official_task_dir": str(official_experiment_task_dir(config, task)),
     }
