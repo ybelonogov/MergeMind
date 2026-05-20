@@ -301,6 +301,37 @@ python scripts/prebuild_swe_ci_agent.py \
 - если `host.docker.internal` не резолвится из WSL, использовать IP Windows
   host из `/etc/resolv.conf`.
 
+Схема с отдельным Linux-компьютером:
+
+- MergeMind, SWE-CI и Docker запускаются на Linux-машине;
+- LM Studio остается на Windows-машине с загруженной локальной моделью;
+- в LM Studio нужно разрешить входящие подключения по сети, не только
+  `localhost`;
+- в Windows Firewall нужно открыть входящий TCP-порт `1234`;
+- в командах SWE-CI использовать LAN endpoint Windows-машины, например
+  `http://192.168.1.50:1234/v1`;
+- внутри Docker-контейнеров на Linux тоже используется этот LAN endpoint, а не
+  `host.docker.internal`.
+
+Быстрая генерация команд для Linux/LAN-сценария:
+
+```bash
+python scripts/prepare_linux_lan_swe_ci.py \
+  --windows-host 192.168.1.50 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --agent-name iflow
+```
+
+Проверка доступности LM Studio с Linux-компа:
+
+```bash
+curl http://192.168.1.50:1234/v1/models
+```
+
+Если этот `curl` не возвращает список моделей, SWE-CI тоже не сможет вызвать
+локальную LLM. В таком случае проверяются LM Studio network binding, Windows
+Firewall и доступность Windows-машины по LAN.
+
 Проверка окружения:
 
 ```bash
