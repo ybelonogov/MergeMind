@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from src.validation.swe_ci.config import build_swe_ci_command
+from src.validation.swe_ci.reporter import run_dir_for
 from src.validation.swe_ci.process_runner import redact_command
 from src.validation.swe_ci.schemas import SweCiRunConfig, SweCiTask
 
@@ -46,6 +47,32 @@ class SweCiCommandConfigTests(unittest.TestCase):
         self.assertIn("--agent_name", command)
         self.assertIn("opencode", command)
         self.assertNotIn("secret-key", " ".join(redact_command(command)))
+
+    def test_absolute_task_dir_is_passed_to_swe_ci(self) -> None:
+        config = SweCiRunConfig(
+            swe_ci_repo_path=Path("SWE-CI"),
+            tasks_path=Path("tasks.jsonl"),
+            output_dir=Path.cwd() / "tmp" / "mergemind-swe-ci-runs",
+            limit=1,
+            max_iterations=1,
+            timeout_seconds=60,
+            mode="baseline",
+            run_id="run-1",
+        )
+        task = SweCiTask(
+            task_id="task-1",
+            repo_name="owner/repo",
+            repo_url="https://github.com/owner/repo",
+            current_sha="abc",
+            target_sha="def",
+            image_sha="sha256:image",
+            test_gap={},
+        )
+        run_dir = run_dir_for(config)
+        command = build_swe_ci_command(config, task, run_dir / "swe_ci_outputs" / task.task_id)
+        save_root_dir = command[command.index("--save_root_dir") + 1]
+
+        self.assertTrue(Path(save_root_dir).is_absolute())
 
 
 if __name__ == "__main__":

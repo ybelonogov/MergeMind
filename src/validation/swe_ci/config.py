@@ -119,9 +119,14 @@ def task_output_dir(run_dir: str | Path, task: SweCiTask) -> Path:
     return Path(run_dir) / "swe_ci_outputs" / safe_task_id
 
 
+def experiment_name_for_task(config: SweCiRunConfig, task: SweCiTask) -> str:
+    metadata = dict(task.metadata)
+    return str(metadata.get("experiment_name") or f"{config.run_id}_{task.task_id}")
+
+
 def build_swe_ci_command(config: SweCiRunConfig, task: SweCiTask, task_dir: str | Path) -> list[str]:
     metadata = dict(task.metadata)
-    experiment_name = str(metadata.get("experiment_name") or f"{config.run_id}_{task.task_id}")
+    experiment_name = experiment_name_for_task(config, task)
     splitting = str(config.splitting or metadata.get("splitting") or "default")
     command = [
         sys.executable,

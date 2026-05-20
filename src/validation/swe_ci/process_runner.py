@@ -180,7 +180,12 @@ def run_process(
         stdout_path=str(stdout_path),
         stderr_path=str(stderr_path),
         events_path=str(events_path),
-        metrics={"phase": phase, "pid": getattr(process, "pid", None), "command": redact_command(command)},
+        metrics={
+            "phase": phase,
+            "pid": getattr(process, "pid", None),
+            "command": redact_command(command),
+            "cwd": str(cwd) if cwd is not None else "",
+        },
         error_message=error_message,
     )
 

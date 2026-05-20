@@ -36,9 +36,9 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
     config = SweCiRunConfig(
-        swe_ci_repo_path=Path(args.swe_ci_repo_path),
-        tasks_path=Path(args.tasks_path),
-        output_dir=Path(args.output_dir),
+        swe_ci_repo_path=Path(args.swe_ci_repo_path).resolve(),
+        tasks_path=Path(args.tasks_path).resolve(),
+        output_dir=Path(args.output_dir).resolve(),
         limit=args.limit,
         max_iterations=args.max_iterations,
         timeout_seconds=args.timeout_seconds,

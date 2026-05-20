@@ -21,6 +21,7 @@ from src.validation.swe_ci.config import (
     build_swe_ci_env,
     describe_task_command,
     ensure_run_config_ready,
+    experiment_name_for_task,
     task_output_dir,
 )
 from src.validation.swe_ci.process_runner import merged_environment, redact_command, run_process
@@ -67,9 +68,9 @@ def _parse_args() -> argparse.Namespace:
 
 def _build_config(args: argparse.Namespace) -> SweCiRunConfig:
     return SweCiRunConfig(
-        swe_ci_repo_path=Path(args.swe_ci_repo_path),
-        tasks_path=Path(args.tasks_path),
-        output_dir=Path(args.output_dir),
+        swe_ci_repo_path=Path(args.swe_ci_repo_path).resolve(),
+        tasks_path=Path(args.tasks_path).resolve(),
+        output_dir=Path(args.output_dir).resolve(),
         limit=args.limit,
         max_iterations=args.max_iterations,
         timeout_seconds=args.timeout_seconds,
@@ -80,7 +81,7 @@ def _build_config(args: argparse.Namespace) -> SweCiRunConfig:
         base_url=args.base_url,
         model_name=args.model_name,
         agent_name=args.agent_name,
-        config_file=args.config_file,
+        config_file=str(Path(args.config_file).resolve()) if args.config_file else None,
         hf_token=args.hf_token,
         mergemind_config_path=PROJECT_ROOT / args.mergemind_config if not Path(args.mergemind_config).is_absolute() else Path(args.mergemind_config),
         mergemind_pipeline=args.mergemind_pipeline,
@@ -135,7 +136,12 @@ def main() -> int:
             env=env,
             phase="swe_ci.evaluate",
         )
-        parsed_result = parse_swe_ci_result(process_result, task_dir)
+        parsed_result = parse_swe_ci_result(
+            process_result,
+            task_dir,
+            swe_ci_repo_path=config.swe_ci_repo_path,
+            experiment_name=experiment_name_for_task(config, task),
+        )
         if config.mode == "mergemind_review_loop":
             append_run_event(run_dir, {"event": "mergemind_review_start", "task_id": task.task_id})
             review_metrics = run_mergemind_patch_review(

@@ -44,6 +44,24 @@ class SweCiResultParserTests(unittest.TestCase):
         self.assertEqual(parsed.status, "success")
         self.assertIn("swe_ci_result_file", parsed.metrics)
 
+    def test_official_iteration_file_is_success_signal(self) -> None:
+        with TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "SWE-CI"
+            iteration_file = repo / "experiments" / "exp-1" / "task-1" / "iteration.jsonl"
+            iteration_file.parent.mkdir(parents=True)
+            iteration_file.write_text("{}\n{}\n", encoding="utf-8")
+
+            parsed = parse_swe_ci_result(
+                _process_result(),
+                Path(tmp) / "outputs",
+                swe_ci_repo_path=repo,
+                experiment_name="exp-1",
+            )
+
+        self.assertEqual(parsed.status, "success")
+        self.assertEqual(parsed.metrics["swe_ci_iteration_count"], 2)
+        self.assertIn("swe_ci_iteration_file", parsed.metrics)
+
 
 if __name__ == "__main__":
     unittest.main()

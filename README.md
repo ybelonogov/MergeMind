@@ -270,11 +270,27 @@ CLI-overrides для реального `python -m swe_ci.evaluate`.
 
 Для `setup_swe_ci.py` и `--dry-run` модель не запускается. Поля `--base-url`,
 `--model-name`, `--api-key` нужны реальному SWE-CI coding-agent на этапе
-benchmark run. Для OpenCode backend передавайте `--agent-name opencode`;
-официальный SWE-CI соберет Docker image с `Dockerfile.opencode`. Если
-SWE-CI/Docker запущен из WSL и LM Studio открыт в Windows, часто удобнее
-использовать `http://host.docker.internal:1234/v1`, а не
+benchmark run. Поддерживаемые backend'ы SWE-CI задаются через `--agent-name`:
+`iflow` или `opencode`. Если SWE-CI/Docker запущен из WSL и LM Studio открыт в
+Windows, часто удобнее использовать `http://host.docker.internal:1234/v1`, а не
 `http://localhost:1234/v1`.
+
+Первый запуск SWE-CI может долго собирать Docker image для agent backend'а
+(`Dockerfile.iflow` или `Dockerfile.opencode`). Чтобы не смешивать долгий build
+с benchmark run, сначала можно прогреть Docker layer cache отдельной командой:
+
+```bash
+python scripts/prebuild_swe_ci_agent.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --base-image image_pypa__build__ffe5ee__010b6c:latest \
+  --agent-name iflow \
+  --builder legacy \
+  --timeout-seconds 3600
+```
+
+Логи prebuild сохраняются в `artifacts/swe_ci_agent_builds/`. Для `iflow`
+узкое место обычно `npm install -g @iflow-ai/iflow-cli`; это инфраструктурная
+стадия, а не вызов локальной LLM.
 
 Рекомендуемая Windows-схема:
 
@@ -306,7 +322,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode baseline \
-  --agent-name opencode \
+  --agent-name iflow \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio \
@@ -323,7 +339,7 @@ python scripts/run_swe_ci.py \
   --run-id sweci_review_loop_001 \
   --limit 1 \
   --mode mergemind_review_loop \
-  --agent-name opencode \
+  --agent-name iflow \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio \
@@ -344,7 +360,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode baseline \
-  --agent-name opencode \
+  --agent-name iflow \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio
@@ -362,7 +378,7 @@ python scripts/run_swe_ci.py \
   --max-iterations 3 \
   --timeout-seconds 7200 \
   --mode mergemind_review_loop \
-  --agent-name opencode \
+  --agent-name iflow \
   --base-url http://host.docker.internal:1234/v1 \
   --model-name qwen3.6-27b@iq2_xxs \
   --api-key lm-studio \
