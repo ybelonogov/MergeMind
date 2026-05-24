@@ -44,10 +44,11 @@ Inputs:
 - /app/code/ contains your current implementation.
 - /app/requirement.xml contains the architect requirement.
 - /app/mergemind_review.md contains review comments generated from your current patch.
+- /app/mergemind_allowed_files.txt lists the only files you may edit.
 
 Workflow:
 1. Read /app/mergemind_review.md and /app/requirement.xml.
-2. Inspect only files already changed by your immediately previous patch.
+2. Read /app/mergemind_allowed_files.txt and inspect only those files under /app/code/.
 3. Apply the smallest code revision needed to address actionable review comments.
 4. If a comment points outside the files you changed, is already addressed, is uncertain,
    or would require broad rewrites, leave that area unchanged.
@@ -55,9 +56,10 @@ Workflow:
 Constraints:
 - Do not edit tests.
 - Do not edit /app/requirement.xml or /app/mergemind_review.md.
+- Do not edit /app/mergemind_allowed_files.txt.
 - Do not run pytest, unittest, or any test command.
 - Do not create new files.
-- Do not modify files that were not modified by your immediately previous patch.
+- Do not modify files that are absent from /app/mergemind_allowed_files.txt.
 - Keep changes minimal and aligned with the existing requirement.
 - Prefer no edit over an ungrounded edit.
 """.strip()
@@ -376,11 +378,15 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 copy_dir_to_container(container_name, tmp_dir/"code", "/app")
                                 copy_file_to_container(container_name, current_dir/"requirement.xml", "/app")
                                 copy_file_to_container(container_name, mergemind_review["review_path"], "/app", rename="mergemind_review.md")
+                                original_changed_files = sorted(set(programmer_result.get("changed_files") or []))
+                                allowed_files_path = task_dir / "mergemind_allowed_files.txt"
+                                allowed_files_path.write_text("\n".join(original_changed_files) + "\n", encoding="utf-8")
+                                copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")
                                 programmer_revision_result = call_cli_agent(
                                     container_name, MERGEMIND_PROGRAMMER_REVISION_PROMPT,
                                     timeout=CONFIG.evolve.programmer.timeout
                                     )
-                                original_changed_files = set(programmer_result.get("changed_files") or [])
+                                original_changed_files = set(original_changed_files)
                                 revision_changed_files = set(programmer_revision_result.get("changed_files") or [])
                                 unexpected_revision_files = sorted(revision_changed_files - original_changed_files)
                                 if unexpected_revision_files:

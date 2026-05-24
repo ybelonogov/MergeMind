@@ -115,7 +115,17 @@ def _collect_context(container_name: str, role: str, prompt: str) -> str:
     if requirement:
         _append_section(parts, "Requirement XML", requirement, remaining)
 
-    candidate_paths = _paths_from_text(summary + "\n" + requirement + "\n" + prompt)
+    mergemind_review = _read_container_file(container_name, "/app/mergemind_review.md", 16000)
+    if mergemind_review:
+        _append_section(parts, "MergeMind review guidance", mergemind_review, remaining)
+
+    allowed_files = _read_container_file(container_name, "/app/mergemind_allowed_files.txt", 4000)
+    if allowed_files:
+        _append_section(parts, "Allowed revision files", allowed_files, remaining)
+
+    candidate_paths = _paths_from_text(
+        summary + "\n" + requirement + "\n" + mergemind_review + "\n" + allowed_files + "\n" + prompt
+    )
     source_paths = [path for path in candidate_paths if path.startswith("src/")]
     if not source_paths:
         source_paths = [path.removeprefix("/app/code/") for path in _list_container_files(container_name, "/app/code/src", "*.py", max_files=80)]

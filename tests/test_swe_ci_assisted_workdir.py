@@ -167,8 +167,10 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn("MERGEMIND_MIN_SCORE", copied_helper)
         self.assertIn("MERGEMIND_MAX_REVISION_EPOCHS", copied_helper)
         self.assertIn("Do not create new files.", copied_helper)
-        self.assertIn("Do not modify files that were not modified", copied_helper)
+        self.assertIn("mergemind_allowed_files.txt", copied_helper)
+        self.assertIn("Do not modify files that are absent", copied_helper)
         self.assertIn('copy_dir_to_container(container_name, tmp_dir/"code", "/app")', copied_run)
+        self.assertIn('copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")', copied_run)
         self.assertIn("--network", copied_tools)
         self.assertIn("NO_THINK_INSTRUCTIONS_FILE", copied_opencode)
         self.assertIn('input="/no_think\\n"', copied_opencode)
@@ -201,6 +203,9 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
             )
             copied_tools = (execution_repo / "src" / "swe_ci" / "benchmark" / "tools.py").read_text(encoding="utf-8")
             copied_config = (execution_repo / "src" / "swe_ci" / "config.py").read_text(encoding="utf-8")
+            copied_direct_agent = (
+                execution_repo / "src" / "swe_ci" / "benchmark" / "agents" / "direct_openai.py"
+            ).read_text(encoding="utf-8")
             has_direct_agent = (
                 execution_repo / "src" / "swe_ci" / "benchmark" / "agents" / "direct_openai.py"
             ).exists()
@@ -214,6 +219,10 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn("call_direct_openai", copied_init)
         self.assertIn('"direct_openai": call_direct_openai', copied_tools)
         self.assertIn('cfg.agent.dockerfile = str(agent_dir / "Dockerfile.direct_openai")', copied_config)
+        self.assertIn("MergeMind review guidance", copied_direct_agent)
+        self.assertIn("/app/mergemind_review.md", copied_direct_agent)
+        self.assertIn("Allowed revision files", copied_direct_agent)
+        self.assertIn("/app/mergemind_allowed_files.txt", copied_direct_agent)
 
 
 if __name__ == "__main__":
