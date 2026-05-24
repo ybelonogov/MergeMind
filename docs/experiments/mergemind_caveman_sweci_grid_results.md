@@ -1,0 +1,140 @@
+# MergeMind Caveman SWE-CI Grid Results
+
+## Summary
+
+Branch: `codex/mergemind-caveman-sweci-grid`.
+
+Primary metric is SWE-CI behavior, not standalone PR-review quality. The smoke grid used the fixed low-gap task `cle-b__httpdbg__22e489__af88c4` with identical baseline and assisted settings:
+
+- SWE-CI agent: `direct_openai`
+- model: `qwen3.6-27b@iq2_xxs`
+- provider: local LM Studio through the Linux reverse tunnel
+- `max_iterations=3`
+- Docker network: `host`
+- no `target_sha` in MergeMind review prompts or artifacts
+
+The full five-task manifest is committed as `configs/swe_ci_caveman_low_gap_tasks.jsonl`, but this report only claims the completed one-task smoke. The `top2` run was stopped by the early-stop rule after 10+ minutes without reaching the first SWE-CI iteration.
+
+## Implemented Configs
+
+New pipeline aliases:
+
+- `qwen35_caveman_top1`: 3 agents, strict correctness-only, max 1 review comment per revision pass.
+- `qwen35_caveman_top2`: 3 agents, max 2 comments for more recall.
+- `qwen35_caveman_direct_top1`: generator emits the repair contract directly, reranker filters, no rewriter.
+- `qwen35_caveman_test_triage`: top1-style chain plus previous visible failed-test summary.
+- Control: `qwen35_rewriter_sweci_triage`.
+
+Pipeline-specific token limits are configured through `llm_pipeline_overrides` in `configs/base.yaml`, so conservative output budgets are scoped to the selected pipeline instead of changing global defaults.
+
+## Commands
+
+Baseline:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path /home/pashab/SWE-CI \
+  --tasks-path configs/swe_ci_caveman_low_gap_tasks.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id caveman_grid_baseline_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 10800 \
+  --mode baseline \
+  --splitting lite \
+  --api-key lm-studio \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --agent-name direct_openai \
+  --source-data-root /home/pashab/SWE-CI/data \
+  --docker-network host
+```
+
+Assisted template:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path /home/pashab/SWE-CI \
+  --tasks-path configs/swe_ci_caveman_low_gap_tasks.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id <run-id> \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 10800 \
+  --mode mergemind_assisted \
+  --splitting lite \
+  --api-key lm-studio \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --agent-name direct_openai \
+  --source-data-root /home/pashab/SWE-CI/data \
+  --docker-network host \
+  --mergemind-config configs/base.yaml \
+  --mergemind-pipeline <pipeline> \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-top-n <1-or-2> \
+  --mergemind-min-score <0.75-or-0.70> \
+  --mergemind-max-revision-epochs 2
+```
+
+Comparison:
+
+```bash
+python scripts/summarize_swe_ci_grid.py \
+  --baseline-run-dir artifacts/swe_ci_runs/caveman_grid_baseline_001 \
+  --assisted-run-dirs \
+    artifacts/swe_ci_runs/caveman_grid_control_triage_cle_b_001 \
+    artifacts/swe_ci_runs/caveman_grid_top1_cle_b_001 \
+    artifacts/swe_ci_runs/caveman_grid_direct_top1_cle_b_001 \
+    artifacts/swe_ci_runs/caveman_grid_test_triage_cle_b_001 \
+  --output-dir artifacts/swe_ci_runs/caveman_grid_smoke_summary_001
+```
+
+## Results
+
+Server artifact root:
+
+- `/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/caveman_grid_smoke_summary_001/summary.md`
+
+Baseline:
+
+- Run: `caveman_grid_baseline_001`
+- Gap sequence: `5 -> 11 -> -1 -> 11`
+- Final gap: `11`
+- Best gap: `5`
+- Tokens: `67006`
+
+Grid summary:
+
+| config | gap delta | final invalid | invalid iters | failed-set jaccard | fixed | new | comments | revisions | tokens | review tokens | LLM calls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `qwen35_caveman_top1` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 2 | 63205 | 7935 | 6 |
+| `qwen35_caveman_direct_top1` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 1 | 66863 | 8966 | 5 |
+| `qwen35_rewriter_sweci_triage` | `-6` | 0 | 0 | 0.949 | 6 | 0 | 1 | 1 | 69538 | 14405 | 9 |
+| `qwen35_caveman_test_triage` | n/a | 1 | 1 | 0.000 | n/a | n/a | 2 | 1 | 59803 | 12548 | 7 |
+
+The `test_triage` row is not considered a valid winner because its final gap was `-1`. The comparator now excludes invalid final gaps from improvement averages and marks them explicitly.
+
+The `top2` run was started as `caveman_grid_top2_cle_b_001` but stopped before completion. It stayed in the first SWE-CI generation phase for 10+ minutes, produced no `iteration.jsonl`, and created no MergeMind assist artifacts. It is treated as an early-stop/no-progress result, not as a scored run.
+
+## Token Budget
+
+Measured completed smoke usage:
+
+- Baseline coding tokens: `67006`
+- Assisted total tokens across scored configs: `259409`
+- Assisted MergeMind review tokens across scored configs: `43854`
+- Total measured completed smoke tokens: `326415`
+
+The planned aggressive 5-task grid budget was `2.8M-3.6M` tokens with a hard review ceiling of `4.0M`. This smoke used about `0.33M` measured tokens before stopping the slow `top2` variant. The aborted `top2` first-generation call is not included because it never wrote SWE-CI iteration accounting.
+
+## Conclusion
+
+`qwen35_caveman_top1` is the current winner for this smoke:
+
+- It improved final gap from `11` to `5`.
+- It fixed 6 baseline final failures with no new final failures.
+- It used fewer measured total tokens than baseline: `63205` vs `67006`.
+- It used fewer tokens and fewer review tokens than the old triage control while achieving the same valid final gap improvement.
+
+This still does not prove reduced `actual_iterations`: baseline and all completed assisted runs used the configured 3 iterations. The evidence is a smaller final gap, better failed-test-set outcome, and lower measured token usage for `qwen35_caveman_top1` on the completed smoke task.
