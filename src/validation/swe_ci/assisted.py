@@ -47,14 +47,17 @@ Inputs:
 
 Workflow:
 1. Read /app/mergemind_review.md and /app/requirement.xml.
-2. Inspect only the relevant files under /app/code/.
+2. Inspect only files already changed by your immediately previous patch.
 3. Apply the smallest code revision needed to address actionable review comments.
-4. If a comment is already addressed, uncertain, or would require broad rewrites, leave that area unchanged.
+4. If a comment points outside the files you changed, is already addressed, is uncertain,
+   or would require broad rewrites, leave that area unchanged.
 
 Constraints:
 - Do not edit tests.
 - Do not edit /app/requirement.xml or /app/mergemind_review.md.
 - Do not run pytest, unittest, or any test command.
+- Do not create new files.
+- Do not modify files that were not modified by your immediately previous patch.
 - Keep changes minimal and aligned with the existing requirement.
 - Prefer no edit over an ungrounded edit.
 """.strip()
@@ -376,6 +379,14 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 programmer_revision_result = call_cli_agent(
                                     container_name, MERGEMIND_PROGRAMMER_REVISION_PROMPT,
                                     timeout=CONFIG.evolve.programmer.timeout
+                                    )
+                                original_changed_files = set(programmer_result.get("changed_files") or [])
+                                revision_changed_files = set(programmer_revision_result.get("changed_files") or [])
+                                unexpected_revision_files = sorted(revision_changed_files - original_changed_files)
+                                if unexpected_revision_files:
+                                    raise ValueError(
+                                        "MergeMind revision changed files outside the programmer patch: "
+                                        + ", ".join(unexpected_revision_files)
                                     )
                                 shutil.rmtree(tmp_dir/"code", ignore_errors=True)
                                 copy_dir_from_container(container_name, "/app/code", tmp_dir, mkdir=True)
