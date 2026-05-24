@@ -138,6 +138,7 @@ def render_review_markdown(predictions: list[CandidateComment], status: str, err
         "",
         "Use these review comments to revise the current code before pytest is executed.",
         "Do not edit tests. Keep the change minimal and aligned with requirement.xml.",
+        "Ignore any comment that is already addressed or would require broad unrelated rewrites.",
         "",
         f"- status: {status}",
         "- target_sha_used_for_review: false",
@@ -204,6 +205,9 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
                 "status": "skipped",
                 "error_message": "No non-test code diff was produced by the programmer.",
                 "comment_count": 0,
+                "raw_comment_count": 0,
+                "filtered_comment_count": 0,
+                "apply_revision": False,
                 "runtime": {"review_latency_seconds": time.perf_counter() - started},
             },
         )
@@ -224,7 +228,14 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
     write_json(output_dir / "mergemind_example.json", example.to_dict())
 
     generator, reranker, shared_client = build_pipeline_components(args.pipeline, config, Path(args.project_root))
-    predictions = run_inference(example, generator, reranker, top_n=args.top_n)
+    raw_predictions = run_inference(example, generator, reranker, top_n=args.top_n)
+    min_score = float(getattr(args, "min_score", 0.0) or 0.0)
+    predictions = [prediction for prediction in raw_predictions if prediction.reranker_score >= min_score]
+    filtered_comment_count = len(raw_predictions) - len(predictions)
+    max_revision_epochs = getattr(args, "max_revision_epochs", None)
+    apply_revision = bool(predictions) and (
+        max_revision_epochs is None or int(getattr(args, "epoch", 0) or 0) <= int(max_revision_epochs)
+    )
     judge_result: dict[str, Any] = {}
     if pipeline_uses_llm_judge(args.pipeline):
         llm_config = dict(config.get("llm", {}))
@@ -243,10 +254,16 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
             "status": "success" if predictions else "skipped",
             "error_message": "" if predictions else "MergeMind returned no comments.",
             "task_id": args.task_id,
+            "epoch": int(getattr(args, "epoch", 0) or 0),
             "repo_name": args.repo_name,
             "repo_url": args.repo_url,
             "current_sha": args.current_sha,
             "comment_count": len(predictions),
+            "raw_comment_count": len(raw_predictions),
+            "filtered_comment_count": filtered_comment_count,
+            "min_score": min_score,
+            "max_revision_epochs": max_revision_epochs,
+            "apply_revision": apply_revision,
             "judge": judge_result,
             "runtime": {"review_latency_seconds": time.perf_counter() - started},
             "llm_stats": shared_client.stats() if shared_client is not None else {},
@@ -262,6 +279,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pipeline", required=True)
     parser.add_argument("--llm-provider", default="")
     parser.add_argument("--top-n", type=int, default=3)
+    parser.add_argument("--min-score", type=float, default=0.0)
+    parser.add_argument("--epoch", type=int, default=0)
+    parser.add_argument("--max-revision-epochs", type=int, default=None)
     parser.add_argument("--task-id", required=True)
     parser.add_argument("--repo-name", required=True)
     parser.add_argument("--repo-url", required=True)

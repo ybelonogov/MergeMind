@@ -151,6 +151,9 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
 
             source_run = (source / "src" / "swe_ci" / "benchmark" / "run.py").read_text(encoding="utf-8")
             copied_run = (execution_repo / "src" / "swe_ci" / "benchmark" / "run.py").read_text(encoding="utf-8")
+            copied_helper = (execution_repo / "src" / "swe_ci" / "benchmark" / "mergemind_assist.py").read_text(
+                encoding="utf-8"
+            )
             copied_tools = (execution_repo / "src" / "swe_ci" / "benchmark" / "tools.py").read_text(encoding="utf-8")
             copied_opencode = (execution_repo / "src" / "swe_ci" / "benchmark" / "agents" / "opencode.py").read_text(encoding="utf-8")
             copied_config = (execution_repo / "config.toml").read_text(encoding="utf-8")
@@ -158,6 +161,9 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertNotEqual(execution_repo, source)
         self.assertNotIn("run_mergemind_assist", source_run)
         self.assertIn("run_mergemind_assist", copied_run)
+        self.assertIn("apply_revision", copied_run)
+        self.assertIn("MERGEMIND_MIN_SCORE", copied_helper)
+        self.assertIn("MERGEMIND_MAX_REVISION_EPOCHS", copied_helper)
         self.assertIn('copy_dir_to_container(container_name, tmp_dir/"code", "/app")', copied_run)
         self.assertIn("--network", copied_tools)
         self.assertIn("NO_THINK_INSTRUCTIONS_FILE", copied_opencode)

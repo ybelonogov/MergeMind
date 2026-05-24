@@ -87,9 +87,10 @@ class SweCiAssistHelperTests(unittest.TestCase):
             result = run_mergemind_assist(args)
             review_exists = Path(result["review_path"]).exists()
 
-        self.assertEqual(result["status"], "skipped")
-        self.assertEqual(result["comment_count"], 0)
-        self.assertTrue(review_exists)
+            self.assertEqual(result["status"], "skipped")
+            self.assertEqual(result["comment_count"], 0)
+            self.assertFalse(result["apply_revision"])
+            self.assertTrue(review_exists)
 
 
 if __name__ == "__main__":

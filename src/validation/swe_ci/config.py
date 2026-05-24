@@ -117,6 +117,13 @@ def validate_run_config(config: SweCiRunConfig, *, require_tools: bool = True) -
             validate_positive_int(config.mergemind_top_n, "mergemind_top_n")
         except SweCiConfigError as exc:
             errors.append(str(exc))
+        if config.mergemind_min_score < 0.0 or config.mergemind_min_score > 1.0:
+            errors.append("mergemind_min_score must be between 0.0 and 1.0.")
+        if config.mergemind_max_revision_epochs is not None:
+            try:
+                validate_positive_int(config.mergemind_max_revision_epochs, "mergemind_max_revision_epochs")
+            except SweCiConfigError as exc:
+                errors.append(str(exc))
         if config.mergemind_config_path is not None and not config.mergemind_config_path.exists():
             errors.append(f"MergeMind config file does not exist: {config.mergemind_config_path}")
     return errors

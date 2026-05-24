@@ -49,6 +49,8 @@ class SweCiRunConfig:
     mergemind_pipeline: str = "qwen35_rewriter"
     mergemind_llm_provider: str = ""
     mergemind_top_n: int = 3
+    mergemind_min_score: float = 0.0
+    mergemind_max_revision_epochs: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

@@ -49,12 +49,14 @@ Workflow:
 1. Read /app/mergemind_review.md and /app/requirement.xml.
 2. Inspect only the relevant files under /app/code/.
 3. Apply the smallest code revision needed to address actionable review comments.
+4. If a comment is already addressed, uncertain, or would require broad rewrites, leave that area unchanged.
 
 Constraints:
 - Do not edit tests.
 - Do not edit /app/requirement.xml or /app/mergemind_review.md.
 - Do not run pytest, unittest, or any test command.
 - Keep changes minimal and aligned with the existing requirement.
+- Prefer no edit over an ungrounded edit.
 """.strip()
 
 
@@ -102,6 +104,10 @@ def run_mergemind_assist(
         os.environ.get("MERGEMIND_LLM_PROVIDER", ""),
         "--top-n",
         os.environ.get("MERGEMIND_TOP_N", "3"),
+        "--min-score",
+        os.environ.get("MERGEMIND_MIN_SCORE", "0.0"),
+        "--epoch",
+        str(epoch),
         "--task-id",
         task_id,
         "--repo-name",
@@ -121,6 +127,9 @@ def run_mergemind_assist(
         "--output-dir",
         str(output_dir),
     ]
+    max_revision_epochs = os.environ.get("MERGEMIND_MAX_REVISION_EPOCHS", "")
+    if max_revision_epochs:
+        command.extend(["--max-revision-epochs", max_revision_epochs])
     timeout = int(os.environ.get("MERGEMIND_ASSIST_TIMEOUT_SECONDS", "1800"))
     completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
     (output_dir / "helper_stdout.log").write_text(completed.stdout, encoding="utf-8")
@@ -353,7 +362,7 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                         after_code_dir=tmp_dir / "code",
                         requirement_path=current_dir / "requirement.xml",
                     )
-                    if mergemind_review.get("status") == "success" and int(mergemind_review.get("comment_count") or 0) > 0:
+                    if mergemind_review.get("status") == "success" and int(mergemind_review.get("comment_count") or 0) > 0 and bool(mergemind_review.get("apply_revision", True)):
                         logger.info(prefix + f"✅ MergeMind generated {mergemind_review.get('comment_count')} review comment(s).")
                         for review_attempt in range(1, CONFIG.evolve.programmer.max_try+1):
                             review_prefix = f"(3b/7) (Review attempt {review_attempt}/{CONFIG.evolve.programmer.max_try}) "
@@ -379,6 +388,8 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                             finally:
                                 if has_container(container_name):
                                     remove_container(container_name)
+                    elif mergemind_review.get("status") == "success" and int(mergemind_review.get("comment_count") or 0) > 0:
+                        logger.info(prefix + f"ℹ️ MergeMind generated {mergemind_review.get('comment_count')} review comment(s), but revision pass was skipped by guard policy.")
                     break
 ''',
     )
@@ -509,8 +520,11 @@ def build_assisted_environment(config: SweCiRunConfig, run_dir: str | Path, proj
         "MERGEMIND_PIPELINE": config.mergemind_pipeline,
         "MERGEMIND_LLM_PROVIDER": config.mergemind_llm_provider,
         "MERGEMIND_TOP_N": str(config.mergemind_top_n),
+        "MERGEMIND_MIN_SCORE": str(config.mergemind_min_score),
         "MERGEMIND_ASSIST_OUTPUT_ROOT": str(output_root.resolve()),
     }
+    if config.mergemind_max_revision_epochs is not None:
+        env["MERGEMIND_MAX_REVISION_EPOCHS"] = str(config.mergemind_max_revision_epochs)
     return env
 
 

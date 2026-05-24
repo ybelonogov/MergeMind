@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from src.validation.swe_ci.config import build_swe_ci_command, build_swe_ci_env
+from src.validation.swe_ci.assisted import build_assisted_environment
 from src.validation.swe_ci.reporter import run_dir_for
 from src.validation.swe_ci.process_runner import redact_command
 from src.validation.swe_ci.schemas import SweCiRunConfig, SweCiTask
@@ -109,6 +110,25 @@ class SweCiCommandConfigTests(unittest.TestCase):
         env = build_swe_ci_env(swe_ci_repo_path, project_root)
 
         self.assertEqual(env["PYTHONPATH"], os.pathsep.join([str(swe_ci_repo_path / "src"), str(project_root)]))
+
+    def test_assisted_environment_includes_revision_guard_settings(self) -> None:
+        config = SweCiRunConfig(
+            swe_ci_repo_path=Path("SWE-CI"),
+            tasks_path=Path("tasks.jsonl"),
+            output_dir=Path("runs"),
+            limit=1,
+            max_iterations=3,
+            timeout_seconds=60,
+            mode="mergemind_assisted",
+            run_id="run-1",
+            mergemind_min_score=0.9,
+            mergemind_max_revision_epochs=2,
+        )
+
+        env = build_assisted_environment(config, Path("runs") / "run-1", Path.cwd())
+
+        self.assertEqual(env["MERGEMIND_MIN_SCORE"], "0.9")
+        self.assertEqual(env["MERGEMIND_MAX_REVISION_EPOCHS"], "2")
 
 
 if __name__ == "__main__":

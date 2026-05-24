@@ -85,6 +85,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--mergemind-pipeline", default="qwen35_rewriter", help="MergeMind pipeline for patch review.")
     parser.add_argument("--mergemind-llm-provider", default="", help="Optional MergeMind LLM provider override.")
     parser.add_argument("--mergemind-top-n", type=int, default=3, help="Number of MergeMind comments to keep.")
+    parser.add_argument(
+        "--mergemind-min-score",
+        type=float,
+        default=0.0,
+        help="Drop MergeMind assisted comments below this reranker score before revision.",
+    )
+    parser.add_argument(
+        "--mergemind-max-revision-epochs",
+        type=int,
+        default=None,
+        help="Apply MergeMind revision only through this epoch; later epochs still record review artifacts.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Validate and print commands without executing SWE-CI.")
     return parser.parse_args()
 
@@ -114,6 +126,8 @@ def _build_config(args: argparse.Namespace) -> SweCiRunConfig:
         mergemind_pipeline=args.mergemind_pipeline,
         mergemind_llm_provider=args.mergemind_llm_provider,
         mergemind_top_n=args.mergemind_top_n,
+        mergemind_min_score=args.mergemind_min_score,
+        mergemind_max_revision_epochs=args.mergemind_max_revision_epochs,
     )
 
 
@@ -142,6 +156,10 @@ def _print_dry_run(config: SweCiRunConfig) -> int:
             print("post_step: MergeMind will review the coding-agent patch from SWE-CI outputs.")
         if config.mode == MERGEMIND_ASSISTED_MODE:
             print("in_loop: MergeMind will review programmer diffs before pytest in the instrumented SWE-CI checkout.")
+            if config.mergemind_min_score:
+                print(f"in_loop: comments below score {config.mergemind_min_score:.3f} will be dropped.")
+            if config.mergemind_max_revision_epochs is not None:
+                print(f"in_loop: MergeMind revision pass limited to epoch <= {config.mergemind_max_revision_epochs}.")
     return 0
 
 
