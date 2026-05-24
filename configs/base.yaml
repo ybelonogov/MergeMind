@@ -65,6 +65,9 @@ llm:
   max_tokens_generator: 700
   max_tokens_reranker: 900
   max_tokens_rewriter: 700
+  max_tokens_contract_generator: 1200
+  max_tokens_contract_reranker: 900
+  max_tokens_contract_rewriter: 1200
   max_tokens_judge: 400
   concurrency: 1
   timeout_seconds: 180
@@ -101,6 +104,7 @@ experiments:
     - baseline_retrieval_logistic
     - qwen35_generator_qwen35_reranker
     - qwen35_full_with_rewriter
+    - qwen35_rewriter_sweci_contract
     - qwen35_full_with_rewriter_and_qwen35_judge
 demo:
   top_n: 3

@@ -41,6 +41,10 @@ class SweCiRunConfig:
     agent_name: str | None = None
     config_file: str | None = None
     hf_token: str | None = None
+    source_data_root: Path | None = None
+    assisted_work_dir: Path | None = None
+    docker_network: str | None = None
+    opencode_no_think: bool = False
     mergemind_config_path: Path | None = None
     mergemind_pipeline: str = "qwen35_rewriter"
     mergemind_llm_provider: str = ""
@@ -48,7 +52,14 @@ class SweCiRunConfig:
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
-        for key in ("swe_ci_repo_path", "tasks_path", "output_dir", "mergemind_config_path"):
+        for key in (
+            "swe_ci_repo_path",
+            "tasks_path",
+            "output_dir",
+            "source_data_root",
+            "assisted_work_dir",
+            "mergemind_config_path",
+        ):
             if payload[key] is not None:
                 payload[key] = str(payload[key])
         return payload

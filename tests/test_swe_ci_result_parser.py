@@ -49,7 +49,17 @@ class SweCiResultParserTests(unittest.TestCase):
             repo = Path(tmp) / "SWE-CI"
             iteration_file = repo / "experiments" / "exp-1" / "task-1" / "iteration.jsonl"
             iteration_file.parent.mkdir(parents=True)
-            iteration_file.write_text("{}\n{}\n", encoding="utf-8")
+            iteration_file.write_text(
+                "\n".join(
+                    [
+                        json.dumps({"gap": 5}),
+                        json.dumps({"gap": 3, "mergemind_review": {"status": "success", "comment_count": 2}}),
+                        json.dumps({"gap": 0, "programmer_revision": {"input_tokens": 1}}),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
 
             parsed = parse_swe_ci_result(
                 _process_result(),
@@ -59,7 +69,12 @@ class SweCiResultParserTests(unittest.TestCase):
             )
 
         self.assertEqual(parsed.status, "success")
-        self.assertEqual(parsed.metrics["swe_ci_iteration_count"], 2)
+        self.assertEqual(parsed.metrics["swe_ci_iteration_count"], 3)
+        self.assertEqual(parsed.metrics["actual_iterations"], 2)
+        self.assertEqual(parsed.metrics["final_gap"], 0)
+        self.assertEqual(parsed.metrics["best_gap"], 0)
+        self.assertEqual(parsed.metrics["mergemind_assist_comment_count"], 2)
+        self.assertEqual(parsed.metrics["mergemind_assist_revision_count"], 1)
         self.assertIn("swe_ci_iteration_file", parsed.metrics)
 
 

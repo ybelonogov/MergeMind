@@ -15,6 +15,8 @@ from src.models.llm import (
     LLMReranker,
     LLMRewriter,
     OpenAICompatibleLLMClient,
+    SWEContractLLMGenerator,
+    SWEContractLLMRewriter,
     SQLiteLLMCache,
     parse_json_payload,
 )
@@ -180,6 +182,24 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertIn("between 3 and 5", seen_prompts[0])
         self.assertIn("correctness", seen_prompts[0])
         self.assertIn("missing tests", seen_prompts[0])
+
+    def test_swe_contract_generator_prompt_is_repair_focused_without_target_sha(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWEContractLLMGenerator(client, max_candidates=4, min_candidates=2)
+
+        generator.generate(_example())
+
+        self.assertIn("increase failing tests", seen_prompts[0])
+        self.assertIn("hidden solution", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
         payload = {
@@ -421,6 +441,43 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertEqual(rewritten[0].text, "Keep the original comment.")
         self.assertEqual(rewriter.fallback_count, 1)
         self.assertTrue(any("llm_rewriter_fallback=true" == item for item in rewritten[0].evidence))
+
+    def test_swe_contract_rewriter_requests_revision_contract(self) -> None:
+        seen_prompts: list[str] = []
+        payload = {
+            "rewritten_comments": [
+                {
+                    "candidate_id": 0,
+                    "rewritten_comment": (
+                        "Finding: Empty carts can still fail.\n"
+                        "Evidence: The diff reads the first item.\n"
+                        "Expected revision: Guard the empty list before indexing.\n"
+                        "Do not change: Tests or unrelated checkout behavior."
+                    ),
+                    "essence": "Empty cart guard",
+                    "severity": "high",
+                    "confidence": 0.9,
+                    "reason": "Converted to repair guidance.",
+                }
+            ]
+        }
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion(json.dumps(payload))
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWEContractLLMRewriter(client)
+
+        rewritten = rewriter.rewrite(_example(), [CandidateComment(text="Guard empty carts.", reranker_score=0.9)])
+
+        self.assertIn("Finding:", rewritten[0].text)
+        self.assertIn("Expected revision:", rewritten[0].text)
+        self.assertIn("Do not change:", rewritten[0].text)
+        self.assertIn("automated programmer revision", rewriter._system_prompt())
+        self.assertIn("Do not ask the programmer to edit tests", seen_prompts[0])
 
 
 if __name__ == "__main__":

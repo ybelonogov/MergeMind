@@ -16,6 +16,12 @@ def _bootstrap_path() -> Path:
 
 PROJECT_ROOT = _bootstrap_path()
 
+from src.validation.swe_ci.assisted import (  # noqa: E402
+    MERGEMIND_ASSISTED_MODE,
+    build_assisted_environment,
+    planned_execution_repo_path,
+    prepare_swe_ci_execution_repo,
+)
 from src.validation.swe_ci.config import (
     build_swe_ci_command,
     build_swe_ci_env,
@@ -50,16 +56,31 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         default="baseline",
-        choices=["baseline", "mergemind_review_loop"],
-        help="baseline runs SWE-CI only; mergemind_review_loop reviews the coding-agent patch after SWE-CI finishes.",
+        choices=["baseline", "mergemind_review_loop", MERGEMIND_ASSISTED_MODE],
+        help=(
+            "baseline runs SWE-CI only; mergemind_review_loop reviews the patch after SWE-CI finishes; "
+            "mergemind_assisted injects MergeMind comments before pytest inside each SWE-CI epoch."
+        ),
     )
     parser.add_argument("--splitting", default="default", help="SWE-CI dataset split to pass to swe_ci.evaluate.")
     parser.add_argument("--api-key", default=None, help="Optional OpenAI-compatible API key for SWE-CI coding-agent.")
     parser.add_argument("--base-url", default=None, help="Optional OpenAI-compatible base URL for SWE-CI coding-agent.")
     parser.add_argument("--model-name", default=None, help="Optional model name for SWE-CI coding-agent.")
-    parser.add_argument("--agent-name", default=None, help="Optional SWE-CI agent backend, for example opencode or iflow.")
+    parser.add_argument(
+        "--agent-name",
+        default=None,
+        help="Optional SWE-CI agent backend, for example opencode, iflow, or direct_openai.",
+    )
     parser.add_argument("--config-file", default=None, help="Optional SWE-CI config file path.")
     parser.add_argument("--hf-token", default=None, help="Optional Hugging Face token for SWE-CI.")
+    parser.add_argument("--source-data-root", default=None, help="Optional SWE-CI data root containing task_id folders.")
+    parser.add_argument("--assisted-work-dir", default=None, help="Optional workdir for instrumented SWE-CI checkout.")
+    parser.add_argument("--docker-network", default=None, help="Optional Docker network mode for SWE-CI task containers, e.g. host.")
+    parser.add_argument(
+        "--opencode-no-think",
+        action="store_true",
+        help="Patch the copied SWE-CI checkout so OpenCode injects /no_think via instructions.",
+    )
     parser.add_argument("--mergemind-config", default="configs/base.yaml", help="MergeMind config for review-loop mode.")
     parser.add_argument("--mergemind-pipeline", default="qwen35_rewriter", help="MergeMind pipeline for patch review.")
     parser.add_argument("--mergemind-llm-provider", default="", help="Optional MergeMind LLM provider override.")
@@ -85,6 +106,10 @@ def _build_config(args: argparse.Namespace) -> SweCiRunConfig:
         agent_name=args.agent_name,
         config_file=str(Path(args.config_file).resolve()) if args.config_file else None,
         hf_token=args.hf_token,
+        source_data_root=Path(args.source_data_root).resolve() if args.source_data_root else None,
+        assisted_work_dir=Path(args.assisted_work_dir).resolve() if args.assisted_work_dir else None,
+        docker_network=args.docker_network,
+        opencode_no_think=args.opencode_no_think,
         mergemind_config_path=PROJECT_ROOT / args.mergemind_config if not Path(args.mergemind_config).is_absolute() else Path(args.mergemind_config),
         mergemind_pipeline=args.mergemind_pipeline,
         mergemind_llm_provider=args.mergemind_llm_provider,
@@ -96,18 +121,27 @@ def _print_dry_run(config: SweCiRunConfig) -> int:
     ensure_run_config_ready(config)
     tasks = load_swe_ci_tasks(config.tasks_path, limit=config.limit)
     run_dir = run_dir_for(config)
+    execution_repo = planned_execution_repo_path(config, run_dir)
     print("[run_swe_ci] DRY RUN: no SWE-CI process will be executed.")
     print(f"[run_swe_ci] Tasks: {len(tasks)}")
+    if execution_repo != config.swe_ci_repo_path:
+        print(f"[run_swe_ci] Execution SWE-CI checkout: {execution_repo}")
+    if config.docker_network:
+        print(f"[run_swe_ci] Docker network: {config.docker_network}")
+    if config.opencode_no_think:
+        print("[run_swe_ci] OpenCode /no_think instruction: enabled")
     for task in tasks:
-        command_info = describe_task_command(config, task, run_dir)
+        command_info = describe_task_command(config, task, run_dir, execution_swe_ci_repo_path=execution_repo)
         print(f"\n[run_swe_ci] task_id={command_info['task_id']}")
         print(f"cwd: {command_info['cwd']}")
-        print(f"dataset_root: {task_dataset_dir(run_dir, task)}")
-        print(f"official_task_dir: {official_experiment_task_dir(config, task)}")
+        print(f"dataset_root: {command_info['dataset_root']}")
+        print(f"official_task_dir: {command_info['official_task_dir']}")
         print("command:")
         print(" ".join(redact_command(command_info["command"])))
         if config.mode == "mergemind_review_loop":
             print("post_step: MergeMind will review the coding-agent patch from SWE-CI outputs.")
+        if config.mode == MERGEMIND_ASSISTED_MODE:
+            print("in_loop: MergeMind will review programmer diffs before pytest in the instrumented SWE-CI checkout.")
     return 0
 
 
@@ -120,15 +154,30 @@ def main() -> int:
     ensure_run_config_ready(config)
     tasks = load_swe_ci_tasks(config.tasks_path, limit=config.limit)
     run_dir = run_dir_for(config)
+    execution_repo = prepare_swe_ci_execution_repo(config, run_dir, PROJECT_ROOT)
     write_run_inputs(run_dir, config, tasks)
     append_run_event(run_dir, {"event": "run_start", "run_id": config.run_id, "task_count": len(tasks)})
+    if execution_repo != config.swe_ci_repo_path:
+        append_run_event(
+            run_dir,
+            {
+                "event": "execution_repo_ready",
+                "mode": config.mode,
+                "source_repo": str(config.swe_ci_repo_path),
+                "execution_repo": str(execution_repo),
+                "docker_network": config.docker_network or "",
+            },
+        )
 
-    env = merged_environment(build_swe_ci_env(config.swe_ci_repo_path))
+    env_updates = build_swe_ci_env(execution_repo, PROJECT_ROOT)
+    if config.mode == MERGEMIND_ASSISTED_MODE:
+        env_updates.update(build_assisted_environment(config, run_dir, PROJECT_ROOT))
+    env = merged_environment(env_updates)
     results: list[SweCiTaskRunResult] = []
     for index, task in enumerate(tasks, start=1):
         append_run_event(run_dir, {"event": "task_start", "task_id": task.task_id, "index": index})
         dataset_root = prepare_task_dataset_root(config, task, run_dir)
-        task_dir = official_experiment_task_dir(config, task)
+        task_dir = official_experiment_task_dir(config, task, swe_ci_repo_path=execution_repo)
         task_log_dir = run_dir / "logs" / _safe_task_id(task.task_id)
         append_run_event(
             run_dir,
@@ -145,14 +194,14 @@ def main() -> int:
             task_id=task.task_id,
             task_log_dir=task_log_dir,
             timeout_seconds=config.timeout_seconds,
-            cwd=config.swe_ci_repo_path,
+            cwd=execution_repo,
             env=env,
             phase="swe_ci.evaluate",
         )
         parsed_result = parse_swe_ci_result(
             process_result,
             task_dir,
-            swe_ci_repo_path=config.swe_ci_repo_path,
+            swe_ci_repo_path=execution_repo,
             experiment_name=experiment_name_for_task(config, task),
         )
         if config.mode == "mergemind_review_loop":

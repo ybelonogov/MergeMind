@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
+from .assisted import MERGEMIND_ASSISTED_MODE
 from .schemas import SweCiRunConfig, SweCiTask
 
-HONEST_SWE_CI_MODES = {"baseline", "mergemind_review_loop"}
+HONEST_SWE_CI_MODES = {"baseline", "mergemind_review_loop", MERGEMIND_ASSISTED_MODE}
 ORACLE_SWE_CI_MODE = "oracle_comments"
 EXPECTED_SWE_CI_FILES = (
     "src/swe_ci/evaluate.py",
@@ -98,7 +100,19 @@ def validate_run_config(config: SweCiRunConfig, *, require_tools: bool = True) -
             errors.append(f"Unsupported mode='{config.mode}'. Use one of: {', '.join(sorted(HONEST_SWE_CI_MODES))}.")
     if not config.run_id.strip():
         errors.append("run_id must not be empty.")
-    if config.mode == "mergemind_review_loop":
+    if config.assisted_work_dir is not None:
+        try:
+            assisted_dir = config.assisted_work_dir.resolve()
+            source_dir = config.swe_ci_repo_path.resolve()
+            if assisted_dir == source_dir:
+                errors.append("assisted_work_dir must not be the same as swe_ci_repo_path.")
+            elif assisted_dir.is_relative_to(source_dir):
+                errors.append("assisted_work_dir must not be inside swe_ci_repo_path.")
+        except OSError:
+            pass
+    if config.docker_network is not None and not str(config.docker_network).strip():
+        errors.append("docker_network must not be empty when provided.")
+    if config.mode in {"mergemind_review_loop", MERGEMIND_ASSISTED_MODE}:
         try:
             validate_positive_int(config.mergemind_top_n, "mergemind_top_n")
         except SweCiConfigError as exc:
@@ -124,8 +138,14 @@ def task_dataset_dir(run_dir: str | Path, task: SweCiTask) -> Path:
     return Path(run_dir) / "swe_ci_datasets" / safe_task_id
 
 
-def official_experiment_task_dir(config: SweCiRunConfig, task: SweCiTask) -> Path:
-    return config.swe_ci_repo_path / "experiments" / experiment_name_for_task(config, task) / task.task_id
+def official_experiment_task_dir(
+    config: SweCiRunConfig,
+    task: SweCiTask,
+    *,
+    swe_ci_repo_path: str | Path | None = None,
+) -> Path:
+    repo_path = Path(swe_ci_repo_path) if swe_ci_repo_path is not None else config.swe_ci_repo_path
+    return repo_path / "experiments" / experiment_name_for_task(config, task) / task.task_id
 
 
 def experiment_name_for_task(config: SweCiRunConfig, task: SweCiTask) -> str:
@@ -162,20 +182,33 @@ def build_swe_ci_command(config: SweCiRunConfig, task: SweCiTask, task_dir: str 
         value = getattr(config, config_key) or metadata.get(config_key)
         if value is not None and str(value) != "":
             command.extend([cli_key, str(value)])
+    docker_network = config.docker_network or metadata.get("docker_network")
+    if docker_network is not None and str(docker_network) != "":
+        command.extend(["--docker.network", str(docker_network)])
     return command
 
 
-def build_swe_ci_env(swe_ci_repo_path: str | Path) -> dict[str, str]:
+def build_swe_ci_env(swe_ci_repo_path: str | Path, project_root: str | Path | None = None) -> dict[str, str]:
     src_path = Path(swe_ci_repo_path) / "src"
-    return {"PYTHONPATH": str(src_path)}
+    parts = [str(src_path)]
+    if project_root is not None:
+        parts.append(str(Path(project_root)))
+    return {"PYTHONPATH": os.pathsep.join(parts)}
 
 
-def describe_task_command(config: SweCiRunConfig, task: SweCiTask, run_dir: str | Path) -> dict[str, Any]:
+def describe_task_command(
+    config: SweCiRunConfig,
+    task: SweCiTask,
+    run_dir: str | Path,
+    *,
+    execution_swe_ci_repo_path: str | Path | None = None,
+) -> dict[str, Any]:
     dataset_dir = task_dataset_dir(run_dir, task)
+    repo_path = Path(execution_swe_ci_repo_path) if execution_swe_ci_repo_path is not None else config.swe_ci_repo_path
     return {
         "task_id": task.task_id,
         "command": build_swe_ci_command(config, task, dataset_dir),
-        "cwd": str(config.swe_ci_repo_path),
+        "cwd": str(repo_path),
         "dataset_root": str(dataset_dir),
-        "official_task_dir": str(official_experiment_task_dir(config, task)),
+        "official_task_dir": str(official_experiment_task_dir(config, task, swe_ci_repo_path=repo_path)),
     }

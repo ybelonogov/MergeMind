@@ -418,6 +418,83 @@ python scripts/run_swe_ci.py \
   --mergemind-top-n 3
 ```
 
+Режим `mergemind_review_loop` является post-hoc проверкой: он сохраняет
+комментарии MergeMind после завершения SWE-CI задачи и не может уменьшить
+число итераций. Для A/B проверки влияния review comments на loop используется
+`mergemind_assisted`.
+
+В `mergemind_assisted` wrapper готовит отдельную instrumented-копию SWE-CI
+checkout с тем же исходным кодом benchmark. Baseline может идти на чистом
+checkout, а assisted-копия добавляет минимальную вставку в epoch:
+
+```text
+architect -> requirement.xml -> programmer -> MergeMind review -> programmer revision -> pytest
+```
+
+MergeMind получает только diff между кодом до epoch и patch'ем programmer,
+`requirement.xml`, `repo_url` и `current_sha`. `target_sha` не передается в
+prompt, example или review artifacts.
+
+Если LM Studio поднят на Windows, а SWE-CI запускается на удаленном Linux,
+безопасный вариант — SSH reverse tunnel:
+
+```powershell
+ssh -N -R 1234:127.0.0.1:1234 -p 7090 pashab@46.146.231.152
+```
+
+На Linux-сервере проверить доступ с host и из Docker:
+
+```bash
+curl http://127.0.0.1:1234/v1/models
+docker run --rm --network host curlimages/curl http://127.0.0.1:1234/v1/models
+```
+
+Smoke A/B на одной и той же задаче:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_baseline_smoke_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 7200 \
+  --mode baseline \
+  --agent-name opencode \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --docker-network host
+
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ../SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_smoke.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_assisted_smoke_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 7200 \
+  --mode mergemind_assisted \
+  --agent-name opencode \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --docker-network host \
+  --mergemind-pipeline qwen35_rewriter \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-top-n 3
+```
+
+Сравнить результаты:
+
+```bash
+python scripts/compare_swe_ci_runs.py \
+  --baseline-run-dir artifacts/swe_ci_runs/sweci_baseline_smoke_001 \
+  --assisted-run-dir artifacts/swe_ci_runs/sweci_assisted_smoke_001 \
+  --output artifacts/swe_ci_runs/sweci_ab_smoke_001.md
+```
+
 Артефакты сохраняются в `artifacts/swe_ci_runs/<run_id>/`:
 
 - `run_config.json`, `tasks.json`, `events.jsonl`;
@@ -431,6 +508,15 @@ python scripts/run_swe_ci.py \
 - `swe_ci_outputs/<task_id>/mergemind_example.json`;
 - `swe_ci_outputs/<task_id>/mergemind_comments.json`;
 - `swe_ci_outputs/<task_id>/mergemind_review.md`.
+
+В режиме `mergemind_assisted` дополнительно сохраняются:
+
+- `workdirs/assisted_swe_ci/` — instrumented copy SWE-CI;
+- `mergemind_assist/<task_id>/epoch_*/mergemind_example.json`;
+- `mergemind_assist/<task_id>/epoch_*/mergemind_comments.json`;
+- `mergemind_assist/<task_id>/epoch_*/mergemind_review.md`;
+- `mergemind_assist/<task_id>/epoch_*/helper_stdout.log`;
+- `mergemind_assist/<task_id>/epoch_*/helper_stderr.log`.
 
 Если SWE-CI не сохранил patch/diff coding-agent, MergeMind review помечается
 как `skipped`; wrapper не пытается строить комментарии из `target_sha`.

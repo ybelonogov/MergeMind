@@ -30,6 +30,8 @@ def _source_data_dir(config: SweCiRunConfig, task: SweCiTask) -> Path:
     data_dir = task.metadata.get("data_dir")
     if data_dir:
         return Path(str(data_dir)).expanduser().resolve()
+    if config.source_data_root is not None:
+        return config.source_data_root / task.task_id
     return config.swe_ci_repo_path / "data" / task.task_id
 
 

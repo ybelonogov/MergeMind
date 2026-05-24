@@ -611,6 +611,24 @@ class LLMGenerator:
         self.last_raw_generated_count = 0
         self.last_deduped_candidate_count = 0
 
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind, a code review system. Generate useful, specific, "
+            "actionable review comments grounded in the provided diff. Prefer recall first: "
+            "surface several plausible review angles before reranking removes noise. "
+            "Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate between {minimum} and {limit} concise review comments when possible. "
+            "Cover diverse grounded angles such as correctness, API/behavior compatibility, "
+            "missing tests, edge cases, maintainability, and style only when it affects review value. "
+            "Avoid duplicates and generic advice. Do not invent issues: if fewer than "
+            f"{minimum} grounded comments exist, return only the grounded ones.\n\n"
+            f"{_example_prompt(example)}"
+        )
+
     def generate(
         self,
         example: MRExample,
@@ -625,23 +643,11 @@ class LLMGenerator:
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are MergeMind, a code review system. Generate useful, specific, "
-                    "actionable review comments grounded in the provided diff. Prefer recall first: "
-                    "surface several plausible review angles before reranking removes noise. "
-                    "Return JSON only."
-                ),
+                "content": self._system_prompt(),
             },
             {
                 "role": "user",
-                "content": (
-                    f"Generate between {minimum} and {limit} concise review comments when possible. "
-                    "Cover diverse grounded angles such as correctness, API/behavior compatibility, "
-                    "missing tests, edge cases, maintainability, and style only when it affects review value. "
-                    "Avoid duplicates and generic advice. Do not invent issues: if fewer than "
-                    f"{minimum} grounded comments exist, return only the grounded ones.\n\n"
-                    f"{_example_prompt(example)}"
-                ),
+                "content": self._user_prompt(example, minimum, limit),
             },
         ]
         result = self.client.chat_json(
@@ -690,6 +696,29 @@ class LLMGenerator:
         return candidates
 
 
+class SWEContractLLMGenerator(LLMGenerator):
+    """Generate SWE-CI-oriented candidate comments focused on patch risk."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI patch-risk reviewer. Generate only correctness, "
+            "behavior, API compatibility, data-loss, or regression-risk review comments "
+            "grounded in the provided requirement and diff. Ignore style-only, naming-only, "
+            "or documentation-only feedback unless it can break behavior. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate between {minimum} and {limit} compact review findings for the programmer's patch. "
+            "Assume the patch may be wrong and look for concrete ways it could increase failing tests "
+            "or fail the stated requirement. Use only the provided current diff, repository context, "
+            "and requirement text. Do not infer a hidden solution or rely on unavailable oracle code. "
+            "Every comment must identify an actionable source-code risk; if fewer grounded risks exist, "
+            "return only those grounded risks.\n\n"
+            f"{_example_prompt(example)}"
+        )
+
+
 class LLMReranker:
     """Rank review candidates with a local LLM."""
 
@@ -704,6 +733,36 @@ class LLMReranker:
         self.max_tokens = max_tokens
         self.fallback_count = 0
         self.mode = "llm"
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are a skeptical senior code reviewer reranking candidate review comments. "
+            "Only score a comment highly if you would personally leave it on the merge request. "
+            "Prefer comments that identify concrete correctness, safety, API, data-loss, "
+            "performance, or maintainability risks grounded in the diff. Return JSON only."
+        )
+
+    def _user_prompt(
+        self,
+        example: MRExample,
+        candidate_lines: list[str],
+        top_n: int,
+    ) -> str:
+        return (
+            "Use this strict scoring rubric:\n"
+            "- 0.90-1.00: clear high-value issue, concrete risk, directly grounded, actionable.\n"
+            "- 0.70-0.89: useful and grounded, but lower severity or missing some context.\n"
+            "- 0.40-0.69: minor, nice-to-have, documentation/style, or somewhat speculative.\n"
+            "- 0.10-0.39: generic, weak, mostly restates the diff, or low confidence.\n"
+            "- 0.00: unrelated, duplicate, hallucinated, or not worth leaving.\n"
+            "Do not copy generator_score. Do not give multiple candidates the same score unless "
+            "they are truly equally useful. At most one candidate should exceed 0.90 unless there "
+            "are multiple independent defects. Documentation, style, and naming-only comments "
+            "should usually stay below 0.70 unless they prevent a real bug.\n\n"
+            f"Rank the best {top_n} candidates. Use the zero-based candidate_id values exactly.\n\n"
+            f"{_example_prompt(example)}\n\nCandidate comments:\n"
+            + "\n".join(candidate_lines)
+        )
 
     def _fallback(self, candidates: list[CandidateComment], top_n: int) -> list[CandidateComment]:
         self.fallback_count += 1
@@ -804,30 +863,11 @@ class LLMReranker:
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are a skeptical senior code reviewer reranking candidate review comments. "
-                    "Only score a comment highly if you would personally leave it on the merge request. "
-                    "Prefer comments that identify concrete correctness, safety, API, data-loss, "
-                    "performance, or maintainability risks grounded in the diff. Return JSON only."
-                ),
+                "content": self._system_prompt(),
             },
             {
                 "role": "user",
-                "content": (
-                    "Use this strict scoring rubric:\n"
-                    "- 0.90-1.00: clear high-value issue, concrete risk, directly grounded, actionable.\n"
-                    "- 0.70-0.89: useful and grounded, but lower severity or missing some context.\n"
-                    "- 0.40-0.69: minor, nice-to-have, documentation/style, or somewhat speculative.\n"
-                    "- 0.10-0.39: generic, weak, mostly restates the diff, or low confidence.\n"
-                    "- 0.00: unrelated, duplicate, hallucinated, or not worth leaving.\n"
-                    "Do not copy generator_score. Do not give multiple candidates the same score unless "
-                    "they are truly equally useful. At most one candidate should exceed 0.90 unless there "
-                    "are multiple independent defects. Documentation, style, and naming-only comments "
-                    "should usually stay below 0.70 unless they prevent a real bug.\n\n"
-                    f"Rank the best {top_n} candidates. Use the zero-based candidate_id values exactly.\n\n"
-                    f"{_example_prompt(example)}\n\nCandidate comments:\n"
-                    + "\n".join(candidate_lines)
-                ),
+                "content": self._user_prompt(example, candidate_lines, top_n),
             },
         ]
         result = self.client.chat_json(
@@ -889,6 +929,38 @@ class LLMReranker:
         return self._fill_missing_ranked(scored, candidates, seen_ids, top_n)
 
 
+class SWEContractLLMReranker(LLMReranker):
+    """Rerank comments for likely SWE-CI repair impact."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI repair-impact critic. Rank comments by how likely "
+            "they are to help the programmer reduce failing tests in the next revision. "
+            "Favor concrete, grounded, minimal-fix guidance. Return JSON only."
+        )
+
+    def _user_prompt(
+        self,
+        example: MRExample,
+        candidate_lines: list[str],
+        top_n: int,
+    ) -> str:
+        return (
+            "Use this strict scoring rubric:\n"
+            "- 0.90-1.00: likely to prevent a regression or directly reduce failing tests.\n"
+            "- 0.70-0.89: grounded and actionable, but lower confidence or indirect test impact.\n"
+            "- 0.40-0.69: plausible but speculative, broad, or mostly maintainability-focused.\n"
+            "- 0.10-0.39: style-only, weak, generic, or not useful for the next revision.\n"
+            "- 0.00: unrelated, duplicate, hallucinated, or based on hidden solution assumptions.\n"
+            "Prefer findings tied to changed source behavior, edge cases, API compatibility, state handling, "
+            "or expected requirement behavior. Do not reward comments that require editing tests. "
+            "Use only the zero-based candidate_id values exactly.\n\n"
+            f"Rank the best {top_n} comments for the next programmer revision.\n\n"
+            f"{_example_prompt(example)}\n\nCandidate comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
 class LLMRewriter:
     """Rewrite final review comments into concise human-facing feedback."""
 
@@ -903,6 +975,29 @@ class LLMRewriter:
         self.max_tokens = max_tokens
         self.fallback_count = 0
         self.mode = "llm_rewriter"
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are a final code-review editor. Rewrite already-selected comments so they are "
+            "clear, concise, and useful to a developer. Do not add new facts, new risks, or "
+            "claims that are not present in the original comment and diff. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, candidate_lines: list[str]) -> str:
+        return (
+            "For each candidate, produce:\n"
+            "- rewritten_comment: one or two short sentences in a practical code-review style.\n"
+            "- essence: at most 12 words describing the core issue.\n"
+            "- severity: one of low, medium, high.\n"
+            "- confidence: 0..1 for whether the rewrite preserved the original meaning.\n\n"
+            "Rules:\n"
+            "- Preserve the original technical meaning.\n"
+            "- Do not invent missing code paths, tests, bugs, or fixes.\n"
+            "- If the original comment is already clear, keep it close to the original.\n"
+            "- Prefer direct, actionable wording over long explanations.\n\n"
+            f"{_example_prompt(example)}\n\nSelected comments:\n"
+            + "\n".join(candidate_lines)
+        )
 
     def _fallback(self, candidates: list[CandidateComment]) -> list[CandidateComment]:
         self.fallback_count += 1
@@ -940,28 +1035,11 @@ class LLMRewriter:
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are a final code-review editor. Rewrite already-selected comments so they are "
-                    "clear, concise, and useful to a developer. Do not add new facts, new risks, or "
-                    "claims that are not present in the original comment and diff. Return JSON only."
-                ),
+                "content": self._system_prompt(),
             },
             {
                 "role": "user",
-                "content": (
-                    "For each candidate, produce:\n"
-                    "- rewritten_comment: one or two short sentences in a practical code-review style.\n"
-                    "- essence: at most 12 words describing the core issue.\n"
-                    "- severity: one of low, medium, high.\n"
-                    "- confidence: 0..1 for whether the rewrite preserved the original meaning.\n\n"
-                    "Rules:\n"
-                    "- Preserve the original technical meaning.\n"
-                    "- Do not invent missing code paths, tests, bugs, or fixes.\n"
-                    "- If the original comment is already clear, keep it close to the original.\n"
-                    "- Prefer direct, actionable wording over long explanations.\n\n"
-                    f"{_example_prompt(example)}\n\nSelected comments:\n"
-                    + "\n".join(candidate_lines)
-                ),
+                "content": self._user_prompt(example, candidate_lines),
             },
         ]
         result = self.client.chat_json(
@@ -1031,3 +1109,31 @@ class LLMRewriter:
         for index, candidate in enumerate(candidates):
             output.append(output_by_id.get(index, candidate))
         return output
+
+
+class SWEContractLLMRewriter(LLMRewriter):
+    """Rewrite selected comments into an agent-facing revision contract."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's final repair-guidance editor. Rewrite selected comments "
+            "as compact instructions for an automated programmer revision. Preserve only "
+            "facts grounded in the original comment and diff. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, candidate_lines: list[str]) -> str:
+        return (
+            "For each candidate, set rewritten_comment to this exact Markdown contract:\n"
+            "Finding: <one concrete risk>\n"
+            "Evidence: <specific diff or requirement evidence>\n"
+            "Expected revision: <minimal source-code change the programmer should make>\n"
+            "Do not change: <tests, unrelated files, or behavior that should remain stable>\n\n"
+            "Rules:\n"
+            "- Keep each field to one concise sentence.\n"
+            "- Do not invent code paths, tests, failing output, or hidden solution details.\n"
+            "- Do not ask the programmer to edit tests.\n"
+            "- Prefer minimal source edits that preserve existing public behavior.\n"
+            "- If the candidate lacks enough evidence, keep the original issue but lower confidence.\n\n"
+            f"{_example_prompt(example)}\n\nSelected comments:\n"
+            + "\n".join(candidate_lines)
+        )

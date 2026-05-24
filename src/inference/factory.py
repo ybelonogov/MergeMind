@@ -8,7 +8,16 @@ from typing import Any
 from src.config import resolve_path
 from src.models.baseline import RetrievalGenerator, Reranker
 from src.data.schema import CandidateComment, MRExample
-from src.models.llm import LLMGenerator, LLMReranker, LLMRewriter, OpenAICompatibleLLMClient, build_llm_client
+from src.models.llm import (
+    LLMGenerator,
+    LLMReranker,
+    LLMRewriter,
+    OpenAICompatibleLLMClient,
+    SWEContractLLMGenerator,
+    SWEContractLLMReranker,
+    SWEContractLLMRewriter,
+    build_llm_client,
+)
 
 BASELINE_MODE = "baseline_retrieval_logistic"
 QWEN_GENERATOR_LOGISTIC_MODE = "qwen35_generator_logistic_reranker"
@@ -20,11 +29,14 @@ QWEN_FULL_REWRITER_MODE = "qwen35_full_with_rewriter"
 QWEN_FULL_REWRITER_ALIAS = "qwen35_rewriter"
 QWEN_FULL_REWRITER_JUDGE_MODE = "qwen35_full_with_rewriter_and_qwen35_judge"
 QWEN_FULL_REWRITER_JUDGE_ALIAS = "qwen35_rewriter_judge"
+QWEN_REWRITER_SWECI_CONTRACT_MODE = "qwen35_rewriter_sweci_contract"
+QWEN_REVIEW_CONTRACT_ALIAS = "qwen35_review_contract"
 
 PIPELINE_ALIASES = {
     QWEN_FULL_ALIAS: QWEN_FULL_MODE,
     QWEN_FULL_REWRITER_ALIAS: QWEN_FULL_REWRITER_MODE,
     QWEN_FULL_REWRITER_JUDGE_ALIAS: QWEN_FULL_REWRITER_JUDGE_MODE,
+    QWEN_REVIEW_CONTRACT_ALIAS: QWEN_REWRITER_SWECI_CONTRACT_MODE,
 }
 
 PIPELINE_MODES = {
@@ -38,6 +50,8 @@ PIPELINE_MODES = {
     QWEN_FULL_REWRITER_ALIAS,
     QWEN_FULL_REWRITER_JUDGE_MODE,
     QWEN_FULL_REWRITER_JUDGE_ALIAS,
+    QWEN_REWRITER_SWECI_CONTRACT_MODE,
+    QWEN_REVIEW_CONTRACT_ALIAS,
 }
 
 
@@ -60,6 +74,7 @@ def pipeline_uses_llm(mode: str) -> bool:
         QWEN_FULL_JUDGE_MODE,
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
+        QWEN_REWRITER_SWECI_CONTRACT_MODE,
     }
 
 
@@ -73,29 +88,32 @@ def _load_baseline_reranker(config: dict[str, Any], project_root: Path) -> Reran
     return Reranker.load(model_dir / "reranker.pkl")
 
 
-def _llm_generation_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_generation_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_generator" if contract else "max_tokens_generator"
     return {
         "max_candidates": int(llm_config.get("max_candidates", config.get("model", {}).get("max_candidates", 5))),
         "min_candidates": int(llm_config.get("min_candidates", 3)),
         "temperature": float(llm_config.get("temperature_generator", 0.2)),
-        "max_tokens": int(llm_config.get("max_tokens_generator", 700)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 1200 if contract else 700)),
     }
 
 
-def _llm_reranker_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_reranker_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_reranker" if contract else "max_tokens_reranker"
     return {
         "temperature": float(llm_config.get("temperature_reranker", 0.0)),
-        "max_tokens": int(llm_config.get("max_tokens_reranker", 900)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 900)),
     }
 
 
-def _llm_rewriter_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_rewriter_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_rewriter" if contract else "max_tokens_rewriter"
     return {
         "temperature": float(llm_config.get("temperature_rewriter", 0.0)),
-        "max_tokens": int(llm_config.get("max_tokens_rewriter", 700)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 1200 if contract else 700)),
     }
 
 
@@ -137,6 +155,7 @@ def build_pipeline_components(
         QWEN_FULL_JUDGE_MODE,
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
+        QWEN_REWRITER_SWECI_CONTRACT_MODE,
     }:
         shared_client = shared_client or build_llm_client(config, project_root)
 
@@ -173,6 +192,16 @@ def build_pipeline_components(
         rewriter = LLMRewriter(shared_client, **_llm_rewriter_config(config))
         return (
             LLMGenerator(shared_client, **_llm_generation_config(config)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_CONTRACT_MODE:
+        assert shared_client is not None
+        reranker = SWEContractLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWEContractLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWEContractLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
             RewritingReranker(reranker, rewriter),
             shared_client,
         )

@@ -13,6 +13,9 @@ __all__ = [
     "LLMReranker",
     "LLMRewriter",
     "OpenAICompatibleLLMClient",
+    "SWEContractLLMGenerator",
+    "SWEContractLLMReranker",
+    "SWEContractLLMRewriter",
 ]
 
 
@@ -21,13 +24,32 @@ def __getattr__(name: str) -> object:
         from .baseline import RetrievalGenerator, Reranker
 
         return {"RetrievalGenerator": RetrievalGenerator, "Reranker": Reranker}[name]
-    if name in {"LLMGenerator", "LLMReranker", "LLMRewriter", "OpenAICompatibleLLMClient"}:
-        from .llm import LLMGenerator, LLMReranker, LLMRewriter, OpenAICompatibleLLMClient
+    if name in {
+        "LLMGenerator",
+        "LLMReranker",
+        "LLMRewriter",
+        "OpenAICompatibleLLMClient",
+        "SWEContractLLMGenerator",
+        "SWEContractLLMReranker",
+        "SWEContractLLMRewriter",
+    }:
+        from .llm import (
+            LLMGenerator,
+            LLMReranker,
+            LLMRewriter,
+            OpenAICompatibleLLMClient,
+            SWEContractLLMGenerator,
+            SWEContractLLMReranker,
+            SWEContractLLMRewriter,
+        )
 
         return {
             "LLMGenerator": LLMGenerator,
             "LLMReranker": LLMReranker,
             "LLMRewriter": LLMRewriter,
             "OpenAICompatibleLLMClient": OpenAICompatibleLLMClient,
+            "SWEContractLLMGenerator": SWEContractLLMGenerator,
+            "SWEContractLLMReranker": SWEContractLLMReranker,
+            "SWEContractLLMRewriter": SWEContractLLMRewriter,
         }[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

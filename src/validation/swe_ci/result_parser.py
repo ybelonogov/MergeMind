@@ -55,6 +55,54 @@ def _count_jsonl_rows(path: Path) -> int:
         return 0
 
 
+def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    try:
+        with Path(path).open("r", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(payload, dict):
+                    rows.append(payload)
+    except OSError:
+        rows = []
+
+    gaps: list[int] = []
+    for row in rows:
+        try:
+            gaps.append(int(row.get("gap")))
+        except (TypeError, ValueError):
+            continue
+    nonnegative_gaps = [gap for gap in gaps if gap >= 0]
+    regressions = 0
+    previous: int | None = None
+    for gap in nonnegative_gaps:
+        if previous is not None and gap > previous:
+            regressions += 1
+        previous = gap
+    reviews = [row.get("mergemind_review") for row in rows if isinstance(row.get("mergemind_review"), dict)]
+    revisions = [row.get("programmer_revision") for row in rows if isinstance(row.get("programmer_revision"), dict)]
+    return {
+        "swe_ci_iteration_count": len(rows),
+        "actual_iterations": max(0, len(rows) - 1),
+        "gap_sequence": gaps,
+        "initial_gap": gaps[0] if gaps else None,
+        "final_gap": gaps[-1] if gaps else None,
+        "best_gap": min(nonnegative_gaps) if nonnegative_gaps else None,
+        "gap_zero": any(gap == 0 for gap in gaps),
+        "regressions_count": regressions,
+        "invalid_iteration_count": sum(1 for gap in gaps if gap < 0),
+        "mergemind_assist_review_count": len(reviews),
+        "mergemind_assist_success_count": sum(1 for review in reviews if review.get("status") == "success"),
+        "mergemind_assist_comment_count": sum(int(review.get("comment_count", 0) or 0) for review in reviews),
+        "mergemind_assist_revision_count": len(revisions),
+    }
+
+
 def _infer_success(payload: dict[str, Any], process_result: SweCiTaskRunResult) -> bool | None:
     for key in ("success", "passed", "pass"):
         if isinstance(payload.get(key), bool):
@@ -82,15 +130,16 @@ def parse_swe_ci_result(
     result_file = locate_swe_ci_result_file(task_output_dir)
     metrics = dict(process_result.metrics)
     metrics["swe_ci_output_dir"] = str(task_output_dir)
+    iteration_file = locate_swe_ci_iteration_file(
+        swe_ci_repo_path=swe_ci_repo_path,
+        experiment_name=experiment_name,
+        task_id=process_result.task_id,
+    )
+    if iteration_file is not None:
+        metrics["swe_ci_iteration_file"] = str(iteration_file)
+        metrics.update(summarize_iteration_file(iteration_file))
     if result_file is None:
-        iteration_file = locate_swe_ci_iteration_file(
-            swe_ci_repo_path=swe_ci_repo_path,
-            experiment_name=experiment_name,
-            task_id=process_result.task_id,
-        )
         if iteration_file is not None:
-            metrics["swe_ci_iteration_file"] = str(iteration_file)
-            metrics["swe_ci_iteration_count"] = _count_jsonl_rows(iteration_file)
             status = "success" if process_result.exit_code == 0 else "failed"
             return SweCiTaskRunResult(
                 task_id=process_result.task_id,

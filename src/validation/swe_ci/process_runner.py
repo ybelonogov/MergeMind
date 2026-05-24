@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -26,6 +27,70 @@ def redact_command(command: list[str]) -> list[str]:
         if part in _SECRET_ARGS:
             redact_next = True
     return redacted
+
+
+def _popen_process_group_kwargs() -> dict[str, Any]:
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {"start_new_session": True}
+
+
+def _kill_process_tree(process: subprocess.Popen[str]) -> None:
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        return
+
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        process.wait(timeout=10)
+        return
+    except subprocess.TimeoutExpired:
+        pass
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+
+
+def _running_docker_container_ids() -> set[str]:
+    try:
+        completed = subprocess.run(
+            ["docker", "ps", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if completed.returncode != 0:
+        return set()
+    return {line.strip() for line in completed.stdout.splitlines() if line.strip()}
+
+
+def _stop_new_docker_containers(previous_container_ids: set[str]) -> list[str]:
+    current_container_ids = _running_docker_container_ids()
+    new_container_ids = sorted(current_container_ids - previous_container_ids)
+    stopped: list[str] = []
+    for container_id in new_container_ids:
+        completed = subprocess.run(
+            ["docker", "stop", container_id],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=30,
+            check=False,
+        )
+        if completed.returncode == 0:
+            stopped.append(container_id)
+    return stopped
 
 
 def run_process(
@@ -77,6 +142,7 @@ def run_process(
                 stderr=stderr_handle,
                 text=True,
                 shell=False,
+                **_popen_process_group_kwargs(),
             )
         except OSError as exc:
             finished_at = utc_now_iso()
@@ -106,6 +172,8 @@ def run_process(
             )
 
         timed_out = False
+        docker_containers_before = _running_docker_container_ids()
+        stopped_docker_containers: list[str] = []
         last_monitor = 0.0
         while True:
             exit_code = process.poll()
@@ -131,10 +199,13 @@ def run_process(
 
             if elapsed >= timeout_seconds:
                 timed_out = True
-                process.kill()
+                _kill_process_tree(process)
+                stopped_docker_containers = _stop_new_docker_containers(docker_containers_before)
                 try:
                     process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
                     pass
                 break
 
@@ -185,6 +256,7 @@ def run_process(
             "pid": getattr(process, "pid", None),
             "command": redact_command(command),
             "cwd": str(cwd) if cwd is not None else "",
+            "docker_containers_stopped_on_timeout": stopped_docker_containers,
         },
         error_message=error_message,
     )

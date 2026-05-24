@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -44,6 +45,28 @@ class SweCiProcessRunnerTests(unittest.TestCase):
 
         self.assertEqual(result.status, "timeout")
         self.assertIn("timed out", result.error_message)
+
+    def test_timeout_kills_child_processes(self) -> None:
+        with TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "orphan-marker.txt"
+            child_script = f"import pathlib, time; time.sleep(3); pathlib.Path({str(marker)!r}).write_text('alive')"
+            parent_script = (
+                "import subprocess, sys, time; "
+                f"subprocess.Popen([sys.executable, '-c', {child_script!r}]); "
+                "time.sleep(10)"
+            )
+
+            result = run_process(
+                command=[sys.executable, "-c", parent_script],
+                task_id="slow-tree-task",
+                task_log_dir=Path(tmp) / "logs" / "slow-tree-task",
+                timeout_seconds=1,
+                monitor_interval_seconds=0.1,
+            )
+            time.sleep(4)
+
+        self.assertEqual(result.status, "timeout")
+        self.assertFalse(marker.exists())
 
     def test_event_log_redacts_secret_arguments(self) -> None:
         with TemporaryDirectory() as tmp:
