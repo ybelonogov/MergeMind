@@ -127,6 +127,50 @@ class SweCiResultParserTests(unittest.TestCase):
         self.assertEqual(parsed.metrics["tokens_per_successful_revision"], 76)
         self.assertIn("swe_ci_iteration_file", parsed.metrics)
 
+    def test_failed_test_reports_skip_invalid_gap_rows(self) -> None:
+        with TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "SWE-CI"
+            iteration_file = repo / "experiments" / "exp-1" / "task-1" / "iteration.jsonl"
+            iteration_file.parent.mkdir(parents=True)
+            iteration_file.write_text(
+                "\n".join(
+                    [
+                        json.dumps({"gap": 2}),
+                        json.dumps({"gap": -1}),
+                        json.dumps({"gap": 1}),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            for name, failed_nodeids in [
+                ("2026-01-01-00-00-00", ["tests/test_a.py::test_a", "tests/test_b.py::test_b"]),
+                ("2026-01-01-00-01-00", ["tests/test_b.py::test_b"]),
+            ]:
+                report_dir = iteration_file.parent / name
+                report_dir.mkdir()
+                (report_dir / "test_report.json").write_text(
+                    json.dumps(
+                        {
+                            "tests": [
+                                {"nodeid": nodeid, "outcome": "failed", "call": {"outcome": "failed"}}
+                                for nodeid in failed_nodeids
+                            ]
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+            parsed = parse_swe_ci_result(
+                _process_result(),
+                Path(tmp) / "outputs",
+                swe_ci_repo_path=repo,
+                experiment_name="exp-1",
+            )
+
+        self.assertEqual(parsed.metrics["failed_test_counts_by_iteration"], [2, 0, 1])
+        self.assertEqual(parsed.metrics["failed_test_nodeids_by_iteration"][2], ["tests/test_b.py::test_b"])
+
 
 if __name__ == "__main__":
     unittest.main()

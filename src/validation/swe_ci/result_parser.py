@@ -82,7 +82,7 @@ def _failed_nodeids_from_report(path: Path) -> list[str]:
     return sorted(nodeids)
 
 
-def _iteration_report_paths(iteration_file: Path, row_count: int) -> list[Path | None]:
+def _iteration_report_paths(iteration_file: Path, gaps: list[int]) -> list[Path | None]:
     task_dir = iteration_file.parent
     report_dirs = [
         path.parent
@@ -91,14 +91,20 @@ def _iteration_report_paths(iteration_file: Path, row_count: int) -> list[Path |
     ]
     report_dirs.sort(key=lambda path: path.name)
     reports = [path / "test_report.json" for path in report_dirs]
-    if len(reports) >= row_count:
-        return reports[:row_count]
     current_report = task_dir / "current" / "test_report.json"
     if current_report.exists() and current_report not in reports:
         reports.insert(0, current_report)
-    output: list[Path | None] = reports[:row_count]
-    while len(output) < row_count:
-        output.append(None)
+    output: list[Path | None] = []
+    report_index = 0
+    for gap in gaps:
+        if gap < 0:
+            output.append(None)
+            continue
+        if report_index < len(reports):
+            output.append(reports[report_index])
+            report_index += 1
+        else:
+            output.append(None)
     return output
 
 
@@ -153,7 +159,7 @@ def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
         previous = gap
     reviews = [row.get("mergemind_review") for row in rows if isinstance(row.get("mergemind_review"), dict)]
     revisions = [row.get("programmer_revision") for row in rows if isinstance(row.get("programmer_revision"), dict)]
-    report_paths = _iteration_report_paths(Path(path), len(rows))
+    report_paths = _iteration_report_paths(Path(path), gaps)
     failed_test_nodeids_by_iteration = [
         _failed_nodeids_from_report(report_path) if report_path is not None else []
         for report_path in report_paths
