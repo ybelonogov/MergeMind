@@ -3,7 +3,8 @@
 ## Summary
 
 This report compares the existing `qwen35_rewriter` chain against the experimental
-`qwen35_rewriter_sweci_contract`, `qwen35_rewriter_sweci_triage`, and strict revision-guard profiles.
+`qwen35_rewriter_sweci_contract`, `qwen35_rewriter_sweci_triage`, strict revision-guard,
+file-aware revision, and before-snapshot revision profiles.
 
 Primary success criterion:
 
@@ -20,6 +21,8 @@ Primary success criterion:
   - reranker scores by likely repair impact;
   - rewriter emits an agent-facing revision contract.
 - Strict revision guard keeps the same reviewer chain, but rejects programmer revisions that modify files outside the immediately preceding programmer patch.
+- File-aware revision passes `/app/mergemind_review.md` and `/app/mergemind_allowed_files.txt` into the direct OpenAI programmer context. This matters because `direct_openai` is not a tool-using shell agent.
+- Before-snapshot revision adds `/app/mergemind_before_files.md`, containing only the pre-programmer contents of files that the programmer already changed in the current epoch. This is not target/oracle information; it is the current epoch's before-state.
 - `LLMJudge` remains optional and is used only for evaluation.
 
 ## SWE-CI Commands
@@ -199,14 +202,19 @@ Runs:
 - Triage: `artifacts/swe_ci_runs/sweci_triage_cle_b_top1_min075_max2_max3_001/summary.md`
 - Strict revision guard: `artifacts/swe_ci_runs/sweci_strict_cle_b_top1_min075_max2_max3_001/summary.md`
 - Strict comparison: `artifacts/swe_ci_runs/sweci_strict_cle_b_ab_compare.md`
+- File-aware revision: `artifacts/swe_ci_runs/sweci_fileaware_v2_cle_b_top1_min075_max2_max3_001/summary.md`
+- Before-snapshot revision: `artifacts/swe_ci_runs/sweci_before_snapshot_cle_b_top1_min075_max2_max3_001/summary.md`
+- Before-snapshot comparison: `artifacts/swe_ci_runs/sweci_before_snapshot_cle_b_ab_compare.md`
 
 | run | gap sequence | actual iterations | final gap | best gap | duration sec | assisted comments | assisted revisions |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | baseline `sweci_direct_cle_b_max3_001` | `5 -> -1 -> 5 -> 11` | 3 | 11 | 5 | 413.506 | 0 | 0 |
 | triage `sweci_triage_cle_b_top1_min075_max2_max3_001` | `5 -> -1 -> -1 -> 11` | 3 | 11 | 5 | 823.125 | 3 | 2 |
 | strict guard `sweci_strict_cle_b_top1_min075_max2_max3_001` | `5 -> -1 -> -1 -> 5` | 3 | 5 | 5 | 620.393 | 3 | 2 |
+| file-aware revision `sweci_fileaware_v2_cle_b_top1_min075_max2_max3_001` | `5 -> -1 -> 5 -> 5` | 3 | 5 | 5 | 715.597 | 3 | 2 |
+| before-snapshot revision `sweci_before_snapshot_cle_b_top1_min075_max2_max3_001` | `5 -> 5 -> 5 -> 5` | 3 | 5 | 5 | 641.947 | 3 | 2 |
 
-Strict guard comparison against baseline:
+Best comparison against baseline:
 
 - Mean iteration delta: `0.000`
 - Mean final gap delta: `-6.000`
@@ -220,7 +228,40 @@ Interpretation:
 - The guard caught a real bad revision attempt in epoch 2:
   - `revision_error=ValueError('MergeMind revision changed files outside the programmer patch: httpdbg/hooks/generic.py')`
   - The retry stayed inside `httpdbg/records.py`.
+- The file-aware revision experiment exposed a direct-agent integration bug: MergeMind review text was being written into the container, but `direct_openai` did not include it in the model prompt context. After adding it, the revision pass consumed the comments, but epoch 1 still regressed to gap `-1` because the model was asked to restore a deleted file without seeing its previous contents.
+- The before-snapshot revision experiment fixed that second issue by passing only the changed files' before-patch contents. It removed the epoch-1 regression (`5 -> -1` became `5 -> 5`) while preserving the same final gap improvement over baseline (`11 -> 5`).
 - The ordinary triage profile generated plausible comments but did not improve the SWE-CI metric and cost more time than baseline.
+
+Before-snapshot command:
+
+```bash
+SWE_CI_DIRECT_CONTEXT_CHARS=80000 SWE_CI_DIRECT_PROGRAMMER_MAX_TOKENS=9000 \
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ~/SWE-CI \
+  --tasks-path artifacts/swe_ci/tasks_cle_b_httpdbg.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id sweci_before_snapshot_cle_b_top1_min075_max2_max3_001 \
+  --limit 1 \
+  --max-iterations 3 \
+  --timeout-seconds 10800 \
+  --mode mergemind_assisted \
+  --splitting lite \
+  --agent-name direct_openai \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --source-data-root ~/SWE-CI/data \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-pipeline qwen35_rewriter_sweci_triage \
+  --mergemind-top-n 1 \
+  --mergemind-min-score 0.75 \
+  --mergemind-max-revision-epochs 2
+```
+
+Important guardrail:
+
+- All assist artifacts for these runs record `target_sha_used_for_review=false`.
+- `/app/mergemind_before_files.md` contains only the source file contents from the current epoch before the programmer patch. It does not include target code, target diff, or hidden SWE-CI scoring information.
 
 ### Real PR Review
 
@@ -270,14 +311,15 @@ The strict iteration-reduction criterion is not met yet: completed SWE-CI smokes
 There is now positive SWE-CI evidence short of iteration reduction:
 
 - On `inline-snapshot`, triage matched baseline final/best gap while using only two revision passes.
-- On `cle-b/httpdbg`, strict revision guard improved final gap from `11` to `5`, preventing a baseline/triage final regression.
+- On `cle-b/httpdbg`, strict/file-aware/before-snapshot profiles improved final gap from `11` to `5`, preventing a baseline/triage final regression.
 - The strict guard produced an auditable safety signal by rejecting an out-of-patch revision attempt.
+- The before-snapshot branch produced the cleanest `cle-b/httpdbg` trajectory: `5 -> 5 -> 5 -> 5`, avoiding both the baseline final regression and the earlier assisted epoch-1 pytest failure.
 
 The stronger artifact remains the real-PR batch: across 5 public merged PRs, the contract profile improved judge score, groundedness, usefulness, produced more comments, and eliminated the fallback seen in the current `qwen35_rewriter` profile.
 
 Recommended next experiment:
 
-- Keep the strict revision guard enabled for all in-loop SWE-CI tests.
-- Add a file-aware revision prompt that passes the allowed changed-file list explicitly into `/app/mergemind_review.md` or a companion artifact.
+- Keep the strict revision guard, file-aware context, and before-snapshot context enabled for all in-loop SWE-CI tests.
+- Add a real-source-file guard that skips MergeMind revision when the programmer patch only creates placeholder paths such as `src/package/module.py`.
 - Run at least 3 small-gap SWE-CI tasks with `max_iterations=5`.
 - Consider stopping or reducing comments after the gap stops improving, because epoch 3 regressed from best gap `12` to final gap `13`.

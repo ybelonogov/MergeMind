@@ -123,8 +123,12 @@ def _collect_context(container_name: str, role: str, prompt: str) -> str:
     if allowed_files:
         _append_section(parts, "Allowed revision files", allowed_files, remaining)
 
+    before_files = _read_container_file(container_name, "/app/mergemind_before_files.md", 26000)
+    if before_files:
+        _append_section(parts, "Before-patch source snapshots", before_files, remaining)
+
     candidate_paths = _paths_from_text(
-        summary + "\n" + requirement + "\n" + mergemind_review + "\n" + allowed_files + "\n" + prompt
+        summary + "\n" + requirement + "\n" + mergemind_review + "\n" + allowed_files + "\n" + before_files + "\n" + prompt
     )
     source_paths = [path for path in candidate_paths if path.startswith("src/")]
     if not source_paths:

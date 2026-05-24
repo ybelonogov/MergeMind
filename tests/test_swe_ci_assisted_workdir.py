@@ -168,10 +168,13 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn("MERGEMIND_MAX_REVISION_EPOCHS", copied_helper)
         self.assertIn("Do not create new files.", copied_helper)
         self.assertIn("mergemind_allowed_files.txt", copied_helper)
+        self.assertIn("mergemind_before_files.md", copied_helper)
         self.assertIn("Do not modify files that are absent", copied_helper)
         self.assertIn('copy_dir_to_container(container_name, tmp_dir/"code", "/app")', copied_run)
         self.assertIn('copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")', copied_run)
         self.assertIn('allowed_files_path.write_text("\\n".join(original_changed_files) + "\\n", encoding="utf-8")', copied_run)
+        self.assertIn('copy_file_to_container(container_name, before_files_path, "/app", rename="mergemind_before_files.md")', copied_run)
+        self.assertIn("Before-patch snapshots for MergeMind revision", copied_run)
         self.assertIn("--network", copied_tools)
         self.assertIn("NO_THINK_INSTRUCTIONS_FILE", copied_opencode)
         self.assertIn('input="/no_think\\n"', copied_opencode)
@@ -224,6 +227,8 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn("/app/mergemind_review.md", copied_direct_agent)
         self.assertIn("Allowed revision files", copied_direct_agent)
         self.assertIn("/app/mergemind_allowed_files.txt", copied_direct_agent)
+        self.assertIn("Before-patch source snapshots", copied_direct_agent)
+        self.assertIn("/app/mergemind_before_files.md", copied_direct_agent)
 
 
 if __name__ == "__main__":

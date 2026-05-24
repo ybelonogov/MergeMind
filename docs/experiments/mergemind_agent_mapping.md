@@ -20,6 +20,7 @@ This note fixes the current agent map before running SWE-CI and real PR experime
 - `Revision Contract`: newly covered by `SWEContractLLMRewriter`, which emits `Finding`, `Evidence`, `Expected revision`, and `Do not change`.
 - `Test Failure Triage Reviewer`: still not fully covered. SWE-CI assisted examples include requirement and programmer diff, but not full non-passed test details as first-class prompt context.
 - `No-Target Oracle Guard`: partially covered. SWE-CI assisted artifacts set `target_sha_used_for_review=false`, omit target code, and the contract prompts forbid hidden-solution assumptions.
+- `Before-Patch Snapshot Provider`: not an LLM agent, but now covered experimentally for SWE-CI direct-agent revision. It passes only the current epoch's pre-programmer contents for files the programmer already changed, so the revision agent can restore accidentally deleted code without seeing target/oracle state.
 
 ## Experimental Profile
 

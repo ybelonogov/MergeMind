@@ -45,18 +45,21 @@ Inputs:
 - /app/requirement.xml contains the architect requirement.
 - /app/mergemind_review.md contains review comments generated from your current patch.
 - /app/mergemind_allowed_files.txt lists the only files you may edit.
+- /app/mergemind_before_files.md contains before-patch snapshots for those files.
 
 Workflow:
 1. Read /app/mergemind_review.md and /app/requirement.xml.
 2. Read /app/mergemind_allowed_files.txt and inspect only those files under /app/code/.
-3. Apply the smallest code revision needed to address actionable review comments.
-4. If a comment points outside the files you changed, is already addressed, is uncertain,
+3. Use /app/mergemind_before_files.md only to restore or reconcile code that your previous patch deleted or replaced by mistake.
+4. Apply the smallest code revision needed to address actionable review comments.
+5. If a comment points outside the files you changed, is already addressed, is uncertain,
    or would require broad rewrites, leave that area unchanged.
 
 Constraints:
 - Do not edit tests.
 - Do not edit /app/requirement.xml or /app/mergemind_review.md.
 - Do not edit /app/mergemind_allowed_files.txt.
+- Do not edit /app/mergemind_before_files.md.
 - Do not run pytest, unittest, or any test command.
 - Do not create new files.
 - Do not modify files that are absent from /app/mergemind_allowed_files.txt.
@@ -382,6 +385,18 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 allowed_files_path = task_dir / "mergemind_allowed_files.txt"
                                 allowed_files_path.write_text("\\n".join(original_changed_files) + "\\n", encoding="utf-8")
                                 copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")
+                                before_files_path = task_dir / "mergemind_before_files.md"
+                                before_sections = ["# Before-patch snapshots for MergeMind revision"]
+                                for original_file in original_changed_files:
+                                    before_source_path = current_dir / "code" / original_file
+                                    before_sections.append("## " + original_file)
+                                    if before_source_path.is_file():
+                                        before_content = before_source_path.read_text(encoding="utf-8", errors="replace")[:20000]
+                                        before_sections.append("```python\\n" + before_content + "\\n```")
+                                    else:
+                                        before_sections.append("<file did not exist before programmer patch>")
+                                before_files_path.write_text("\\n\\n".join(before_sections) + "\\n", encoding="utf-8")
+                                copy_file_to_container(container_name, before_files_path, "/app", rename="mergemind_before_files.md")
                                 programmer_revision_result = call_cli_agent(
                                     container_name, MERGEMIND_PROGRAMMER_REVISION_PROMPT,
                                     timeout=CONFIG.evolve.programmer.timeout
