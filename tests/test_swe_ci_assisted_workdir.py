@@ -171,6 +171,7 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn("Do not modify files that are absent", copied_helper)
         self.assertIn('copy_dir_to_container(container_name, tmp_dir/"code", "/app")', copied_run)
         self.assertIn('copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")', copied_run)
+        self.assertIn('allowed_files_path.write_text("\\n".join(original_changed_files) + "\\n", encoding="utf-8")', copied_run)
         self.assertIn("--network", copied_tools)
         self.assertIn("NO_THINK_INSTRUCTIONS_FILE", copied_opencode)
         self.assertIn('input="/no_think\\n"', copied_opencode)

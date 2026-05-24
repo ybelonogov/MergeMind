@@ -380,7 +380,7 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 copy_file_to_container(container_name, mergemind_review["review_path"], "/app", rename="mergemind_review.md")
                                 original_changed_files = sorted(set(programmer_result.get("changed_files") or []))
                                 allowed_files_path = task_dir / "mergemind_allowed_files.txt"
-                                allowed_files_path.write_text("\n".join(original_changed_files) + "\n", encoding="utf-8")
+                                allowed_files_path.write_text("\\n".join(original_changed_files) + "\\n", encoding="utf-8")
                                 copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")
                                 programmer_revision_result = call_cli_agent(
                                     container_name, MERGEMIND_PROGRAMMER_REVISION_PROMPT,
