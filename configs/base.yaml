@@ -105,6 +105,7 @@ experiments:
     - qwen35_generator_qwen35_reranker
     - qwen35_full_with_rewriter
     - qwen35_rewriter_sweci_contract
+    - qwen35_rewriter_sweci_triage
     - qwen35_full_with_rewriter_and_qwen35_judge
 demo:
   top_n: 3

@@ -16,6 +16,9 @@ from src.models.llm import (
     SWEContractLLMGenerator,
     SWEContractLLMReranker,
     SWEContractLLMRewriter,
+    SWETriageLLMGenerator,
+    SWETriageLLMReranker,
+    SWETriageLLMRewriter,
     build_llm_client,
 )
 
@@ -31,12 +34,15 @@ QWEN_FULL_REWRITER_JUDGE_MODE = "qwen35_full_with_rewriter_and_qwen35_judge"
 QWEN_FULL_REWRITER_JUDGE_ALIAS = "qwen35_rewriter_judge"
 QWEN_REWRITER_SWECI_CONTRACT_MODE = "qwen35_rewriter_sweci_contract"
 QWEN_REVIEW_CONTRACT_ALIAS = "qwen35_review_contract"
+QWEN_REWRITER_SWECI_TRIAGE_MODE = "qwen35_rewriter_sweci_triage"
+QWEN_REVIEW_TRIAGE_ALIAS = "qwen35_review_triage"
 
 PIPELINE_ALIASES = {
     QWEN_FULL_ALIAS: QWEN_FULL_MODE,
     QWEN_FULL_REWRITER_ALIAS: QWEN_FULL_REWRITER_MODE,
     QWEN_FULL_REWRITER_JUDGE_ALIAS: QWEN_FULL_REWRITER_JUDGE_MODE,
     QWEN_REVIEW_CONTRACT_ALIAS: QWEN_REWRITER_SWECI_CONTRACT_MODE,
+    QWEN_REVIEW_TRIAGE_ALIAS: QWEN_REWRITER_SWECI_TRIAGE_MODE,
 }
 
 PIPELINE_MODES = {
@@ -52,6 +58,8 @@ PIPELINE_MODES = {
     QWEN_FULL_REWRITER_JUDGE_ALIAS,
     QWEN_REWRITER_SWECI_CONTRACT_MODE,
     QWEN_REVIEW_CONTRACT_ALIAS,
+    QWEN_REWRITER_SWECI_TRIAGE_MODE,
+    QWEN_REVIEW_TRIAGE_ALIAS,
 }
 
 
@@ -75,6 +83,7 @@ def pipeline_uses_llm(mode: str) -> bool:
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
+        QWEN_REWRITER_SWECI_TRIAGE_MODE,
     }
 
 
@@ -156,6 +165,7 @@ def build_pipeline_components(
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
+        QWEN_REWRITER_SWECI_TRIAGE_MODE,
     }:
         shared_client = shared_client or build_llm_client(config, project_root)
 
@@ -202,6 +212,16 @@ def build_pipeline_components(
         rewriter = SWEContractLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
         return (
             SWEContractLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_TRIAGE_MODE:
+        assert shared_client is not None
+        reranker = SWETriageLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWETriageLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWETriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
             RewritingReranker(reranker, rewriter),
             shared_client,
         )

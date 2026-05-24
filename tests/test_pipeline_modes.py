@@ -9,6 +9,7 @@ from src.inference.factory import (
     QWEN_FULL_REWRITER_JUDGE_MODE,
     QWEN_FULL_REWRITER_MODE,
     QWEN_REWRITER_SWECI_CONTRACT_MODE,
+    QWEN_REWRITER_SWECI_TRIAGE_MODE,
     build_pipeline_components,
     canonical_pipeline_mode,
     pipeline_uses_llm,
@@ -22,8 +23,10 @@ class PipelineModeTests(unittest.TestCase):
         self.assertEqual(canonical_pipeline_mode("qwen35_rewriter"), QWEN_FULL_REWRITER_MODE)
         self.assertEqual(canonical_pipeline_mode("qwen35_rewriter_judge"), QWEN_FULL_REWRITER_JUDGE_MODE)
         self.assertEqual(canonical_pipeline_mode("qwen35_review_contract"), QWEN_REWRITER_SWECI_CONTRACT_MODE)
+        self.assertEqual(canonical_pipeline_mode("qwen35_review_triage"), QWEN_REWRITER_SWECI_TRIAGE_MODE)
         self.assertTrue(pipeline_uses_llm("qwen35_rewriter"))
         self.assertTrue(pipeline_uses_llm("qwen35_review_contract"))
+        self.assertTrue(pipeline_uses_llm("qwen35_review_triage"))
         self.assertFalse(pipeline_uses_llm_judge("qwen35_rewriter"))
         self.assertTrue(pipeline_uses_llm_judge("qwen35_rewriter_judge"))
 
@@ -82,6 +85,33 @@ class PipelineModeTests(unittest.TestCase):
         self.assertEqual(generator.max_tokens, 1200)
         self.assertEqual(reranker.reranker.max_tokens, 900)
         self.assertEqual(reranker.rewriter.max_tokens, 1200)
+
+    def test_triage_mode_uses_triage_agents_and_caps_candidates(self) -> None:
+        config = {
+            "llm": {
+                "max_candidates": 5,
+                "min_candidates": 3,
+                "max_tokens_contract_generator": 1200,
+                "max_tokens_contract_reranker": 900,
+                "max_tokens_contract_rewriter": 1200,
+            },
+            "model": {"max_candidates": 5},
+        }
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: {"choices": [{"message": {"content": "{}"}}]})
+
+        generator, reranker, shared_client = build_pipeline_components(
+            QWEN_REWRITER_SWECI_TRIAGE_MODE,
+            config,
+            Path("."),
+            llm_client=client,
+        )
+
+        self.assertIs(shared_client, client)
+        self.assertEqual(generator.__class__.__name__, "SWETriageLLMGenerator")
+        self.assertEqual(reranker.reranker.__class__.__name__, "SWETriageLLMReranker")
+        self.assertEqual(reranker.rewriter.__class__.__name__, "SWETriageLLMRewriter")
+        self.assertEqual(generator.max_candidates, 3)
+        self.assertEqual(generator.min_candidates, 1)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,9 @@ __all__ = [
     "SWEContractLLMGenerator",
     "SWEContractLLMReranker",
     "SWEContractLLMRewriter",
+    "SWETriageLLMGenerator",
+    "SWETriageLLMReranker",
+    "SWETriageLLMRewriter",
 ]
 
 
@@ -32,6 +35,9 @@ def __getattr__(name: str) -> object:
         "SWEContractLLMGenerator",
         "SWEContractLLMReranker",
         "SWEContractLLMRewriter",
+        "SWETriageLLMGenerator",
+        "SWETriageLLMReranker",
+        "SWETriageLLMRewriter",
     }:
         from .llm import (
             LLMGenerator,
@@ -41,6 +47,9 @@ def __getattr__(name: str) -> object:
             SWEContractLLMGenerator,
             SWEContractLLMReranker,
             SWEContractLLMRewriter,
+            SWETriageLLMGenerator,
+            SWETriageLLMReranker,
+            SWETriageLLMRewriter,
         )
 
         return {
@@ -51,5 +60,8 @@ def __getattr__(name: str) -> object:
             "SWEContractLLMGenerator": SWEContractLLMGenerator,
             "SWEContractLLMReranker": SWEContractLLMReranker,
             "SWEContractLLMRewriter": SWEContractLLMRewriter,
+            "SWETriageLLMGenerator": SWETriageLLMGenerator,
+            "SWETriageLLMReranker": SWETriageLLMReranker,
+            "SWETriageLLMRewriter": SWETriageLLMRewriter,
         }[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

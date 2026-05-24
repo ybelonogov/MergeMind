@@ -17,6 +17,8 @@ from src.models.llm import (
     OpenAICompatibleLLMClient,
     SWEContractLLMGenerator,
     SWEContractLLMRewriter,
+    SWETriageLLMGenerator,
+    SWETriageLLMRewriter,
     SQLiteLLMCache,
     parse_json_payload,
 )
@@ -199,6 +201,26 @@ class LocalLLMComponentTests(unittest.TestCase):
 
         self.assertIn("increase failing tests", seen_prompts[0])
         self.assertIn("hidden solution", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
+
+    def test_swe_triage_generator_caps_candidates_and_avoids_oracle_terms(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWETriageLLMGenerator(client, max_candidates=5, min_candidates=3)
+
+        generator.generate(_example())
+
+        self.assertEqual(generator.max_candidates, 3)
+        self.assertEqual(generator.min_candidates, 1)
+        self.assertIn("one strong root-cause finding", seen_prompts[0])
+        self.assertIn("smallest safe source-code repair", seen_prompts[0])
         self.assertNotIn("target_sha", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
@@ -478,6 +500,47 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertIn("Do not change:", rewritten[0].text)
         self.assertIn("automated programmer revision", rewriter._system_prompt())
         self.assertIn("Do not ask the programmer to edit tests", seen_prompts[0])
+
+    def test_swe_triage_rewriter_requests_minimal_root_cause_contract(self) -> None:
+        seen_prompts: list[str] = []
+        payload = {
+            "rewritten_comments": [
+                {
+                    "candidate_id": 0,
+                    "rewritten_comment": (
+                        "Finding: The patch violates the snapshot update invariant.\n"
+                        "Evidence: The diff changes update handling without preserving old values.\n"
+                        "Expected revision: Preserve existing value normalization before writing the update.\n"
+                        "Do not change: Tests, public APIs, or unrelated snapshot formatting."
+                    ),
+                    "essence": "Snapshot update invariant",
+                    "severity": "high",
+                    "confidence": 0.88,
+                    "reason": "Converted to root-cause repair guidance.",
+                }
+            ]
+        }
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion(json.dumps(payload))
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWETriageLLMRewriter(client)
+
+        rewritten = rewriter.rewrite(
+            _example(),
+            [CandidateComment(text="Preserve update normalization.", reranker_score=0.9)],
+        )
+
+        self.assertIn("Finding:", rewritten[0].text)
+        self.assertIn("Expected revision:", rewritten[0].text)
+        self.assertIn("Do not change:", rewritten[0].text)
+        self.assertIn("root-cause repair editor", rewriter._system_prompt())
+        self.assertIn("smallest source-code edit", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
 
 
 if __name__ == "__main__":

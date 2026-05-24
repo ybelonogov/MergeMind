@@ -719,6 +719,45 @@ class SWEContractLLMGenerator(LLMGenerator):
         )
 
 
+class SWETriageLLMGenerator(SWEContractLLMGenerator):
+    """Generate a small set of root-cause triage comments for SWE-CI repair."""
+
+    def __init__(
+        self,
+        client: OpenAICompatibleLLMClient,
+        max_candidates: int = 3,
+        min_candidates: int = 1,
+        temperature: float = 0.2,
+        max_tokens: int = 700,
+    ) -> None:
+        super().__init__(
+            client,
+            max_candidates=max(1, min(max_candidates, 3)),
+            min_candidates=max(1, min(min_candidates, 1)),
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI test-failure triage reviewer. Generate only the "
+            "smallest set of source-code repair blockers that a programmer can act on before "
+            "pytest. Prefer one root-cause finding over multiple broad review notes. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate up to {limit} triage findings; one strong root-cause finding is better than "
+            "several weak comments. Focus only on source-code changes that are likely to reduce the "
+            "failing-test gap in the next revision. A valid finding must name the broken invariant, "
+            "cite diff or requirement evidence, and describe the smallest safe source-code repair. "
+            "Reject style, docs, naming, test-editing, speculative rewrites, and broad redesign advice. "
+            "Use only the provided current diff, repository context, and requirement text. Do not rely "
+            "on unavailable oracle code. If there is no grounded root-cause risk, return no comments.\n\n"
+            f"{_example_prompt(example)}"
+        )
+
+
 class LLMReranker:
     """Rank review candidates with a local LLM."""
 
@@ -961,6 +1000,38 @@ class SWEContractLLMReranker(LLMReranker):
         )
 
 
+class SWETriageLLMReranker(SWEContractLLMReranker):
+    """Rerank SWE-CI comments as root-cause triage blockers."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI root-cause triage critic. Select only comments that "
+            "are likely to produce a minimal, behavior-preserving repair in the next programmer "
+            "revision. Penalize noise aggressively. Return JSON only."
+        )
+
+    def _user_prompt(
+        self,
+        example: MRExample,
+        candidate_lines: list[str],
+        top_n: int,
+    ) -> str:
+        return (
+            "Use this strict scoring rubric:\n"
+            "- 0.90-1.00: grounded root cause, clear invariant, minimal repair likely reduces failing tests.\n"
+            "- 0.75-0.89: actionable and grounded but lower confidence about test-gap impact.\n"
+            "- 0.40-0.74: plausible review note, but too broad, indirect, or not a revision blocker.\n"
+            "- 0.10-0.39: style, docs, naming, test-editing, generic, or likely to distract the programmer.\n"
+            "- 0.00: unrelated, duplicate, hallucinated, or based on unavailable information.\n"
+            "For automated SWE-CI repair, false positives are expensive: if a comment could cause "
+            "a broad rewrite or preserve the wrong behavior, keep it below 0.75. Rank only comments "
+            "that should be shown before the next revision. Use the zero-based candidate_id values exactly.\n\n"
+            f"Rank the best {top_n} comments for root-cause repair triage.\n\n"
+            f"{_example_prompt(example)}\n\nCandidate comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
 class LLMRewriter:
     """Rewrite final review comments into concise human-facing feedback."""
 
@@ -1134,6 +1205,34 @@ class SWEContractLLMRewriter(LLMRewriter):
             "- Do not ask the programmer to edit tests.\n"
             "- Prefer minimal source edits that preserve existing public behavior.\n"
             "- If the candidate lacks enough evidence, keep the original issue but lower confidence.\n\n"
+            f"{_example_prompt(example)}\n\nSelected comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
+class SWETriageLLMRewriter(SWEContractLLMRewriter):
+    """Rewrite comments into one minimal root-cause repair contract."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI root-cause repair editor. Convert selected triage comments "
+            "into compact instructions for an automated programmer. Preserve only grounded facts, "
+            "avoid broad rewrites, and prefer no-op guidance over speculative fixes. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, candidate_lines: list[str]) -> str:
+        return (
+            "For each candidate, set rewritten_comment to this exact Markdown contract:\n"
+            "Finding: <one likely root cause or invariant violation>\n"
+            "Evidence: <specific requirement or diff evidence; no test-output guesses>\n"
+            "Expected revision: <smallest source-code edit that should repair the invariant>\n"
+            "Do not change: <tests, unrelated files, public APIs, or behavior that should stay stable>\n\n"
+            "Rules:\n"
+            "- Keep each field to one concise sentence.\n"
+            "- Do not invent failing tests, hidden implementation details, or unavailable solution code.\n"
+            "- Do not ask the programmer to edit tests.\n"
+            "- Do not preserve newly introduced behavior unless the requirement explicitly demands it.\n"
+            "- If the candidate is weak, rewrite it as a narrow verification/check instead of a broad rewrite.\n\n"
             f"{_example_prompt(example)}\n\nSelected comments:\n"
             + "\n".join(candidate_lines)
         )
