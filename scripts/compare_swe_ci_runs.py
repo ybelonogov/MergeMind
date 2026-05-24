@@ -51,6 +51,11 @@ def _int_number(value: Any) -> int | None:
     return int(numeric) if numeric is not None else None
 
 
+def _valid_gap(value: Any) -> int | None:
+    gap = _int_number(value)
+    return gap if gap is not None and gap >= 0 else None
+
+
 def _gap_sequence(row: dict[str, Any]) -> list[int]:
     value = _metric(row, "gap_sequence")
     if not isinstance(value, list):
@@ -114,8 +119,10 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
         right = assisted.get(task_id, {})
         baseline_iterations = _number(_metric(left, "actual_iterations"))
         assisted_iterations = _number(_metric(right, "actual_iterations"))
-        baseline_final_gap = _int_number(_metric(left, "final_gap"))
-        assisted_final_gap = _int_number(_metric(right, "final_gap"))
+        baseline_final_gap_raw = _int_number(_metric(left, "final_gap"))
+        assisted_final_gap_raw = _int_number(_metric(right, "final_gap"))
+        baseline_final_gap = _valid_gap(_metric(left, "final_gap"))
+        assisted_final_gap = _valid_gap(_metric(right, "final_gap"))
         baseline_gaps = _gap_sequence(left)
         assisted_gaps = _gap_sequence(right)
         baseline_first_same = _first_iter_to_gap(baseline_gaps, baseline_final_gap, same_or_lower=False)
@@ -141,6 +148,12 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
                 ),
                 "baseline_final_gap": baseline_final_gap,
                 "assisted_final_gap": assisted_final_gap,
+                "baseline_final_gap_raw": baseline_final_gap_raw,
+                "assisted_final_gap_raw": assisted_final_gap_raw,
+                "baseline_final_gap_valid": baseline_final_gap is not None,
+                "assisted_final_gap_valid": assisted_final_gap is not None,
+                "baseline_invalid_iteration_count": _int_number(_metric(left, "invalid_iteration_count")) or 0,
+                "assisted_invalid_iteration_count": _int_number(_metric(right, "invalid_iteration_count")) or 0,
                 "final_gap_delta": (
                     assisted_final_gap - baseline_final_gap
                     if baseline_final_gap is not None and assisted_final_gap is not None
@@ -218,6 +231,8 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
         "assisted_total_tokens": sum(float(row["assisted_total_tokens"] or 0) for row in rows),
         "assisted_review_tokens": sum(float(row["assisted_review_tokens"] or 0) for row in rows),
         "assisted_llm_call_count": sum(float(row["assisted_llm_call_count"] or 0) for row in rows),
+        "invalid_final_gap_count": sum(1 for row in rows if not row["assisted_final_gap_valid"]),
+        "assisted_invalid_iteration_count": sum(int(row["assisted_invalid_iteration_count"] or 0) for row in rows),
     }
     return rows, summary
 
@@ -242,17 +257,20 @@ def render_markdown(baseline_dir: Path, assisted_dir: Path, rows: list[dict[str,
         f"- assisted total tokens: {_fmt(summary['assisted_total_tokens'])}",
         f"- assisted review tokens: {_fmt(summary['assisted_review_tokens'])}",
         f"- assisted LLM calls: {_fmt(summary['assisted_llm_call_count'])}",
+        f"- invalid assisted final gaps: {summary['invalid_final_gap_count']}",
+        f"- assisted invalid iterations: {summary['assisted_invalid_iteration_count']}",
         "",
-        "Negative deltas mean the assisted run used fewer iterations or ended with a smaller gap.",
+        "Negative deltas mean the assisted run used fewer iterations or ended with a smaller valid gap.",
+        "Rows with invalid final gaps are excluded from final-gap delta averages.",
         "",
-        "| task_id | baseline | assisted | base_iter | assist_iter | iter_delta | base_gap | assist_gap | gap_delta | first_same | first_same/lower | failed_jaccard | fixed | new | same_tests | tokens | review_tokens | comments | revisions |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |",
+        "| task_id | baseline | assisted | base_iter | assist_iter | iter_delta | base_gap | assist_gap | gap_delta | invalid_iters | first_same | first_same/lower | failed_jaccard | fixed | new | same_tests | tokens | review_tokens | comments | revisions |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
             "| {task_id} | {baseline_status} | {assisted_status} | {baseline_iterations} | "
             "{assisted_iterations} | {iteration_delta} | {baseline_final_gap} | {assisted_final_gap} | "
-            "{final_gap_delta} | {first_iter_to_same_gap} | {first_iter_to_same_or_lower_gap} | "
+            "{final_gap_delta} | {assisted_invalid_iteration_count} | {first_iter_to_same_gap} | {first_iter_to_same_or_lower_gap} | "
             "{failed_set_jaccard_vs_baseline} | {fixed_failure_count} | {new_failure_count} | "
             "{same_gap_same_tests} | {assisted_total_tokens} | {assisted_review_tokens} | "
             "{assisted_comments} | {assisted_revisions} |".format(

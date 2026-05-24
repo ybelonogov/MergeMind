@@ -59,17 +59,19 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         f"- baseline: `{payload['baseline_dir']}`",
         "",
-        "| config | tasks | mean_gap_delta | same/lower_iter_delta | failed_jaccard | fixed | new | comments | revisions | tokens | review_tokens | llm_calls |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| config | tasks | mean_gap_delta | invalid_final | invalid_iters | same/lower_iter_delta | failed_jaccard | fixed | new | comments | revisions | tokens | review_tokens | llm_calls |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for item in payload["configs"]:
         summary = item["summary"]
         lines.append(
-            "| {name} | {task_count} | {gap_delta} | {iter_delta} | {jaccard} | {fixed} | {new} | "
+            "| {name} | {task_count} | {gap_delta} | {invalid_final} | {invalid_iters} | {iter_delta} | {jaccard} | {fixed} | {new} | "
             "{comments} | {revisions} | {tokens} | {review_tokens} | {calls} |".format(
                 name=item["name"],
                 task_count=_fmt(summary.get("task_count")),
                 gap_delta=_fmt(summary.get("mean_final_gap_delta")),
+                invalid_final=_fmt(summary.get("invalid_final_gap_count")),
+                invalid_iters=_fmt(summary.get("assisted_invalid_iteration_count")),
                 iter_delta=_fmt(summary.get("mean_same_or_lower_gap_iteration_delta")),
                 jaccard=_fmt(summary.get("mean_failed_set_jaccard_vs_baseline")),
                 fixed=_fmt(summary.get("fixed_failure_count")),

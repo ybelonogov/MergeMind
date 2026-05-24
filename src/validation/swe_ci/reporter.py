@@ -56,7 +56,7 @@ def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
     final_gaps = [
         int(result.metrics["final_gap"])
         for result in results
-        if isinstance(result.metrics.get("final_gap"), int)
+        if isinstance(result.metrics.get("final_gap"), int) and int(result.metrics["final_gap"]) >= 0
     ]
     best_gaps = [
         int(result.metrics["best_gap"])
@@ -87,6 +87,11 @@ def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
         "mergemind_comment_count": sum(int(payload.get("comment_count", 0)) for payload in review_payloads),
         "average_actual_iterations": sum(actual_iterations) / len(actual_iterations) if actual_iterations else 0.0,
         "average_final_gap": sum(final_gaps) / len(final_gaps) if final_gaps else 0.0,
+        "invalid_final_gap_count": sum(
+            1
+            for result in results
+            if isinstance(result.metrics.get("final_gap"), int) and int(result.metrics["final_gap"]) < 0
+        ),
         "average_best_gap": sum(best_gaps) / len(best_gaps) if best_gaps else 0.0,
         "gap_zero_count": sum(1 for result in results if result.metrics.get("gap_zero") is True),
         "mergemind_assist_review_count": sum(int(result.metrics.get("mergemind_assist_review_count", 0) or 0) for result in results),
@@ -120,6 +125,7 @@ def render_summary(run_id: str, run_dir: Path, results: list[SweCiTaskRunResult]
         f"- Average duration seconds: {metrics['average_duration_seconds']:.3f}",
         f"- Average actual iterations: {metrics['average_actual_iterations']:.3f}",
         f"- Average final gap: {metrics['average_final_gap']:.3f}",
+        f"- Invalid final gap count: {metrics['invalid_final_gap_count']}",
         f"- Average best gap: {metrics['average_best_gap']:.3f}",
         f"- Gap zero count: {metrics['gap_zero_count']}",
         f"- MergeMind reviewed tasks: {metrics['mergemind_reviewed']}",
