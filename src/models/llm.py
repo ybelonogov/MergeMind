@@ -758,6 +758,82 @@ class SWETriageLLMGenerator(SWEContractLLMGenerator):
         )
 
 
+class CavemanLLMGenerator(SWEContractLLMGenerator):
+    """Generate blunt, low-noise SWE-CI repair comments."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are Caveman Reviewer for SWE-CI. Your only job is to reduce failing tests "
+            "and patch risk. You are not a stylist, architect, or teacher. Generate comments "
+            "only for concrete source-code bug risks grounded in the requirement, diff, or "
+            "visible test-failure context. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate between 0 and {limit} comments. Prefer zero comments over weak comments.\n\n"
+            "Caveman rules:\n"
+            "1. Comment only on changed source code or directly affected source behavior.\n"
+            "2. One comment must describe one concrete bug risk.\n"
+            "3. Every comment must cite specific evidence from diff, requirement, or visible test failure context.\n"
+            "4. If you cannot name a specific failing behavior, return no comment.\n"
+            "5. Prefer comments likely to reduce the current failing-test gap.\n"
+            "6. Prefer local fixes over rewrites.\n"
+            "7. Do not suggest editing tests.\n"
+            "8. Do not mention style, docs, naming, formatting, or preferences.\n"
+            "9. Do not summarize or praise.\n"
+            "10. If confidence is low, say nothing.\n\n"
+            "Each comment text must already include these fields:\n"
+            "Finding: <one sentence bug/risk>\n"
+            "Evidence: <specific diff, requirement, or visible test evidence>\n"
+            "Expected revision: <small local source-code change>\n"
+            "Do not change: <tests, unrelated files, or behavior to preserve>\n"
+            "Confidence: <0.0-1.0>\n\n"
+            f"{_example_prompt(example)}"
+        )
+
+
+class CavemanDirectLLMGenerator(CavemanLLMGenerator):
+    """Generate final repair-contract comments without a rewriter step."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are Caveman Direct Reviewer for SWE-CI. Generate final agent-facing repair "
+            "contracts directly. Be blunt, local, and conservative. Return JSON only."
+        )
+
+
+class CavemanTestTriageLLMGenerator(CavemanLLMGenerator):
+    """Generate comments using visible previous pytest failures as first-class evidence."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are Caveman Test Triage Reviewer for SWE-CI. Use only the requirement, diff, "
+            "and visible previous pytest failures to find one local source-code repair risk. "
+            "Do not infer unseen tests or hidden solutions. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate between 0 and {limit} comments. Prefer exactly one root-cause comment "
+            "when the visible pytest failures and diff point to a local source bug; otherwise "
+            "return no comments.\n\n"
+            "Priority:\n"
+            "1. Import/runtime errors introduced by the patch.\n"
+            "2. Visible failed nodeids explained by changed source behavior.\n"
+            "3. Wrong branch, wrong default, wrong type, or lost state in changed code.\n"
+            "4. Anything else only if it is concrete and local.\n\n"
+            "Required comment fields:\n"
+            "Finding: <one likely root cause>\n"
+            "Evidence: <specific diff/requirement/test-failure evidence>\n"
+            "Expected revision: <small source-code edit>\n"
+            "Do not change: <tests, unrelated files, public APIs, or behavior to preserve>\n"
+            "Confidence: <0.0-1.0>\n\n"
+            "Forbidden: style-only, docs-only, naming, test edits, broad refactors, speculation.\n\n"
+            f"{_example_prompt(example)}"
+        )
+
+
 class LLMReranker:
     """Rank review candidates with a local LLM."""
 
@@ -1032,6 +1108,37 @@ class SWETriageLLMReranker(SWEContractLLMReranker):
         )
 
 
+class CavemanLLMReranker(SWEContractLLMReranker):
+    """Aggressively filter SWE-CI comments for local repair impact."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are Caveman Critic for SWE-CI. False positives are expensive. Select only "
+            "comments that a coding agent should follow before pytest. Return JSON only."
+        )
+
+    def _user_prompt(
+        self,
+        example: MRExample,
+        candidate_lines: list[str],
+        top_n: int,
+    ) -> str:
+        return (
+            "Use this strict scoring rubric:\n"
+            "- 0.90-1.00: concrete local bug risk, strong evidence, small safe revision.\n"
+            "- 0.75-0.89: grounded and actionable, but weaker test-gap confidence.\n"
+            "- 0.40-0.74: plausible but too broad, indirect, or missing evidence.\n"
+            "- 0.10-0.39: generic, style/docs/naming, test-edit advice, or distracting.\n"
+            "- 0.00: unrelated, duplicate, hallucinated, or unsafe.\n"
+            "A high-scoring comment must contain Finding, Evidence, Expected revision, "
+            "Do not change, and Confidence. Penalize comments that could cause broad rewrites "
+            "or edits outside the programmer patch. Use the zero-based candidate_id values exactly.\n\n"
+            f"Rank the best {top_n} comments for the next programmer revision.\n\n"
+            f"{_example_prompt(example)}\n\nCandidate comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
 class LLMRewriter:
     """Rewrite final review comments into concise human-facing feedback."""
 
@@ -1233,6 +1340,33 @@ class SWETriageLLMRewriter(SWEContractLLMRewriter):
             "- Do not ask the programmer to edit tests.\n"
             "- Do not preserve newly introduced behavior unless the requirement explicitly demands it.\n"
             "- If the candidate is weak, rewrite it as a narrow verification/check instead of a broad rewrite.\n\n"
+            f"{_example_prompt(example)}\n\nSelected comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
+class CavemanLLMRewriter(SWEContractLLMRewriter):
+    """Rewrite selected comments into a strict caveman repair contract."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are Caveman Repair Editor. Rewrite selected comments as terse instructions "
+            "for an automated SWE-CI programmer revision. Do not add facts. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, candidate_lines: list[str]) -> str:
+        return (
+            "For each candidate, set rewritten_comment to this exact contract:\n"
+            "Finding: <one concrete bug/risk>\n"
+            "Evidence: <specific diff, requirement, or visible test-failure evidence>\n"
+            "Expected revision: <smallest local source-code change>\n"
+            "Do not change: <tests, unrelated files, public APIs, or behavior to preserve>\n"
+            "Confidence: <0.0-1.0>\n\n"
+            "Rules:\n"
+            "- Keep each field to one short sentence.\n"
+            "- Do not ask for tests, docs, naming changes, broad refactors, or style edits.\n"
+            "- Preserve only facts present in the selected comment and provided context.\n"
+            "- Prefer no new claim over a guess.\n\n"
             f"{_example_prompt(example)}\n\nSelected comments:\n"
             + "\n".join(candidate_lines)
         )

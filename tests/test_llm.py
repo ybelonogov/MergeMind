@@ -9,6 +9,9 @@ from tempfile import TemporaryDirectory
 
 from src.data.schema import CandidateComment, MRExample
 from src.models.llm import (
+    CavemanLLMGenerator,
+    CavemanLLMRewriter,
+    CavemanTestTriageLLMGenerator,
     GENERATOR_SCHEMA,
     JUDGE_SCHEMA,
     LLMGenerator,
@@ -222,6 +225,68 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertIn("one strong root-cause finding", seen_prompts[0])
         self.assertIn("smallest safe source-code repair", seen_prompts[0])
         self.assertNotIn("target_sha", seen_prompts[0])
+
+    def test_caveman_generator_prompt_requires_contract_and_filters_noise(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = CavemanLLMGenerator(client, max_candidates=3, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("Caveman Reviewer", combined)
+        self.assertIn("Finding:", combined)
+        self.assertIn("Expected revision:", combined)
+        self.assertIn("Do not change:", combined)
+        self.assertIn("If confidence is low, say nothing", combined)
+        self.assertNotIn("target_sha", combined)
+        self.assertNotIn("oracle", combined.lower())
+
+    def test_caveman_test_triage_prompt_mentions_visible_failures_without_target(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = CavemanTestTriageLLMGenerator(client, max_candidates=3, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("visible previous pytest failures", combined)
+        self.assertNotIn("target_sha", combined)
+
+    def test_caveman_rewriter_requests_required_contract_fields(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"rewritten_comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = CavemanLLMRewriter(client)
+
+        rewriter.rewrite(_example(), [CandidateComment(text="Guard empty carts.", reranker_score=0.9)])
+
+        self.assertIn("Finding:", seen_prompts[0])
+        self.assertIn("Evidence:", seen_prompts[0])
+        self.assertIn("Expected revision:", seen_prompts[0])
+        self.assertIn("Confidence:", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
         payload = {

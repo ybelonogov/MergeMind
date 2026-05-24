@@ -63,6 +63,9 @@ def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
         for result in results
         if isinstance(result.metrics.get("best_gap"), int)
     ]
+    total_tokens = [float(result.metrics.get("total_tokens", 0) or 0) for result in results]
+    review_tokens = [float(result.metrics.get("mergemind_review_tokens", 0) or 0) for result in results]
+    llm_calls = [float(result.metrics.get("llm_call_count", 0) or 0) for result in results]
     task_count = len(results)
     review_payloads = [
         result.metrics.get("mergemind_review")
@@ -90,6 +93,9 @@ def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
         "mergemind_assist_success_count": sum(int(result.metrics.get("mergemind_assist_success_count", 0) or 0) for result in results),
         "mergemind_assist_comment_count": sum(int(result.metrics.get("mergemind_assist_comment_count", 0) or 0) for result in results),
         "mergemind_assist_revision_count": sum(int(result.metrics.get("mergemind_assist_revision_count", 0) or 0) for result in results),
+        "total_tokens": sum(total_tokens),
+        "mergemind_review_tokens": sum(review_tokens),
+        "llm_call_count": sum(llm_calls),
     }
 
 
@@ -122,11 +128,14 @@ def render_summary(run_id: str, run_dir: Path, results: list[SweCiTaskRunResult]
         f"- MergeMind assisted reviews: {metrics['mergemind_assist_success_count']}",
         f"- MergeMind assisted comments: {metrics['mergemind_assist_comment_count']}",
         f"- MergeMind assisted revisions: {metrics['mergemind_assist_revision_count']}",
+        f"- Total tokens: {metrics['total_tokens']:.0f}",
+        f"- MergeMind review tokens: {metrics['mergemind_review_tokens']:.0f}",
+        f"- MergeMind LLM calls: {metrics['llm_call_count']:.0f}",
         "",
         "## Tasks",
         "",
-        "| task_id | status | iterations | final_gap | best_gap | duration_sec | exit_code | mergemind_review | comments | assisted_comments | stdout | stderr | error |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
+        "| task_id | status | iterations | final_gap | best_gap | duration_sec | tokens | review_tokens | exit_code | mergemind_review | comments | assisted_comments | stdout | stderr | error |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
     ]
     for result in results:
         stdout_link = _relative_link(run_dir, result.stdout_path)
@@ -138,9 +147,12 @@ def render_summary(run_id: str, run_dir: Path, results: list[SweCiTaskRunResult]
         iterations = result.metrics.get("actual_iterations", "")
         final_gap = result.metrics.get("final_gap", "")
         best_gap = result.metrics.get("best_gap", "")
+        total_tokens = result.metrics.get("total_tokens", "")
+        review_tokens = result.metrics.get("mergemind_review_tokens", "")
         error = result.error_message.replace("|", "\\|") if result.error_message else ""
         lines.append(
             f"| {result.task_id} | {result.status} | {iterations} | {final_gap} | {best_gap} | {result.duration_seconds:.3f} | "
+            f"{total_tokens} | {review_tokens} | "
             f"{'' if result.exit_code is None else result.exit_code} | "
             f"{review_status} | {review_comments} | {assisted_comments} | "
             f"[stdout]({stdout_link}) | [stderr]({stderr_link}) | {error} |"

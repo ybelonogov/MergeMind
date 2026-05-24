@@ -53,13 +53,56 @@ class SweCiResultParserTests(unittest.TestCase):
                 "\n".join(
                     [
                         json.dumps({"gap": 5}),
-                        json.dumps({"gap": 3, "mergemind_review": {"status": "success", "comment_count": 2}}),
+                        json.dumps(
+                            {
+                                "gap": 3,
+                                "architect": {"input_tokens": 10, "output_tokens": 5},
+                                "programmer": {"input_tokens": 20, "output_tokens": 7},
+                                "mergemind_review": {
+                                    "status": "success",
+                                    "comment_count": 2,
+                                    "comments_path": str(repo / "comments.json"),
+                                },
+                            }
+                        ),
                         json.dumps({"gap": 0, "programmer_revision": {"input_tokens": 1}}),
                     ]
                 )
                 + "\n",
                 encoding="utf-8",
             )
+            (repo / "comments.json").write_text(
+                json.dumps(
+                    {
+                        "llm_stats": {
+                            "total_tokens": 33,
+                            "llm_call_count": 3,
+                            "parse_error_rate": 0.0,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            for index, failed_nodeids in enumerate(
+                [
+                    ["tests/test_a.py::test_a", "tests/test_b.py::test_b"],
+                    ["tests/test_b.py::test_b"],
+                    [],
+                ]
+            ):
+                report_dir = iteration_file.parent / f"2026-01-01-00-00-0{index}"
+                report_dir.mkdir()
+                (report_dir / "test_report.json").write_text(
+                    json.dumps(
+                        {
+                            "tests": [
+                                {"nodeid": nodeid, "outcome": "failed", "call": {"outcome": "failed"}}
+                                for nodeid in failed_nodeids
+                            ]
+                        }
+                    ),
+                    encoding="utf-8",
+                )
 
             parsed = parse_swe_ci_result(
                 _process_result(),
@@ -75,6 +118,13 @@ class SweCiResultParserTests(unittest.TestCase):
         self.assertEqual(parsed.metrics["best_gap"], 0)
         self.assertEqual(parsed.metrics["mergemind_assist_comment_count"], 2)
         self.assertEqual(parsed.metrics["mergemind_assist_revision_count"], 1)
+        self.assertEqual(parsed.metrics["failed_test_counts_by_iteration"], [2, 1, 0])
+        self.assertEqual(parsed.metrics["coding_tokens"], 42)
+        self.assertEqual(parsed.metrics["revision_tokens"], 1)
+        self.assertEqual(parsed.metrics["mergemind_review_tokens"], 33)
+        self.assertEqual(parsed.metrics["total_tokens"], 76)
+        self.assertEqual(parsed.metrics["llm_call_count"], 3)
+        self.assertEqual(parsed.metrics["tokens_per_successful_revision"], 76)
         self.assertIn("swe_ci_iteration_file", parsed.metrics)
 
 

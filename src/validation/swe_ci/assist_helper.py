@@ -64,6 +64,62 @@ def _read_text(path: Path | None) -> str:
         return raw.decode("utf-8", errors="ignore")
 
 
+def _test_failed(test: dict[str, Any]) -> bool:
+    if str(test.get("outcome", "")).lower() not in {"", "passed"}:
+        return True
+    for phase in ("setup", "call", "teardown"):
+        payload = test.get(phase)
+        if isinstance(payload, dict) and str(payload.get("outcome", "")).lower() not in {"", "passed", "skipped"}:
+            return True
+    return False
+
+
+def _load_failed_nodeids(report_path: Path) -> list[str]:
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    tests = payload.get("tests", []) if isinstance(payload, dict) else []
+    if not isinstance(tests, list):
+        return []
+    nodeids: list[str] = []
+    for test in tests:
+        if not isinstance(test, dict) or not _test_failed(test):
+            continue
+        nodeid = str(test.get("nodeid", "")).strip()
+        if nodeid:
+            nodeids.append(nodeid)
+    return sorted(set(nodeids))
+
+
+def build_previous_failure_context(before_code_dir: str | Path, *, max_nodeids: int = 30) -> str:
+    """Return a compact summary of visible pytest failures before this revision."""
+
+    report_path = Path(before_code_dir).parent / "test_report.json"
+    if not report_path.exists():
+        return ""
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    summary = payload.get("summary", {}) if isinstance(payload, dict) else {}
+    failed_nodeids = _load_failed_nodeids(report_path)
+    lines = ["Visible previous pytest failures before this revision:"]
+    if isinstance(summary, dict) and summary:
+        lines.append(
+            "summary: "
+            + ", ".join(f"{key}={summary[key]}" for key in sorted(summary) if key in {"failed", "error", "passed", "total", "collected"})
+        )
+    if failed_nodeids:
+        lines.append("failed_nodeids:")
+        for nodeid in failed_nodeids[:max_nodeids]:
+            lines.append(f"- {nodeid}")
+        remaining = len(failed_nodeids) - max_nodeids
+        if remaining > 0:
+            lines.append(f"- ... {remaining} more")
+    return "\n".join(lines).strip()
+
+
 def build_code_diff(before_code_dir: str | Path, after_code_dir: str | Path) -> str:
     """Build a unified diff for source changes, excluding test files."""
 
@@ -100,6 +156,7 @@ def build_assist_example(
     image_sha: str,
     requirement_text: str,
     diff_text: str,
+    failure_context_text: str = "",
 ) -> MRExample:
     """Create an MRExample for a programmer patch without exposing oracle fields."""
 
@@ -114,14 +171,16 @@ def build_assist_example(
                 "Review the patch produced by the SWE-CI programmer before pytest is executed.",
                 f"Repository: {repo_url}",
                 f"Base commit: {current_sha}",
-                "Gold target commit is intentionally omitted from this review context.",
+                "Hidden solution data is intentionally omitted from this review context.",
                 "",
                 "Architect requirement:",
                 requirement_text.strip(),
+                "",
+                failure_context_text.strip(),
             ]
-        ),
+        ).strip(),
         diff=diff_text,
-        ci_signals={"swe_ci_task_id": task_id},
+        ci_signals={"swe_ci_task_id": task_id, "previous_failure_context": failure_context_text},
         metadata={
             "swe_ci_task_id": task_id,
             "repo_url": repo_url,
@@ -213,6 +272,9 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
         )
 
     requirement_text = Path(args.requirement_path).read_text(encoding="utf-8", errors="ignore")
+    failure_context_text = ""
+    if "test_triage" in str(args.pipeline):
+        failure_context_text = build_previous_failure_context(args.before_code_dir)
     config = apply_llm_provider(load_config(args.config), args.llm_provider)
     example = enrich_example(
         build_assist_example(
@@ -223,6 +285,7 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
             image_sha=args.image_sha,
             requirement_text=requirement_text,
             diff_text=diff_text,
+            failure_context_text=failure_context_text,
         )
     )
     write_json(output_dir / "mergemind_example.json", example.to_dict())

@@ -24,7 +24,19 @@ class CompareSweCiRunsTests(unittest.TestCase):
                                 "task_id": "task-1",
                                 "status": "success",
                                 "duration_seconds": 10,
-                                "metrics": {"actual_iterations": 3, "final_gap": 2, "best_gap": 2},
+                                "metrics": {
+                                    "actual_iterations": 3,
+                                    "gap_sequence": [5, 4, 2, 2],
+                                    "final_gap": 2,
+                                    "best_gap": 2,
+                                    "total_tokens": 100,
+                                    "failed_test_nodeids_by_iteration": [
+                                        ["a", "b", "c", "d", "e"],
+                                        ["a", "b", "c", "d"],
+                                        ["a", "b"],
+                                        ["a", "b"],
+                                    ],
+                                },
                             }
                         ]
                     }
@@ -41,10 +53,19 @@ class CompareSweCiRunsTests(unittest.TestCase):
                                 "duration_seconds": 12,
                                 "metrics": {
                                     "actual_iterations": 2,
+                                    "gap_sequence": [5, 2, 0],
                                     "final_gap": 0,
                                     "best_gap": 0,
+                                    "total_tokens": 150,
+                                    "mergemind_review_tokens": 50,
+                                    "llm_call_count": 3,
                                     "mergemind_assist_comment_count": 4,
                                     "mergemind_assist_revision_count": 2,
+                                    "failed_test_nodeids_by_iteration": [
+                                        ["a", "b", "c", "d", "e"],
+                                        ["a", "b"],
+                                        [],
+                                    ],
                                 },
                             }
                         ]
@@ -58,8 +79,19 @@ class CompareSweCiRunsTests(unittest.TestCase):
 
         self.assertEqual(rows[0]["iteration_delta"], -1)
         self.assertEqual(rows[0]["final_gap_delta"], -2)
+        self.assertEqual(rows[0]["first_iter_to_same_gap"], 1)
+        self.assertEqual(rows[0]["same_gap_iteration_delta"], -1)
+        self.assertEqual(rows[0]["failed_set_jaccard_vs_baseline"], 0.0)
+        self.assertEqual(rows[0]["fixed_failure_count"], 2)
+        self.assertEqual(rows[0]["new_failure_count"], 0)
+        self.assertEqual(rows[0]["tokens_per_gap_delta"], 75)
+        self.assertEqual(rows[0]["tokens_per_fixed_failure"], 75)
         self.assertEqual(summary["assisted_comment_count"], 4)
+        self.assertEqual(summary["baseline_total_tokens"], 100)
+        self.assertEqual(summary["assisted_total_tokens"], 150)
+        self.assertEqual(summary["assisted_review_tokens"], 50)
         self.assertIn("task-1", markdown)
+        self.assertIn("failed_jaccard", markdown)
 
 
 if __name__ == "__main__":

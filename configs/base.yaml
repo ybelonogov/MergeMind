@@ -72,6 +72,30 @@ llm:
   concurrency: 1
   timeout_seconds: 180
   retries: 2
+llm_pipeline_overrides:
+  qwen35_caveman_top1:
+    max_candidates: 3
+    min_candidates: 1
+    max_tokens_contract_generator: 900
+    max_tokens_contract_reranker: 600
+    max_tokens_contract_rewriter: 800
+  qwen35_caveman_top2:
+    max_candidates: 4
+    min_candidates: 1
+    max_tokens_contract_generator: 1000
+    max_tokens_contract_reranker: 700
+    max_tokens_contract_rewriter: 900
+  qwen35_caveman_direct_top1:
+    max_candidates: 3
+    min_candidates: 1
+    max_tokens_contract_generator: 1100
+    max_tokens_contract_reranker: 600
+  qwen35_caveman_test_triage:
+    max_candidates: 3
+    min_candidates: 1
+    max_tokens_contract_generator: 1000
+    max_tokens_contract_reranker: 700
+    max_tokens_contract_rewriter: 800
 llm_providers:
   local:
     base_url: http://localhost:1234/v1
@@ -106,6 +130,10 @@ experiments:
     - qwen35_full_with_rewriter
     - qwen35_rewriter_sweci_contract
     - qwen35_rewriter_sweci_triage
+    - qwen35_caveman_top1
+    - qwen35_caveman_top2
+    - qwen35_caveman_direct_top1
+    - qwen35_caveman_test_triage
     - qwen35_full_with_rewriter_and_qwen35_judge
 demo:
   top_n: 3

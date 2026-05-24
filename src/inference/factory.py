@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,11 @@ from src.config import resolve_path
 from src.models.baseline import RetrievalGenerator, Reranker
 from src.data.schema import CandidateComment, MRExample
 from src.models.llm import (
+    CavemanDirectLLMGenerator,
+    CavemanLLMGenerator,
+    CavemanLLMReranker,
+    CavemanLLMRewriter,
+    CavemanTestTriageLLMGenerator,
     LLMGenerator,
     LLMReranker,
     LLMRewriter,
@@ -36,6 +42,10 @@ QWEN_REWRITER_SWECI_CONTRACT_MODE = "qwen35_rewriter_sweci_contract"
 QWEN_REVIEW_CONTRACT_ALIAS = "qwen35_review_contract"
 QWEN_REWRITER_SWECI_TRIAGE_MODE = "qwen35_rewriter_sweci_triage"
 QWEN_REVIEW_TRIAGE_ALIAS = "qwen35_review_triage"
+QWEN_CAVEMAN_TOP1_MODE = "qwen35_caveman_top1"
+QWEN_CAVEMAN_TOP2_MODE = "qwen35_caveman_top2"
+QWEN_CAVEMAN_DIRECT_TOP1_MODE = "qwen35_caveman_direct_top1"
+QWEN_CAVEMAN_TEST_TRIAGE_MODE = "qwen35_caveman_test_triage"
 
 PIPELINE_ALIASES = {
     QWEN_FULL_ALIAS: QWEN_FULL_MODE,
@@ -60,6 +70,10 @@ PIPELINE_MODES = {
     QWEN_REVIEW_CONTRACT_ALIAS,
     QWEN_REWRITER_SWECI_TRIAGE_MODE,
     QWEN_REVIEW_TRIAGE_ALIAS,
+    QWEN_CAVEMAN_TOP1_MODE,
+    QWEN_CAVEMAN_TOP2_MODE,
+    QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+    QWEN_CAVEMAN_TEST_TRIAGE_MODE,
 }
 
 
@@ -84,7 +98,26 @@ def pipeline_uses_llm(mode: str) -> bool:
         QWEN_FULL_REWRITER_JUDGE_MODE,
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
         QWEN_REWRITER_SWECI_TRIAGE_MODE,
+        QWEN_CAVEMAN_TOP1_MODE,
+        QWEN_CAVEMAN_TOP2_MODE,
+        QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+        QWEN_CAVEMAN_TEST_TRIAGE_MODE,
     }
+
+
+def _apply_pipeline_overrides(config: dict[str, Any], canonical_mode: str) -> dict[str, Any]:
+    overrides = config.get("llm_pipeline_overrides", {})
+    if not isinstance(overrides, dict) or canonical_mode not in overrides:
+        return config
+    pipeline_overrides = overrides.get(canonical_mode, {})
+    if not isinstance(pipeline_overrides, dict):
+        return config
+    merged = copy.deepcopy(config)
+    merged.setdefault("llm", {})
+    llm_overrides = pipeline_overrides.get("llm", pipeline_overrides)
+    if isinstance(llm_overrides, dict):
+        merged["llm"].update(llm_overrides)
+    return merged
 
 
 def _load_retrieval_generator(config: dict[str, Any], project_root: Path) -> RetrievalGenerator:
@@ -155,6 +188,7 @@ def build_pipeline_components(
     canonical_mode = canonical_pipeline_mode(mode)
     if canonical_mode not in PIPELINE_MODES:
         raise ValueError(f"Unknown pipeline mode: {mode}")
+    config = _apply_pipeline_overrides(config, canonical_mode)
 
     shared_client = llm_client
     if canonical_mode in {
@@ -166,6 +200,10 @@ def build_pipeline_components(
         QWEN_FULL_REWRITER_JUDGE_MODE,
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
         QWEN_REWRITER_SWECI_TRIAGE_MODE,
+        QWEN_CAVEMAN_TOP1_MODE,
+        QWEN_CAVEMAN_TOP2_MODE,
+        QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+        QWEN_CAVEMAN_TEST_TRIAGE_MODE,
     }:
         shared_client = shared_client or build_llm_client(config, project_root)
 
@@ -222,6 +260,34 @@ def build_pipeline_components(
         rewriter = SWETriageLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
         return (
             SWETriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode in {QWEN_CAVEMAN_TOP1_MODE, QWEN_CAVEMAN_TOP2_MODE}:
+        assert shared_client is not None
+        reranker = CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = CavemanLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            CavemanLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_CAVEMAN_DIRECT_TOP1_MODE:
+        assert shared_client is not None
+        return (
+            CavemanDirectLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True)),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_CAVEMAN_TEST_TRIAGE_MODE:
+        assert shared_client is not None
+        reranker = CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = CavemanLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            CavemanTestTriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
             RewritingReranker(reranker, rewriter),
             shared_client,
         )

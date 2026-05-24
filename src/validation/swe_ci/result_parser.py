@@ -55,6 +55,73 @@ def _count_jsonl_rows(path: Path) -> int:
         return 0
 
 
+def _phase_failed(payload: Any) -> bool:
+    return isinstance(payload, dict) and str(payload.get("outcome", "")).lower() not in {"", "passed", "skipped"}
+
+
+def _test_failed(test: dict[str, Any]) -> bool:
+    if str(test.get("outcome", "")).lower() not in {"", "passed"}:
+        return True
+    return any(_phase_failed(test.get(phase)) for phase in ("setup", "call", "teardown"))
+
+
+def _failed_nodeids_from_report(path: Path) -> list[str]:
+    payload = _load_json(path)
+    if payload is None:
+        return []
+    tests = payload.get("tests", [])
+    if not isinstance(tests, list):
+        return []
+    nodeids: set[str] = set()
+    for test in tests:
+        if not isinstance(test, dict) or not _test_failed(test):
+            continue
+        nodeid = str(test.get("nodeid", "")).strip()
+        if nodeid:
+            nodeids.add(nodeid)
+    return sorted(nodeids)
+
+
+def _iteration_report_paths(iteration_file: Path, row_count: int) -> list[Path | None]:
+    task_dir = iteration_file.parent
+    report_dirs = [
+        path.parent
+        for path in task_dir.glob("*/test_report.json")
+        if path.parent.name not in {"target"}
+    ]
+    report_dirs.sort(key=lambda path: path.name)
+    reports = [path / "test_report.json" for path in report_dirs]
+    if len(reports) >= row_count:
+        return reports[:row_count]
+    current_report = task_dir / "current" / "test_report.json"
+    if current_report.exists() and current_report not in reports:
+        reports.insert(0, current_report)
+    output: list[Path | None] = reports[:row_count]
+    while len(output) < row_count:
+        output.append(None)
+    return output
+
+
+def _tokens_for_agent(payload: Any) -> int:
+    if not isinstance(payload, dict):
+        return 0
+    total = payload.get("total_tokens")
+    if isinstance(total, int):
+        return total
+    input_tokens = int(payload.get("input_tokens", 0) or payload.get("prompt_tokens", 0) or 0)
+    output_tokens = int(payload.get("output_tokens", 0) or payload.get("completion_tokens", 0) or 0)
+    return input_tokens + output_tokens
+
+
+def _review_llm_stats(review: dict[str, Any]) -> dict[str, Any]:
+    comments_path = review.get("comments_path")
+    if not comments_path:
+        return {}
+    payload = _load_json(Path(str(comments_path)))
+    stats = payload.get("llm_stats", {}) if isinstance(payload, dict) else {}
+    return stats if isinstance(stats, dict) else {}
+
+
 def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     try:
@@ -86,6 +153,25 @@ def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
         previous = gap
     reviews = [row.get("mergemind_review") for row in rows if isinstance(row.get("mergemind_review"), dict)]
     revisions = [row.get("programmer_revision") for row in rows if isinstance(row.get("programmer_revision"), dict)]
+    report_paths = _iteration_report_paths(Path(path), len(rows))
+    failed_test_nodeids_by_iteration = [
+        _failed_nodeids_from_report(report_path) if report_path is not None else []
+        for report_path in report_paths
+    ]
+    coding_tokens = sum(
+        _tokens_for_agent(row.get("architect")) + _tokens_for_agent(row.get("programmer"))
+        for row in rows
+    )
+    revision_tokens = sum(_tokens_for_agent(row.get("programmer_revision")) for row in rows)
+    review_stats = [_review_llm_stats(review) for review in reviews]
+    mergemind_review_tokens = sum(int(stats.get("total_tokens", 0) or 0) for stats in review_stats)
+    llm_call_count = sum(int(stats.get("llm_call_count", 0) or 0) for stats in review_stats)
+    parse_error_count = sum(
+        float(stats.get("parse_error_rate", 0.0) or 0.0) * int(stats.get("llm_call_count", 0) or 0)
+        for stats in review_stats
+    )
+    total_tokens = coding_tokens + revision_tokens + mergemind_review_tokens
+    successful_revision_count = len(revisions)
     return {
         "swe_ci_iteration_count": len(rows),
         "actual_iterations": max(0, len(rows) - 1),
@@ -100,6 +186,17 @@ def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
         "mergemind_assist_success_count": sum(1 for review in reviews if review.get("status") == "success"),
         "mergemind_assist_comment_count": sum(int(review.get("comment_count", 0) or 0) for review in reviews),
         "mergemind_assist_revision_count": len(revisions),
+        "failed_test_nodeids_by_iteration": failed_test_nodeids_by_iteration,
+        "failed_test_counts_by_iteration": [len(nodeids) for nodeids in failed_test_nodeids_by_iteration],
+        "coding_tokens": coding_tokens,
+        "revision_tokens": revision_tokens,
+        "mergemind_review_tokens": mergemind_review_tokens,
+        "total_tokens": total_tokens,
+        "llm_call_count": llm_call_count,
+        "parse_error_rate": parse_error_count / llm_call_count if llm_call_count else 0.0,
+        "tokens_per_successful_revision": (
+            total_tokens / successful_revision_count if successful_revision_count else None
+        ),
     }
 
 

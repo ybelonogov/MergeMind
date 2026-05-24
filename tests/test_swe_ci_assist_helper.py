@@ -6,7 +6,12 @@ from argparse import Namespace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.validation.swe_ci.assist_helper import build_assist_example, build_code_diff, run_mergemind_assist
+from src.validation.swe_ci.assist_helper import (
+    build_assist_example,
+    build_code_diff,
+    build_previous_failure_context,
+    run_mergemind_assist,
+)
 
 
 class SweCiAssistHelperTests(unittest.TestCase):
@@ -58,6 +63,32 @@ class SweCiAssistHelperTests(unittest.TestCase):
         self.assertIn("BASE_SECRET", payload)
         self.assertNotIn("TARGET_SECRET", payload)
         self.assertFalse(example.metadata["target_sha_used_for_review"])
+
+    def test_previous_failure_context_reads_visible_test_report(self) -> None:
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            code_dir = base / "code"
+            code_dir.mkdir()
+            (base / "test_report.json").write_text(
+                json.dumps(
+                    {
+                        "summary": {"failed": 1, "error": 1, "passed": 3, "total": 5},
+                        "tests": [
+                            {"nodeid": "tests/test_a.py::test_a", "outcome": "passed"},
+                            {"nodeid": "tests/test_b.py::test_b", "outcome": "failed", "call": {"outcome": "failed"}},
+                            {"nodeid": "tests/test_c.py::test_c", "outcome": "error", "setup": {"outcome": "failed"}},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            context = build_previous_failure_context(code_dir)
+
+        self.assertIn("failed=1", context)
+        self.assertIn("error=1", context)
+        self.assertIn("tests/test_b.py::test_b", context)
+        self.assertIn("tests/test_c.py::test_c", context)
 
     def test_helper_skips_no_diff_and_writes_artifacts(self) -> None:
         with TemporaryDirectory() as tmp:
