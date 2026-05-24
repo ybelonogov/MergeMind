@@ -2,7 +2,8 @@
 
 ## Summary
 
-This report compares the existing `qwen35_rewriter` chain against the experimental `qwen35_rewriter_sweci_contract` profile.
+This report compares the existing `qwen35_rewriter` chain against the experimental
+`qwen35_rewriter_sweci_contract`, `qwen35_rewriter_sweci_triage`, and strict revision-guard profiles.
 
 Primary success criterion:
 
@@ -12,11 +13,13 @@ Primary success criterion:
 ## Agent Changes
 
 - Baseline chain: `LLMGenerator -> LLMReranker -> LLMRewriter`.
-- New contract chain: `SWEContractLLMGenerator -> SWEContractLLMReranker -> SWEContractLLMRewriter`.
-- The new chain preserves the same number of agents, but changes prompt intent:
+- Contract chain: `SWEContractLLMGenerator -> SWEContractLLMReranker -> SWEContractLLMRewriter`.
+- Triage chain: `SWETriageLLMGenerator -> SWETriageLLMReranker -> SWETriageLLMRewriter`.
+- The new chains preserve the same number of agents, but change prompt intent:
   - generator acts as a correctness-only patch-risk reviewer;
   - reranker scores by likely repair impact;
   - rewriter emits an agent-facing revision contract.
+- Strict revision guard keeps the same reviewer chain, but rejects programmer revisions that modify files outside the immediately preceding programmer patch.
 - `LLMJudge` remains optional and is used only for evaluation.
 
 ## SWE-CI Commands
@@ -62,6 +65,30 @@ python scripts/run_swe_ci.py \
   --mergemind-top-n 3
 ```
 
+Guarded triage template:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path ~/SWE-CI \
+  --tasks-path <single-task-or-lite-manifest>.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id <assisted-run-id> \
+  --limit 1 \
+  --max-iterations 3 \
+  --mode mergemind_assisted \
+  --splitting lite \
+  --agent-name direct_openai \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --source-data-root ~/SWE-CI/data \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-pipeline qwen35_rewriter_sweci_triage \
+  --mergemind-top-n 1 \
+  --mergemind-min-score 0.75 \
+  --mergemind-max-revision-epochs 2
+```
+
 ## Real PR Commands
 
 ```bash
@@ -82,6 +109,8 @@ python scripts/run_github_pr_experiment.py \
 ## Results
 
 ### SWE-CI
+
+#### inline-snapshot task
 
 Completed smoke artifacts on the Linux server:
 
@@ -126,6 +155,73 @@ Per-epoch MergeMind usage for assisted contract:
 | 2 | 3 | 3 | 6925 | 49.591 | 0.000 |
 | 3 | 3 | 3 | 7666 | 113.166 | 0.000 |
 
+Triage follow-up on the same task:
+
+- Run: `artifacts/swe_ci_runs/sweci_triage_top1_min075_max2_lite_max3_001/summary.md`
+- Comparison: `artifacts/swe_ci_runs/sweci_triage_top1_ab_compare.md`
+- Pipeline: `qwen35_rewriter_sweci_triage`
+- Settings: `top_n=1`, `min_score=0.75`, `max_revision_epochs=2`
+
+| run | gap sequence | actual iterations | final gap | best gap | assisted comments | assisted revisions |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| baseline `sweci_direct_lite_max3_001` | `16 -> 106 -> 13 -> 12` | 3 | 12 | 12 | 0 | 0 |
+| triage `sweci_triage_top1_min075_max2_lite_max3_001` | `16 -> 13 -> 13 -> 12` | 3 | 12 | 12 | 2 | 2 |
+
+Comparison result:
+
+- Mean iteration delta: `0.000`
+- Mean final gap delta: `0.000`
+- Triage was better than the earlier contract profile on final gap (`12` vs `13`), but it did not beat baseline.
+
+#### cle-b/httpdbg task
+
+To avoid overfitting to the original `inline-snapshot` task, a second small-gap SWE-CI task was downloaded from the public dataset:
+
+```bash
+python - <<'PY'
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id="skylenage-ai/SWE-CI",
+    repo_type="dataset",
+    allow_patterns=["data/cle-b__httpdbg__22e489__af88c4/**"],
+    local_dir="/home/pashab/SWE-CI",
+)
+PY
+```
+
+Manifest:
+
+- `artifacts/swe_ci/tasks_cle_b_httpdbg.jsonl`
+
+Runs:
+
+- Baseline: `artifacts/swe_ci_runs/sweci_direct_cle_b_max3_001/summary.md`
+- Triage: `artifacts/swe_ci_runs/sweci_triage_cle_b_top1_min075_max2_max3_001/summary.md`
+- Strict revision guard: `artifacts/swe_ci_runs/sweci_strict_cle_b_top1_min075_max2_max3_001/summary.md`
+- Strict comparison: `artifacts/swe_ci_runs/sweci_strict_cle_b_ab_compare.md`
+
+| run | gap sequence | actual iterations | final gap | best gap | duration sec | assisted comments | assisted revisions |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| baseline `sweci_direct_cle_b_max3_001` | `5 -> -1 -> 5 -> 11` | 3 | 11 | 5 | 413.506 | 0 | 0 |
+| triage `sweci_triage_cle_b_top1_min075_max2_max3_001` | `5 -> -1 -> -1 -> 11` | 3 | 11 | 5 | 823.125 | 3 | 2 |
+| strict guard `sweci_strict_cle_b_top1_min075_max2_max3_001` | `5 -> -1 -> -1 -> 5` | 3 | 5 | 5 | 620.393 | 3 | 2 |
+
+Strict guard comparison against baseline:
+
+- Mean iteration delta: `0.000`
+- Mean final gap delta: `-6.000`
+- Assisted comments: `3`
+- Assisted revisions: `2`
+
+Interpretation:
+
+- This task still does not prove reduced `actual_iterations`.
+- The strict revision guard does provide a positive SWE-CI artifact: it prevented the final regression from `5` to `11`, ending at final gap `5`.
+- The guard caught a real bad revision attempt in epoch 2:
+  - `revision_error=ValueError('MergeMind revision changed files outside the programmer patch: httpdbg/hooks/generic.py')`
+  - The retry stayed inside `httpdbg/records.py`.
+- The ordinary triage profile generated plausible comments but did not improve the SWE-CI metric and cost more time than baseline.
+
 ### Real PR Review
 
 Completed artifact:
@@ -169,12 +265,19 @@ Human-review similarity:
 
 ## Conclusion
 
-The strict SWE-CI success criterion is not met on the completed one-task smoke: `actual_iterations` did not decrease and final gap was slightly worse for the contract profile.
+The strict iteration-reduction criterion is not met yet: completed SWE-CI smokes did not reduce `actual_iterations`.
 
-There is still evidence that in-loop MergeMind helps the repair trajectory: the assisted run avoided the first-epoch regression and reached the baseline best gap one epoch earlier. The stronger artifact is the real-PR batch: across 5 public merged PRs, the contract profile improved judge score, groundedness, usefulness, produced more comments, and eliminated the fallback seen in the current `qwen35_rewriter` profile.
+There is now positive SWE-CI evidence short of iteration reduction:
+
+- On `inline-snapshot`, triage matched baseline final/best gap while using only two revision passes.
+- On `cle-b/httpdbg`, strict revision guard improved final gap from `11` to `5`, preventing a baseline/triage final regression.
+- The strict guard produced an auditable safety signal by rejecting an out-of-patch revision attempt.
+
+The stronger artifact remains the real-PR batch: across 5 public merged PRs, the contract profile improved judge score, groundedness, usefulness, produced more comments, and eliminated the fallback seen in the current `qwen35_rewriter` profile.
 
 Recommended next experiment:
 
-- Run the same A/B on at least 3 SWE-CI tasks with `max_iterations=5`.
-- Add a guard that skips the revision pass when MergeMind comments are low-confidence or repetitive.
+- Keep the strict revision guard enabled for all in-loop SWE-CI tests.
+- Add a file-aware revision prompt that passes the allowed changed-file list explicitly into `/app/mergemind_review.md` or a companion artifact.
+- Run at least 3 small-gap SWE-CI tasks with `max_iterations=5`.
 - Consider stopping or reducing comments after the gap stops improving, because epoch 3 regressed from best gap `12` to final gap `13`.
