@@ -15,6 +15,20 @@ Primary metric is SWE-CI behavior, not standalone PR-review quality. The smoke g
 
 The full five-task manifest is committed as `configs/swe_ci_caveman_low_gap_tasks.jsonl`, but this report only claims the completed one-task smoke. The `top2` run was stopped by the early-stop rule after 10+ minutes without reaching the first SWE-CI iteration.
 
+## Integration Shape
+
+MergeMind is integrated as an extra review context inside the SWE-CI loop, not as a post-run analyzer:
+
+1. SWE-CI architect writes the requirement for the current epoch.
+2. SWE-CI programmer makes the first code change.
+3. MergeMind receives only the observed before/after diff for changed source files.
+4. MergeMind generates a compact review comment.
+5. The comment is passed back to the programmer as revision context.
+6. The programmer performs a revision pass.
+7. Pytest runs after the revision.
+
+The assisted path does not pass `target_sha`, hidden target diff, or hidden oracle data into MergeMind. The `test_triage` variant additionally passes visible previous failed-test information, but only from already observed test output.
+
 ## Implemented Configs
 
 New pipeline aliases:
@@ -106,16 +120,36 @@ Baseline:
 
 Grid summary:
 
-| config | gap delta | final invalid | invalid iters | failed-set jaccard | fixed | new | comments | revisions | tokens | review tokens | LLM calls |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `qwen35_caveman_top1` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 2 | 63205 | 7935 | 6 |
-| `qwen35_caveman_direct_top1` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 1 | 66863 | 8966 | 5 |
-| `qwen35_rewriter_sweci_triage` | `-6` | 0 | 0 | 0.949 | 6 | 0 | 1 | 1 | 69538 | 14405 | 9 |
-| `qwen35_caveman_test_triage` | n/a | 1 | 1 | 0.000 | n/a | n/a | 2 | 1 | 59803 | 12548 | 7 |
+| config | official evoscore | gap delta | final invalid | invalid iters | failed-set jaccard | fixed | new | comments | revisions | tokens | review tokens | LLM calls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| baseline | `-0.5439` | n/a | 0 | 1 | n/a | n/a | n/a | 0 | 0 | 67006 | 0 | 0 |
+| `qwen35_caveman_top1` | `-0.3333` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 2 | 63205 | 7935 | 6 |
+| `qwen35_caveman_direct_top1` | `-0.3333` | `-6` | 0 | 1 | 0.949 | 6 | 0 | 2 | 1 | 66863 | 8966 | 5 |
+| `qwen35_rewriter_sweci_triage` | `0.0000` | `-6` | 0 | 0 | 0.949 | 6 | 0 | 1 | 1 | 69538 | 14405 | 9 |
+| `qwen35_caveman_test_triage` | `-0.3333` | n/a | 1 | 1 | 0.000 | n/a | n/a | 2 | 1 | 59803 | 12548 | 7 |
 
 The `test_triage` row is not considered a valid winner because its final gap was `-1`. The comparator now excludes invalid final gaps from improvement averages and marks them explicitly.
 
 The `top2` run was started as `caveman_grid_top2_cle_b_001` but stopped before completion. It stayed in the first SWE-CI generation phase for 10+ minutes, produced no `iteration.jsonl`, and created no MergeMind assist artifacts. It is treated as an early-stop/no-progress result, not as a scored run.
+
+## Metric Notes
+
+`actual_iterations` did not improve in the completed runs. Baseline and completed assisted variants all used the configured 3 iterations.
+
+`final_gap` is the number of failing tests at the last recorded SWE-CI iteration. Lower is better, but equal numeric gaps do not necessarily mean the same tests are failing.
+
+For that reason the comparison also records failed-test-set metrics:
+
+- `failed-set jaccard`: overlap between the final baseline failing tests and final assisted failing tests.
+- `fixed`: baseline final failures that are absent in the assisted final set.
+- `new`: assisted final failures that were not in the baseline final set.
+
+Invalid gap values such as `-1` are not treated as improvements. They are counted separately through `final invalid` and `invalid iters`.
+
+The official SWE-CI stdout `EVOSCORE(GAMMA=1)` gives a slightly different ranking than the custom grid summary:
+
+- best official evoscore in this smoke: `qwen35_rewriter_sweci_triage` with `0.0000`;
+- best final-gap/token tradeoff in this smoke: `qwen35_caveman_top1`, because it matches the final gap improvement while using fewer total and review tokens.
 
 ## Token Budget
 
@@ -137,4 +171,12 @@ The planned aggressive 5-task grid budget was `2.8M-3.6M` tokens with a hard rev
 - It used fewer measured total tokens than baseline: `63205` vs `67006`.
 - It used fewer tokens and fewer review tokens than the old triage control while achieving the same valid final gap improvement.
 
+If the primary criterion is the official SWE-CI evoscore, the current best scored variant is still the control `qwen35_rewriter_sweci_triage`, not caveman top1.
+
 This still does not prove reduced `actual_iterations`: baseline and all completed assisted runs used the configured 3 iterations. The evidence is a smaller final gap, better failed-test-set outcome, and lower measured token usage for `qwen35_caveman_top1` on the completed smoke task.
+
+## Short Status Text
+
+Current concise status for reporting:
+
+> MergeMind was integrated as an additional review context inside the SWE-CI loop. The agent first makes a code change, MergeMind reviews the diff and returns a comment, the agent performs a revision pass using that comment, and tests run only after that revision. The local model was Qwen3.6-27B GGUF IQ2_XXS through LM Studio with 32768 context, exposed to the Ubuntu server via reverse SSH tunnel. The result is preliminary: iteration count has not decreased yet, but on `cle-b/httpdbg` baseline finished with final gap 11 and the best MergeMind variants finished with final gap 5. The official SWE-CI evoscore improved from `-0.5439` baseline to `0.0000` for the current triage-control assisted run.
