@@ -1,0 +1,180 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T2A]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[russian,english]{babel}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Times New Roman}
+    {\setmainfont{Times New Roman}}
+    {\setmainfont{TeX Gyre Termes}}
+  \usepackage{polyglossia}
+  \setdefaultlanguage{russian}
+  \setotherlanguage{english}
+\fi
+
+\usepackage{geometry}
+\geometry{left=25mm,right=20mm,top=20mm,bottom=20mm}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\title{MergeMind: генерация и оценка review-комментариев для поддержки coding-agent в CI-цикле}
+\author{<ФИО студента> \and <ФИО научного руководителя>}
+\date{Черновик, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+В статье рассматривается подход к автоматизированной генерации review-комментариев
+по diff и контексту репозитория. Предлагаемый прототип MergeMind использует
+цепочку generator--reranker--rewriter для получения малого числа конкретных
+комментариев, после чего комментарии оцениваются как в задаче review, так и
+через downstream-поведение coding-agent в SWE-CI. Первичные эксперименты
+показывают, что MergeMind пока не доказывает сокращение числа итераций, но может
+улучшать официальную метрику SWE-CI EvoScore на отдельных задачах и снижать
+финальный test gap.
+\end{abstract}
+
+\section{Введение}
+
+Code review остается одним из основных механизмов контроля качества
+программного обеспечения. Современные языковые модели позволяют генерировать
+естественно-языковые замечания по diff, однако практическая ценность такого
+инструмента определяется не количеством комментариев, а их полезностью,
+обоснованностью и способностью привести к исправлению.
+
+Цель работы --- исследовать, может ли автоматический review-комментарий
+использоваться как дополнительный контекст для coding-agent внутри CI-подобного
+цикла решения задачи.
+
+\section{Обзор литературы}
+
+Работы по automated code review рассматривают несколько связанных задач:
+оценку качества изменения, генерацию комментария и исправление кода по
+комментарию. CodeReviewer формулирует эту область как отдельную задачу
+предобучения для работы с diff и review comments. CodeReviewQA смещает фокус на
+понимание логики review-комментария, а не только на текстовое сходство.
+
+Для оценки естественно-языковых выводов используются как классические метрики
+сходства, так и LLM judge с рубриками groundedness и usefulness. Для проверки
+практического эффекта review-комментариев полезны CI-like benchmark, где
+комментарий можно передать агенту-разработчику и проверить изменение поведения
+по тестам.
+
+\section{Постановка задачи}
+
+Дан diff изменения, контекст репозитория и, в SWE-CI сценарии, требование
+текущей итерации в виде \texttt{requirement.xml}. Необходимо сгенерировать
+небольшое число комментариев, которые:
+
+\begin{itemize}
+  \item основаны только на доступном diff и видимом контексте;
+  \item указывают на конкретный риск корректности;
+  \item пригодны для передачи агенту-разработчику как контекст исправления;
+  \item не используют target commit или скрытую oracle-информацию.
+\end{itemize}
+
+\section{Предложенный подход}
+
+MergeMind строится как цепочка из нескольких агентов:
+
+\begin{itemize}
+  \item generator формирует candidate comments по diff и контексту;
+  \item reranker отбирает наиболее полезные и grounded comments;
+  \item rewriter переводит выбранные замечания в компактный repair contract;
+  \item optional judge используется только для оценки, а не для подсказки SWE-CI.
+\end{itemize}
+
+В assisted SWE-CI режиме комментарий передается внутрь цикла решения. Сначала
+SWE-CI programmer делает первичную правку, затем MergeMind анализирует
+before/after diff и формирует review. После этого review копируется в контейнер
+как \texttt{/app/mergemind\_review.md}; programmer выполняет revision pass, и
+тесты запускаются уже после revision.
+
+\section{Экспериментальная схема}
+
+Сравниваются два режима:
+
+\begin{itemize}
+  \item baseline --- обычный SWE-CI без MergeMind, но с той же локальной моделью;
+  \item assisted --- SWE-CI с дополнительным MergeMind review-context между
+    programmer patch и запуском тестов.
+\end{itemize}
+
+Для оценки используются:
+
+\begin{itemize}
+  \item \texttt{actual\_iterations};
+  \item official SWE-CI EvoScore;
+  \item final gap и best gap;
+  \item overlap наборов падающих тестов;
+  \item token usage и число LLM-вызовов.
+\end{itemize}
+
+\section{Начальные результаты}
+
+\begin{center}
+\begin{tabular}{lrrrr}
+  \toprule
+  Run & EvoScore & Final gap & Comments & Revisions \\
+  \midrule
+  Baseline \texttt{inline-snapshot} & 0.5045 & 12 & 0 & 0 \\
+  Contract \texttt{inline-snapshot} & 0.9167 & 13 & 9 & 3 \\
+  Triage \texttt{inline-snapshot} & 0.8333 & 12 & 2 & 2 \\
+  Baseline \texttt{cle-b/httpdbg} & -0.5439 & 11 & 0 & 0 \\
+  Triage-control \texttt{cle-b/httpdbg} & 0.0000 & 5 & 1 & 1 \\
+  Caveman top1 \texttt{cle-b/httpdbg} & -0.3333 & 5 & 2 & 2 \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+На задаче \texttt{inline-snapshot} MergeMind-профили дали более высокий
+EvoScore, чем baseline без MergeMind. На задаче \texttt{cle-b/httpdbg}
+положительный EvoScore пока не достигнут, но assisted-варианты снизили final
+gap с 11 до 5 и не добавили новых финальных падений в лучшем caveman-профиле.
+
+\section{Обсуждение}
+
+Промежуточные результаты показывают, что эффект зависит от типа комментария.
+Более строгие комментарии, ориентированные на один конкретный риск
+корректности, дают лучший баланс качества и стоимости, чем более широкие
+много-комментарные варианты. При этом сокращение числа итераций пока не
+доказано: завершенные прогоны обычно доходили до заданного лимита итераций.
+
+\section{Заключение и дальнейшая работа}
+
+Текущий прототип подтверждает реализуемость in-loop review-context для SWE-CI.
+Следующий этап --- расширить число проектов и итераций, отдельно проанализировать
+изменение \texttt{requirement.xml} между итерациями и подготовить таблицу
+результатов на непересекающемся наборе проектов.
+
+\begin{thebibliography}{9}
+
+\bibitem{codereviewer}
+Li Z., Lu S., Guo D. et al. Automating Code Review Activities by Large-Scale
+Pre-training. arXiv:2203.09095, 2022.
+
+\bibitem{towards-acr}
+Tufano M., Watson C., Bavota G., Poshyvanyk D. Towards Automating Code Review
+Activities. arXiv:2101.02518, 2021.
+
+\bibitem{codereviewqa}
+CodeReviewQA: The Code Review Comprehension Assessment for Large Language
+Models. Findings of ACL, 2025.
+
+\bibitem{geval}
+Liu Y. et al. G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment.
+arXiv:2303.16634, 2023.
+
+\bibitem{sweci}
+SWE-CI: Evaluating Agent Capabilities in Maintaining Codebases via Continuous
+Integration. arXiv:2603.03823, 2026.
+
+\end{thebibliography}
+
+\end{document}
