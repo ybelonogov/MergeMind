@@ -21,6 +21,7 @@ Current reproducibility anchors:
 - fixed SWE-CI manifest: `configs/swe_ci_caveman_low_gap_tasks.jsonl`
 - comparison script: `scripts/compare_swe_ci_runs.py`
 - grid summary script: `scripts/summarize_swe_ci_grid.py`
+- requirement/comment injection analyzer: `scripts/analyze_swe_ci_requirements.py`
 - Linux worktree used for runs: `/home/pashab/MergeMind-caveman-grid`
 - SWE-CI checkout on server: `/home/pashab/SWE-CI`
 
@@ -89,12 +90,22 @@ Code pointers:
 - injection patch: `src/validation/swe_ci/assisted.py`
 - direct agent context reader: `src/validation/swe_ci/direct_openai_agent_template.py`
 - review builder: `src/validation/swe_ci/assist_helper.py`
+- artifact analyzer: `scripts/analyze_swe_ci_requirements.py`
+
+Reproducible inspection command:
+
+```bash
+python scripts/analyze_swe_ci_requirements.py \
+  --run-dir artifacts/swe_ci_runs/<run_id> \
+  --output artifacts/swe_ci_runs/<run_id>/requirement_injection_analysis.md \
+  --json-output artifacts/swe_ci_runs/<run_id>/requirement_injection_analysis.json
+```
 
 Open investigation:
 
-- compare `requirement.xml` across epochs in completed runs;
+- run the analyzer on completed runs and compare `requirement.xml` across epochs;
 - check whether requirement drift changes the usefulness of MergeMind comments;
-- add report fields for requirement hash/text excerpt per iteration.
+- use requirement hash/text excerpt per iteration when explaining whether the comment was generated against the same or changed requirement.
 
 ## NIR and Article Draft
 
