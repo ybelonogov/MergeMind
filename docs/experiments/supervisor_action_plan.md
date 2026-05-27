@@ -19,6 +19,7 @@ Important validation documents:
 Current reproducibility anchors:
 
 - fixed SWE-CI manifest: `configs/swe_ci_caveman_low_gap_tasks.jsonl`
+- holdout SWE-CI manifest without already scored tasks: `configs/swe_ci_caveman_holdout_tasks.jsonl`
 - comparison script: `scripts/compare_swe_ci_runs.py`
 - grid summary script: `scripts/summarize_swe_ci_grid.py`
 - requirement/comment injection analyzer: `scripts/analyze_swe_ci_requirements.py`
@@ -45,6 +46,10 @@ Planned split:
   - `eliben__pycparser__7f6b34__6ba954`
   - `gusye1234__nano-graphrag__bc175d__9b33a7`
 
+Manifest for this split:
+
+- `configs/swe_ci_caveman_holdout_tasks.jsonl`
+
 Suggested next run matrix:
 
 - baseline without MergeMind;
@@ -56,6 +61,52 @@ Suggested iteration setting:
 
 - start with `max_iterations=5` for 2 projects;
 - expand to all remaining projects only if the local model and server remain stable.
+
+Dry-run commands before spending GPU time:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path /home/pashab/SWE-CI \
+  --tasks-path configs/swe_ci_caveman_holdout_tasks.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id holdout_baseline_max5_dryrun \
+  --limit 2 \
+  --max-iterations 5 \
+  --mode baseline \
+  --splitting lite \
+  --agent-name direct_openai \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --source-data-root /home/pashab/SWE-CI/data \
+  --docker-network host \
+  --dry-run
+```
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path /home/pashab/SWE-CI \
+  --tasks-path configs/swe_ci_caveman_holdout_tasks.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id holdout_caveman_top1_max5_dryrun \
+  --limit 2 \
+  --max-iterations 5 \
+  --mode mergemind_assisted \
+  --splitting lite \
+  --agent-name direct_openai \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --api-key lm-studio \
+  --source-data-root /home/pashab/SWE-CI/data \
+  --docker-network host \
+  --mergemind-config configs/base.yaml \
+  --mergemind-pipeline qwen35_caveman_top1 \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-top-n 1 \
+  --mergemind-min-score 0.75 \
+  --mergemind-max-revision-epochs 2 \
+  --dry-run
+```
 
 Metrics to report:
 
