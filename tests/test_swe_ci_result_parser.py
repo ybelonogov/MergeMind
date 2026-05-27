@@ -5,11 +5,15 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.validation.swe_ci.result_parser import parse_swe_ci_result
+from src.validation.swe_ci.result_parser import parse_swe_ci_result, summarize_stdout_metrics
 from src.validation.swe_ci.schemas import SweCiTaskRunResult
 
 
-def _process_result(status: str = "success", exit_code: int | None = 0) -> SweCiTaskRunResult:
+def _process_result(
+    status: str = "success",
+    exit_code: int | None = 0,
+    stdout_path: str = "stdout.log",
+) -> SweCiTaskRunResult:
     return SweCiTaskRunResult(
         task_id="task-1",
         status=status,  # type: ignore[arg-type]
@@ -17,7 +21,7 @@ def _process_result(status: str = "success", exit_code: int | None = 0) -> SweCi
         finished_at="2026-01-01T00:00:01+00:00",
         duration_seconds=1.0,
         exit_code=exit_code,
-        stdout_path="stdout.log",
+        stdout_path=stdout_path,
         stderr_path="stderr.log",
         events_path="events.jsonl",
         metrics={},
@@ -43,6 +47,37 @@ class SweCiResultParserTests(unittest.TestCase):
 
         self.assertEqual(parsed.status, "success")
         self.assertIn("swe_ci_result_file", parsed.metrics)
+
+    def test_parses_official_swe_ci_stdout_metrics(self) -> None:
+        with TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "outputs"
+            output_dir.mkdir()
+            (output_dir / "result.json").write_text(json.dumps({"success": True}), encoding="utf-8")
+            stdout_path = Path(tmp) / "stdout.log"
+            stdout_path.write_text(
+                """
+╔══════════════════════════╤═══════════════════╤═════════════╤═════════════════╗
+║ Task ID                  │ EVOSCORE(GAMMA=1) │ SOLVED_RATE │ ZERO_REGRESSION ║
+╟──────────────────────────┼───────────────────┼─────────────┼─────────────────╢
+║ task-1                   │            0.8333 │      0.0000 │          1.0000 ║
+╟──────────────────────────┼───────────────────┼─────────────┼─────────────────╢
+║ AVERAGE                  │            0.8333 │      0.0000 │          1.0000 ║
+╚══════════════════════════╧═══════════════════╧═════════════╧═════════════════╝
+""",
+                encoding="utf-8",
+            )
+
+            parsed_with_stdout = parse_swe_ci_result(
+                _process_result(stdout_path=str(stdout_path)),
+                output_dir,
+            )
+            stdout_metrics = summarize_stdout_metrics(stdout_path)
+
+        self.assertEqual(stdout_metrics["official_evoscore"], 0.8333)
+        self.assertEqual(parsed_with_stdout.status, "success")
+        self.assertEqual(parsed_with_stdout.metrics["official_evoscore"], 0.8333)
+        self.assertEqual(parsed_with_stdout.metrics["official_solved_rate"], 0.0)
+        self.assertEqual(parsed_with_stdout.metrics["official_zero_regression"], 1.0)
 
     def test_official_iteration_file_is_success_signal(self) -> None:
         with TemporaryDirectory() as tmp:

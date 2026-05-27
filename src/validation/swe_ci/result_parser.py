@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,11 @@ RESULT_FILE_NAMES = (
     "summary.json",
     "metrics.json",
 )
+
+_OFFICIAL_METRIC_ROW_RE = re.compile(
+    r"[│|]\s*([+-]?\d+(?:\.\d+)?)\s*[│|]\s*([+-]?\d+(?:\.\d+)?)\s*[│|]\s*([+-]?\d+(?:\.\d+)?)\s*[║|]"
+)
+_FLOAT_RE = re.compile(r"[+-]?\d+(?:\.\d+)?")
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -126,6 +132,34 @@ def _review_llm_stats(review: dict[str, Any]) -> dict[str, Any]:
     payload = _load_json(Path(str(comments_path)))
     stats = payload.get("llm_stats", {}) if isinstance(payload, dict) else {}
     return stats if isinstance(stats, dict) else {}
+
+
+def summarize_stdout_metrics(path: str | Path) -> dict[str, float]:
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return {}
+    if "EVOSCORE" not in text.upper():
+        return {}
+
+    matches: list[tuple[str, str, str]] = []
+    for line in text.splitlines():
+        if not any(separator in line for separator in ("│", "|")):
+            continue
+        values = _FLOAT_RE.findall(line)
+        if len(values) >= 3:
+            matches.append((values[-3], values[-2], values[-1]))
+    if not matches:
+        matches = _OFFICIAL_METRIC_ROW_RE.findall(text)
+    if not matches:
+        return {}
+
+    evoscore, solved_rate, zero_regression = matches[-1]
+    return {
+        "official_evoscore": float(evoscore),
+        "official_solved_rate": float(solved_rate),
+        "official_zero_regression": float(zero_regression),
+    }
 
 
 def summarize_iteration_file(path: str | Path) -> dict[str, Any]:
@@ -241,6 +275,7 @@ def parse_swe_ci_result(
     if iteration_file is not None:
         metrics["swe_ci_iteration_file"] = str(iteration_file)
         metrics.update(summarize_iteration_file(iteration_file))
+    metrics.update(summarize_stdout_metrics(process_result.stdout_path))
     if result_file is None:
         if iteration_file is not None:
             status = "success" if process_result.exit_code == 0 else "failed"

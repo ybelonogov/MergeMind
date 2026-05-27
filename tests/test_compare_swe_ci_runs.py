@@ -30,6 +30,7 @@ class CompareSweCiRunsTests(unittest.TestCase):
                                     "final_gap": 2,
                                     "best_gap": 2,
                                     "total_tokens": 100,
+                                    "official_evoscore": 0.25,
                                     "failed_test_nodeids_by_iteration": [
                                         ["a", "b", "c", "d", "e"],
                                         ["a", "b", "c", "d"],
@@ -57,6 +58,7 @@ class CompareSweCiRunsTests(unittest.TestCase):
                                     "final_gap": 0,
                                     "best_gap": 0,
                                     "total_tokens": 150,
+                                    "official_evoscore": 0.75,
                                     "mergemind_review_tokens": 50,
                                     "llm_call_count": 3,
                                     "mergemind_assist_comment_count": 4,
@@ -86,12 +88,15 @@ class CompareSweCiRunsTests(unittest.TestCase):
         self.assertEqual(rows[0]["new_failure_count"], 0)
         self.assertEqual(rows[0]["tokens_per_gap_delta"], 75)
         self.assertEqual(rows[0]["tokens_per_fixed_failure"], 75)
+        self.assertEqual(rows[0]["official_evoscore_delta"], 0.5)
         self.assertEqual(summary["assisted_comment_count"], 4)
+        self.assertEqual(summary["mean_official_evoscore_delta"], 0.5)
         self.assertEqual(summary["baseline_total_tokens"], 100)
         self.assertEqual(summary["assisted_total_tokens"], 150)
         self.assertEqual(summary["assisted_review_tokens"], 50)
         self.assertIn("task-1", markdown)
         self.assertIn("failed_jaccard", markdown)
+        self.assertIn("mean official EvoScore delta: 0.500", markdown)
 
     def test_invalid_assisted_final_gap_is_not_counted_as_improvement(self) -> None:
         with TemporaryDirectory() as tmp:

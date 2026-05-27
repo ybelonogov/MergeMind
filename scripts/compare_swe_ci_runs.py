@@ -134,6 +134,8 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
         fixed_failures = len(baseline_failed_set - assisted_failed_set) if baseline_failed_set is not None and assisted_failed_set is not None else None
         new_failures = len(assisted_failed_set - baseline_failed_set) if baseline_failed_set is not None and assisted_failed_set is not None else None
         assisted_total_tokens = _number(_metric(right, "total_tokens"))
+        baseline_official_evoscore = _number(_metric(left, "official_evoscore"))
+        assisted_official_evoscore = _number(_metric(right, "official_evoscore"))
         rows.append(
             {
                 "task_id": task_id,
@@ -184,6 +186,17 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
                 "assisted_total_tokens": assisted_total_tokens,
                 "assisted_review_tokens": _number(_metric(right, "mergemind_review_tokens")),
                 "assisted_llm_call_count": _number(_metric(right, "llm_call_count")),
+                "baseline_official_evoscore": baseline_official_evoscore,
+                "assisted_official_evoscore": assisted_official_evoscore,
+                "official_evoscore_delta": (
+                    assisted_official_evoscore - baseline_official_evoscore
+                    if assisted_official_evoscore is not None and baseline_official_evoscore is not None
+                    else None
+                ),
+                "baseline_official_solved_rate": _number(_metric(left, "official_solved_rate")),
+                "assisted_official_solved_rate": _number(_metric(right, "official_solved_rate")),
+                "baseline_official_zero_regression": _number(_metric(left, "official_zero_regression")),
+                "assisted_official_zero_regression": _number(_metric(right, "official_zero_regression")),
                 "tokens_per_gap_delta": (
                     assisted_total_tokens / abs(assisted_final_gap - baseline_final_gap)
                     if assisted_total_tokens is not None
@@ -214,6 +227,11 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
         for row in rows
         if row["failed_set_jaccard_vs_baseline"] is not None
     ]
+    evoscore_deltas = [
+        row["official_evoscore_delta"]
+        for row in rows
+        if row["official_evoscore_delta"] is not None
+    ]
     summary = {
         "task_count": len(rows),
         "compared_task_count": len(iteration_deltas),
@@ -223,6 +241,7 @@ def build_comparison(baseline_dir: Path, assisted_dir: Path) -> tuple[list[dict[
             sum(same_or_lower_deltas) / len(same_or_lower_deltas) if same_or_lower_deltas else None
         ),
         "mean_failed_set_jaccard_vs_baseline": sum(jaccards) / len(jaccards) if jaccards else None,
+        "mean_official_evoscore_delta": sum(evoscore_deltas) / len(evoscore_deltas) if evoscore_deltas else None,
         "new_failure_count": sum(int(row["new_failure_count"] or 0) for row in rows),
         "fixed_failure_count": sum(int(row["fixed_failure_count"] or 0) for row in rows),
         "assisted_comment_count": sum(int(row["assisted_comments"] or 0) for row in rows),
@@ -249,6 +268,7 @@ def render_markdown(baseline_dir: Path, assisted_dir: Path, rows: list[dict[str,
         f"- mean final gap delta: {_fmt(summary['mean_final_gap_delta'])}",
         f"- mean same/lower gap iteration delta: {_fmt(summary['mean_same_or_lower_gap_iteration_delta'])}",
         f"- mean failed-set Jaccard vs baseline: {_fmt(summary['mean_failed_set_jaccard_vs_baseline'])}",
+        f"- mean official EvoScore delta: {_fmt(summary['mean_official_evoscore_delta'])}",
         f"- fixed failures: {summary['fixed_failure_count']}",
         f"- new failures: {summary['new_failure_count']}",
         f"- assisted comments: {summary['assisted_comment_count']}",
@@ -263,14 +283,14 @@ def render_markdown(baseline_dir: Path, assisted_dir: Path, rows: list[dict[str,
         "Negative deltas mean the assisted run used fewer iterations or ended with a smaller valid gap.",
         "Rows with invalid final gaps are excluded from final-gap delta averages.",
         "",
-        "| task_id | baseline | assisted | base_iter | assist_iter | iter_delta | base_gap | assist_gap | gap_delta | invalid_iters | first_same | first_same/lower | failed_jaccard | fixed | new | same_tests | tokens | review_tokens | comments | revisions |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |",
+        "| task_id | baseline | assisted | base_iter | assist_iter | iter_delta | base_gap | assist_gap | gap_delta | evoscore_delta | invalid_iters | first_same | first_same/lower | failed_jaccard | fixed | new | same_tests | tokens | review_tokens | comments | revisions |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
             "| {task_id} | {baseline_status} | {assisted_status} | {baseline_iterations} | "
             "{assisted_iterations} | {iteration_delta} | {baseline_final_gap} | {assisted_final_gap} | "
-            "{final_gap_delta} | {assisted_invalid_iteration_count} | {first_iter_to_same_gap} | {first_iter_to_same_or_lower_gap} | "
+            "{final_gap_delta} | {official_evoscore_delta} | {assisted_invalid_iteration_count} | {first_iter_to_same_gap} | {first_iter_to_same_or_lower_gap} | "
             "{failed_set_jaccard_vs_baseline} | {fixed_failure_count} | {new_failure_count} | "
             "{same_gap_same_tests} | {assisted_total_tokens} | {assisted_review_tokens} | "
             "{assisted_comments} | {assisted_revisions} |".format(

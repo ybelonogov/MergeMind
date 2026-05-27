@@ -22,6 +22,7 @@ Current reproducibility anchors:
 - holdout SWE-CI manifest without already scored tasks: `configs/swe_ci_caveman_holdout_tasks.jsonl`
 - comparison script: `scripts/compare_swe_ci_runs.py`
 - grid summary script: `scripts/summarize_swe_ci_grid.py`
+- official SWE-CI stdout metric parser: `src/validation/swe_ci/result_parser.py`
 - requirement/comment injection analyzer: `scripts/analyze_swe_ci_requirements.py`
 - Linux worktree used for runs: `/home/pashab/MergeMind-caveman-grid`
 - SWE-CI checkout on server: `/home/pashab/SWE-CI`
@@ -111,6 +112,7 @@ python scripts/run_swe_ci.py \
 Metrics to report:
 
 - official SWE-CI `EVOSCORE(GAMMA=1)`;
+- official SWE-CI `SOLVED_RATE` and `ZERO_REGRESSION`;
 - `actual_iterations`;
 - `final_gap`;
 - `best_gap`;

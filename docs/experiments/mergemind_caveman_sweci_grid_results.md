@@ -104,6 +104,11 @@ python scripts/summarize_swe_ci_grid.py \
   --output-dir artifacts/swe_ci_runs/caveman_grid_smoke_summary_001
 ```
 
+The comparison pipeline now also parses the official SWE-CI stdout table and carries
+`EVOSCORE(GAMMA=1)`, `SOLVED_RATE`, and `ZERO_REGRESSION` into `summary.json` and
+the generated markdown reports. This keeps the custom gap/failing-test metrics
+aligned with the benchmark's own scoring output.
+
 ## Results
 
 Server artifact root:
