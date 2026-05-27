@@ -180,6 +180,57 @@ If the primary criterion is the official SWE-CI evoscore, the current best score
 
 This still does not prove reduced `actual_iterations`: baseline and all completed assisted runs used the configured 3 iterations. The evidence is a smaller final gap, better failed-test-set outcome, and lower measured token usage for `qwen35_caveman_top1` on the completed smoke task.
 
+## Holdout Follow-up: igrek51/wat
+
+Date: 2026-05-27.
+
+Task:
+
+- `igrek51__wat__ecddda__8efafa`
+- initial gap: `5`
+- model: `qwen3.6-27b@iq2_xxs`
+- `max_iterations=5`
+- server artifact root: `/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs`
+
+Runs:
+
+| run | status | gap sequence | final gap | best gap | comments | total tokens | notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| `holdout_baseline_igrek51_max5_002` | completed | `5 -> -1 -> -1 -> 5 -> 5 -> 5` | 5 | 5 | 0 | 91318 | baseline did not improve the initial gap; two invalid pytest epochs |
+| `holdout_caveman_top1_igrek51_max5_001` | early-stopped | `5 -> 40 -> 25` | 25 | 5 | 2 | 94270 | worse than baseline; first MergeMind revision increased failures from 5 to 40 |
+| `holdout_triage_igrek51_max5_001` | early-stopped | `5 -> 5` | 5 | 5 | 1 | 22382 | no gap improvement before stop; epoch 2 revision hit malformed JSON after a long generation |
+
+The `qwen35_caveman_top1` comment was plausible at text level:
+
+> Implement `.public` as a modifier that filters private attributes.
+
+However, the revision pass broadened the code change and regressed the run to 40
+failing tests. This is a negative result for the current caveman prompt on this
+holdout task. The result suggests that the prompt should make the revision
+contract stricter: prefer preserving existing behavior over implementing a
+larger feature-shaped repair when confidence comes only from a diff/requirement
+match.
+
+The control `qwen35_rewriter_sweci_triage` was safer on the first completed
+epoch: it kept the gap at 5 instead of worsening it, but it did not improve the
+task before the run was stopped. Its second revision attempt produced malformed
+JSON, which points to a separate reliability issue in the direct local-model
+agent output path.
+
+Current conclusion for this holdout:
+
+- no reduction in `actual_iterations` was shown;
+- no `final_gap` improvement was shown;
+- `qwen35_caveman_top1` is not a good default for this task;
+- `qwen35_rewriter_sweci_triage` remains safer than caveman on this task, but not yet useful.
+
+Next prompt/config direction:
+
+- run safer variants with `max_revision_epochs=1`;
+- reject comments when the programmer patch touches unrelated/generated-looking files;
+- require the reviewer to prefer `0 comments` when the diff does not clearly touch the failing behavior;
+- keep the revision contract focused on preserving the current passing tests.
+
 ## Short Status Text
 
 Current concise status for reporting:
