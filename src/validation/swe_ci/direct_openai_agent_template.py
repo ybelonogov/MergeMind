@@ -86,6 +86,20 @@ def _paths_from_text(text: str) -> list[str]:
     return seen
 
 
+def _allowed_revision_files(container_name: str) -> set[str]:
+    text = _read_container_file(container_name, "/app/mergemind_allowed_files.txt", 4000)
+    allowed: set[str] = set()
+    for line in text.splitlines():
+        path = line.strip().removeprefix("/app/code/").removeprefix("code/")
+        if not path:
+            continue
+        normalized = posixpath.normpath(path)
+        if normalized.startswith("../") or normalized == ".." or normalized.startswith("/"):
+            continue
+        allowed.add(normalized)
+    return allowed
+
+
 def _append_section(parts: list[str], title: str, body: str, remaining: list[int]) -> None:
     if not body or remaining[0] <= 0:
         return
@@ -244,7 +258,13 @@ def _extract_json(text: str) -> dict[str, Any]:
     return json.loads(text[start : end + 1])
 
 
-def _apply_file_replacements(container_name: str, response_text: str) -> list[str]:
+def _apply_file_replacements(
+    container_name: str,
+    response_text: str,
+    *,
+    allowed_paths: set[str] | None = None,
+    allow_empty: bool = False,
+) -> list[str]:
     payload = _extract_json(response_text)
     files = payload.get("files") or payload.get("changes") or []
     if not isinstance(files, list):
@@ -263,9 +283,11 @@ def _apply_file_replacements(container_name: str, response_text: str) -> list[st
             raise RuntimeError(f"Unsafe path from direct_openai response: {path}")
         if normalized.startswith("tests/") or "/tests/" in normalized:
             raise RuntimeError(f"direct_openai attempted to edit tests: {normalized}")
+        if allowed_paths is not None and normalized not in allowed_paths:
+            raise RuntimeError(f"direct_openai attempted to edit file outside allowed revision set: {normalized}")
         _write_container_file(container_name, f"/app/code/{normalized}", content)
         changed.append(normalized)
-    if not changed:
+    if not changed and not allow_empty:
         raise RuntimeError("direct_openai did not return any file replacements.")
     return changed
 
@@ -340,11 +362,21 @@ Repository context:
         },
     }
     programmer_max_tokens = int(os.environ.get("SWE_CI_DIRECT_PROGRAMMER_MAX_TOKENS", "10000"))
+    allowed_revision_files = _allowed_revision_files(container_name)
+    allowed_revision_instruction = ""
+    if allowed_revision_files:
+        allowed_list = "\n".join(f"- {path}" for path in sorted(allowed_revision_files))
+        allowed_revision_instruction = f"""
+This is a MergeMind revision pass. You may edit only these exact paths:
+{allowed_list}
+If no safe edit exists in those files, return {{"files":[]}}.
+"""
     user_prompt = f"""/no_think
 You are the SWE-CI programmer. Modify source code only. Do not edit tests.
 Return JSON only in this exact shape:
-{{"files":[{{"path":"src/package/module.py","content":"full replacement file content"}}]}}
+{{"files":[{{"path":"path/from/allowed/context.py","content":"full replacement file content"}}]}}
 Include full replacement content for every changed file. Keep the patch minimal.
+{allowed_revision_instruction}
 
 Original prompt:
 {prompt}
@@ -361,7 +393,12 @@ Repository context:
         max_tokens=programmer_max_tokens,
         response_format=file_replacements_schema,
     )
-    changed_files = _apply_file_replacements(container_name, content)
+    changed_files = _apply_file_replacements(
+        container_name,
+        content,
+        allowed_paths=allowed_revision_files or None,
+        allow_empty=bool(allowed_revision_files),
+    )
     return _usage(
         usage.get("prompt_tokens"),
         usage.get("completion_tokens"),

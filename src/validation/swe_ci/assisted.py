@@ -405,10 +405,14 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 revision_changed_files = set(programmer_revision_result.get("changed_files") or [])
                                 unexpected_revision_files = sorted(revision_changed_files - original_changed_files)
                                 if unexpected_revision_files:
-                                    raise ValueError(
+                                    revision_error = ValueError(
                                         "MergeMind revision changed files outside the programmer patch: "
                                         + ", ".join(unexpected_revision_files)
                                     )
+                                    mergemind_review["revision_error"] = repr(revision_error)
+                                    programmer_revision_result = {}
+                                    logger.error(review_prefix + "⚠️ Non-retryable MergeMind revision guard: " + repr(revision_error))
+                                    break
                                 shutil.rmtree(tmp_dir/"code", ignore_errors=True)
                                 copy_dir_from_container(container_name, "/app/code", tmp_dir, mkdir=True)
                                 logger.info(review_prefix + "✅ The programmer revised the code with MergeMind review.")

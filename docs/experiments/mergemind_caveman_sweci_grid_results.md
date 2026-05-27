@@ -200,6 +200,7 @@ Runs:
 | `holdout_baseline_igrek51_max5_002` | completed | `5 -> -1 -> -1 -> 5 -> 5 -> 5` | 5 | 5 | 0 | 91318 | baseline did not improve the initial gap; two invalid pytest epochs |
 | `holdout_caveman_top1_igrek51_max5_001` | early-stopped | `5 -> 40 -> 25` | 25 | 5 | 2 | 94270 | worse than baseline; first MergeMind revision increased failures from 5 to 40 |
 | `holdout_triage_igrek51_max5_001` | early-stopped | `5 -> 5` | 5 | 5 | 1 | 22382 | no gap improvement before stop; epoch 2 revision hit malformed JSON after a long generation |
+| `holdout_safe_triage_igrek51_max5_001` | early-stopped | `5 -> -1 -> -1` | -1 | 5 | 2 | 54104 | no useful progress; two invalid pytest epochs, first revision also hit the outside-patch guard |
 
 The `qwen35_caveman_top1` comment was plausible at text level:
 
@@ -223,16 +224,22 @@ Current conclusion for this holdout:
 - no reduction in `actual_iterations` was shown;
 - no `final_gap` improvement was shown;
 - `qwen35_caveman_top1` is not a good default for this task;
-- `qwen35_rewriter_sweci_triage` remains safer than caveman on this task, but not yet useful.
+- `qwen35_rewriter_sweci_triage` remains safer than caveman on this task, but not yet useful;
+- `qwen35_rewriter_sweci_safe_triage` did not help on this task and was stopped to save GPU time after two invalid epochs.
+
+Follow-up implementation from this negative holdout:
+
+- the direct local-model agent no longer uses `src/package/module.py` as an example path in its JSON prompt, because Qwen sometimes copied that placeholder literally;
+- during MergeMind revision passes, the direct agent now enforces `/app/mergemind_allowed_files.txt` before writing file replacements;
+- an outside-patch revision is now treated as a non-retryable guard failure, so the same forbidden edit is not retried 10 times.
 
 Next prompt/config direction:
 
-- run `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1`;
 - reject comments when the programmer patch touches unrelated/generated-looking files;
 - require the reviewer to prefer `0 comments` when the diff does not clearly touch the failing behavior;
 - keep the revision contract focused on preserving the current passing tests.
 
-Planned safe-triage command:
+Executed safe-triage command:
 
 ```bash
 python scripts/run_swe_ci.py \

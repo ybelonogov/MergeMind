@@ -63,7 +63,9 @@ Suggested iteration setting:
 
 - start with `max_iterations=5` for 2 projects;
 - expand to all remaining projects only if the local model and server remain stable.
-- after the `igrek51/wat` negative holdout, prefer `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1` before spending more GPU time on caveman variants.
+- after the `igrek51/wat` negative holdout, treat `qwen35_caveman_top1` as risky for this task;
+- `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1` was also negative on `igrek51/wat` (`5 -> -1 -> -1`) and should not be expanded until the direct-agent guard fix is included;
+- after the guard fix, rerun only a single low-gap holdout first before spending GPU time on a wider grid.
 
 Dry-run commands before spending GPU time:
 
@@ -146,6 +148,12 @@ Code pointers:
 - direct agent context reader: `src/validation/swe_ci/direct_openai_agent_template.py`
 - review builder: `src/validation/swe_ci/assist_helper.py`
 - artifact analyzer: `scripts/analyze_swe_ci_requirements.py`
+
+Reliability fix from 2026-05-27:
+
+- the direct local-model agent now enforces `/app/mergemind_allowed_files.txt` during MergeMind revision passes;
+- placeholder path `src/package/module.py` was removed from the JSON prompt example because the local model copied it literally in a revision response;
+- outside-patch revision attempts are now non-retryable guard failures instead of 10 repeated attempts.
 
 Reproducible inspection command:
 
