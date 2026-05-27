@@ -37,6 +37,7 @@ New pipeline aliases:
 - `qwen35_caveman_top2`: 3 agents, max 2 comments for more recall.
 - `qwen35_caveman_direct_top1`: generator emits the repair contract directly, reranker filters, no rewriter.
 - `qwen35_caveman_test_triage`: top1-style chain plus previous visible failed-test summary.
+- `qwen35_rewriter_sweci_safe_triage`: conservative triage after the `igrek51/wat` holdout; prefers no comment over broad repair, rejects generated/data/test/doc advice, and asks revisions to preserve currently passing behavior.
 - Control: `qwen35_rewriter_sweci_triage`.
 
 Pipeline-specific token limits are configured through `llm_pipeline_overrides` in `configs/base.yaml`, so conservative output budgets are scoped to the selected pipeline instead of changing global defaults.
@@ -226,10 +227,37 @@ Current conclusion for this holdout:
 
 Next prompt/config direction:
 
-- run safer variants with `max_revision_epochs=1`;
+- run `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1`;
 - reject comments when the programmer patch touches unrelated/generated-looking files;
 - require the reviewer to prefer `0 comments` when the diff does not clearly touch the failing behavior;
 - keep the revision contract focused on preserving the current passing tests.
+
+Planned safe-triage command:
+
+```bash
+python scripts/run_swe_ci.py \
+  --swe-ci-repo-path /home/pashab/SWE-CI \
+  --tasks-path configs/swe_ci_caveman_holdout_tasks.jsonl \
+  --output-dir artifacts/swe_ci_runs \
+  --run-id holdout_safe_triage_igrek51_max5_001 \
+  --limit 1 \
+  --max-iterations 5 \
+  --timeout-seconds 14400 \
+  --mode mergemind_assisted \
+  --splitting lite \
+  --api-key lm-studio \
+  --base-url http://127.0.0.1:1234/v1 \
+  --model-name qwen3.6-27b@iq2_xxs \
+  --agent-name direct_openai \
+  --source-data-root /home/pashab/SWE-CI/data \
+  --docker-network host \
+  --mergemind-config configs/base.yaml \
+  --mergemind-pipeline qwen35_rewriter_sweci_safe_triage \
+  --mergemind-llm-provider local_qwen36_27b_iq2 \
+  --mergemind-top-n 1 \
+  --mergemind-min-score 0.80 \
+  --mergemind-max-revision-epochs 1
+```
 
 ## Short Status Text
 

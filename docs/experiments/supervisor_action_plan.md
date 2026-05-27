@@ -55,6 +55,7 @@ Suggested next run matrix:
 
 - baseline without MergeMind;
 - `qwen35_rewriter_sweci_triage`;
+- `qwen35_rewriter_sweci_safe_triage`;
 - `qwen35_caveman_top1`;
 - optional `qwen35_caveman_direct_top1` if token budget allows.
 
@@ -62,6 +63,7 @@ Suggested iteration setting:
 
 - start with `max_iterations=5` for 2 projects;
 - expand to all remaining projects only if the local model and server remain stable.
+- after the `igrek51/wat` negative holdout, prefer `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1` before spending more GPU time on caveman variants.
 
 Dry-run commands before spending GPU time:
 

@@ -90,6 +90,12 @@ llm_pipeline_overrides:
     min_candidates: 1
     max_tokens_contract_generator: 1100
     max_tokens_contract_reranker: 600
+  qwen35_rewriter_sweci_safe_triage:
+    max_candidates: 2
+    min_candidates: 1
+    max_tokens_contract_generator: 800
+    max_tokens_contract_reranker: 500
+    max_tokens_contract_rewriter: 700
   qwen35_caveman_test_triage:
     max_candidates: 3
     min_candidates: 1
@@ -130,6 +136,7 @@ experiments:
     - qwen35_full_with_rewriter
     - qwen35_rewriter_sweci_contract
     - qwen35_rewriter_sweci_triage
+    - qwen35_rewriter_sweci_safe_triage
     - qwen35_caveman_top1
     - qwen35_caveman_top2
     - qwen35_caveman_direct_top1

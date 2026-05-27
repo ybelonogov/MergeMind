@@ -20,6 +20,8 @@ from src.models.llm import (
     OpenAICompatibleLLMClient,
     SWEContractLLMGenerator,
     SWEContractLLMRewriter,
+    SWESafeTriageLLMGenerator,
+    SWESafeTriageLLMRewriter,
     SWETriageLLMGenerator,
     SWETriageLLMRewriter,
     SQLiteLLMCache,
@@ -250,6 +252,29 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertNotIn("target_sha", combined)
         self.assertNotIn("oracle", combined.lower())
 
+    def test_safe_triage_prompt_prefers_no_comment_over_regression_risk(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWESafeTriageLLMGenerator(client, max_candidates=2, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("regression-guard reviewer", combined)
+        self.assertIn("Prefer 0 comments", combined)
+        self.assertIn("currently passing behavior", combined)
+        self.assertIn("not generated data", combined)
+        self.assertNotIn("target_sha", combined)
+        self.assertNotIn("oracle", combined.lower())
+
     def test_caveman_test_triage_prompt_mentions_visible_failures_without_target(self) -> None:
         seen_prompts: list[str] = []
 
@@ -287,6 +312,25 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertIn("Evidence:", seen_prompts[0])
         self.assertIn("Expected revision:", seen_prompts[0])
         self.assertIn("Confidence:", seen_prompts[0])
+
+    def test_safe_triage_rewriter_preserves_passing_behavior(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"rewritten_comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWESafeTriageLLMRewriter(client)
+
+        rewriter.rewrite(_example(), [CandidateComment(text="Avoid broad public modifier changes.", reranker_score=0.9)])
+
+        self.assertIn("currently passing behavior", seen_prompts[0])
+        self.assertIn("generated data", seen_prompts[0])
+        self.assertIn("smallest behavior-preserving correction", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
         payload = {
