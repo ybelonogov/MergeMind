@@ -99,6 +99,36 @@ python scripts/run_swe_ci.py \
   --mergemind-max-revision-epochs 1
 ```
 
+## Smoke Attempt
+
+Run id:
+
+- `test_guard_igrek51_max3_001`
+
+Task:
+
+- `igrek51__wat__ecddda__8efafa`
+
+Setting:
+
+- `max_iterations=3`
+- `model_name=qwen3.6-27b@iq2_xxs`
+- `pipeline=qwen35_rewriter_sweci_test_guard`
+- server artifact path: `/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/test_guard_igrek51_max3_001`
+
+Result:
+
+- not scored;
+- initial SWE-CI gap was recorded as `5`;
+- the run did not reach the MergeMind review step;
+- SWE-CI architect retries failed with LM Studio `HTTP 400`:
+
+```text
+Failed to load model "qwen3.6-27b@iq2_xxs". Error: Error loading model.
+```
+
+The run was stopped manually to avoid spending GPU time on repeated model-load failures. This is an infrastructure/model-loading failure, not evidence for or against the new reviewer pipeline.
+
 ## Acceptance Criteria
 
 Treat this mode as better only if one of these holds:
