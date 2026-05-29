@@ -201,6 +201,7 @@ Runs:
 | `holdout_caveman_top1_igrek51_max5_001` | early-stopped | `5 -> 40 -> 25` | 25 | 5 | 2 | 94270 | worse than baseline; first MergeMind revision increased failures from 5 to 40 |
 | `holdout_triage_igrek51_max5_001` | early-stopped | `5 -> 5` | 5 | 5 | 1 | 22382 | no gap improvement before stop; epoch 2 revision hit malformed JSON after a long generation |
 | `holdout_safe_triage_igrek51_max5_001` | early-stopped | `5 -> -1 -> -1` | -1 | 5 | 2 | 54104 | no useful progress; two invalid pytest epochs, first revision also hit the outside-patch guard |
+| `holdout_safe_triage_after_guard_igrek51_max5_001` | early-stopped | `5 -> 5` | 5 | 5 | 1 | 44069 | post-guard rerun; first epoch stayed valid but did not improve, epoch 2 hit direct-agent malformed JSON and was stopped |
 
 The `qwen35_caveman_top1` comment was plausible at text level:
 
@@ -232,12 +233,14 @@ Follow-up implementation from this negative holdout:
 - the direct local-model agent no longer uses `src/package/module.py` as an example path in its JSON prompt, because Qwen sometimes copied that placeholder literally;
 - during MergeMind revision passes, the direct agent now enforces `/app/mergemind_allowed_files.txt` before writing file replacements;
 - an outside-patch revision is now treated as a non-retryable guard failure, so the same forbidden edit is not retried 10 times.
+- the revision allow-list is restricted to Python source files from the programmer patch; non-code artifacts such as `*.txt` and `*.md` are recorded as skipped instead of being handed back to the revision agent.
 
 Next prompt/config direction:
 
 - reject comments when the programmer patch touches unrelated/generated-looking files;
 - require the reviewer to prefer `0 comments` when the diff does not clearly touch the failing behavior;
 - keep the revision contract focused on preserving the current passing tests.
+- improve or replace the `direct_openai` JSON file-replacement path before expanding this holdout, because malformed JSON in the programmer step is now the main reliability blocker.
 
 Executed safe-triage command:
 

@@ -15,6 +15,7 @@ Important validation documents:
 - `docs/experiments/mergemind_agent_mapping.md`
 - `docs/experiments/mergemind_qwen35_rewriter_results.md`
 - `docs/experiments/mergemind_caveman_sweci_grid_results.md`
+- `docs/experiments/mergemind_test_aware_reviewer.md`
 
 Current reproducibility anchors:
 
@@ -56,6 +57,7 @@ Suggested next run matrix:
 - baseline without MergeMind;
 - `qwen35_rewriter_sweci_triage`;
 - `qwen35_rewriter_sweci_safe_triage`;
+- `qwen35_rewriter_sweci_test_guard`;
 - `qwen35_caveman_top1`;
 - optional `qwen35_caveman_direct_top1` if token budget allows.
 
@@ -65,7 +67,8 @@ Suggested iteration setting:
 - expand to all remaining projects only if the local model and server remain stable.
 - after the `igrek51/wat` negative holdout, treat `qwen35_caveman_top1` as risky for this task;
 - `qwen35_rewriter_sweci_safe_triage` with `max_revision_epochs=1` was also negative on `igrek51/wat` (`5 -> -1 -> -1`) and should not be expanded until the direct-agent guard fix is included;
-- after the guard fix, rerun only a single low-gap holdout first before spending GPU time on a wider grid.
+- after the first guard fix, a rerun stayed valid for one epoch (`5 -> 5`) but did not improve and then hit malformed JSON in the direct programmer agent;
+- do not spend GPU time on a wider grid until the direct-agent JSON replacement path is made more reliable.
 
 Dry-run commands before spending GPU time:
 
@@ -154,6 +157,15 @@ Reliability fix from 2026-05-27:
 - the direct local-model agent now enforces `/app/mergemind_allowed_files.txt` during MergeMind revision passes;
 - placeholder path `src/package/module.py` was removed from the JSON prompt example because the local model copied it literally in a revision response;
 - outside-patch revision attempts are now non-retryable guard failures instead of 10 repeated attempts.
+- MergeMind revision allow-lists are now restricted to Python source files from the programmer patch; non-code files touched by the programmer are recorded as skipped and are not handed to the revision agent.
+
+Test-aware reviewer update from 2026-05-29:
+
+- new pipeline: `qwen35_rewriter_sweci_test_guard`;
+- alias: `qwen35_review_test_guard`;
+- visible previous pytest failures are always included in this mode;
+- reviewed diffs are restricted to Python source files;
+- comments must connect a visible failing test to changed Python source and a minimal safe revision.
 
 Reproducible inspection command:
 

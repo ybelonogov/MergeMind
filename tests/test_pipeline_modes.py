@@ -13,6 +13,7 @@ from src.inference.factory import (
     QWEN_FULL_REWRITER_MODE,
     QWEN_REWRITER_SWECI_CONTRACT_MODE,
     QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+    QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
     QWEN_REWRITER_SWECI_TRIAGE_MODE,
     build_pipeline_components,
     canonical_pipeline_mode,
@@ -29,10 +30,12 @@ class PipelineModeTests(unittest.TestCase):
         self.assertEqual(canonical_pipeline_mode("qwen35_review_contract"), QWEN_REWRITER_SWECI_CONTRACT_MODE)
         self.assertEqual(canonical_pipeline_mode("qwen35_review_triage"), QWEN_REWRITER_SWECI_TRIAGE_MODE)
         self.assertEqual(canonical_pipeline_mode("qwen35_review_safe_triage"), QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE)
+        self.assertEqual(canonical_pipeline_mode("qwen35_review_test_guard"), QWEN_REWRITER_SWECI_TEST_GUARD_MODE)
         self.assertTrue(pipeline_uses_llm("qwen35_rewriter"))
         self.assertTrue(pipeline_uses_llm("qwen35_review_contract"))
         self.assertTrue(pipeline_uses_llm("qwen35_review_triage"))
         self.assertTrue(pipeline_uses_llm("qwen35_review_safe_triage"))
+        self.assertTrue(pipeline_uses_llm("qwen35_review_test_guard"))
         self.assertTrue(pipeline_uses_llm(QWEN_CAVEMAN_TOP1_MODE))
         self.assertTrue(pipeline_uses_llm(QWEN_CAVEMAN_DIRECT_TOP1_MODE))
         self.assertFalse(pipeline_uses_llm_judge("qwen35_rewriter"))
@@ -204,6 +207,44 @@ class PipelineModeTests(unittest.TestCase):
         self.assertEqual(generator.max_tokens, 800)
         self.assertEqual(reranker.reranker.max_tokens, 500)
         self.assertEqual(reranker.rewriter.max_tokens, 700)
+
+    def test_test_guard_mode_uses_test_guard_agents_and_token_overrides(self) -> None:
+        config = {
+            "llm": {
+                "max_candidates": 8,
+                "min_candidates": 3,
+                "max_tokens_contract_generator": 1200,
+                "max_tokens_contract_reranker": 900,
+                "max_tokens_contract_rewriter": 1200,
+            },
+            "llm_pipeline_overrides": {
+                QWEN_REWRITER_SWECI_TEST_GUARD_MODE: {
+                    "max_candidates": 2,
+                    "min_candidates": 1,
+                    "max_tokens_contract_generator": 750,
+                    "max_tokens_contract_reranker": 500,
+                    "max_tokens_contract_rewriter": 650,
+                }
+            },
+            "model": {"max_candidates": 8},
+        }
+        client = OpenAICompatibleLLMClient(completion_fn=lambda **_: {"choices": [{"message": {"content": "{}"}}]})
+
+        generator, reranker, _ = build_pipeline_components(
+            QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
+            config,
+            Path("."),
+            llm_client=client,
+        )
+
+        self.assertEqual(generator.__class__.__name__, "SWETestGuardLLMGenerator")
+        self.assertEqual(reranker.reranker.__class__.__name__, "SWETestGuardLLMReranker")
+        self.assertEqual(reranker.rewriter.__class__.__name__, "SWETestGuardLLMRewriter")
+        self.assertEqual(generator.max_candidates, 2)
+        self.assertEqual(generator.min_candidates, 1)
+        self.assertEqual(generator.max_tokens, 750)
+        self.assertEqual(reranker.reranker.max_tokens, 500)
+        self.assertEqual(reranker.rewriter.max_tokens, 650)
 
     def test_caveman_direct_top1_skips_rewriter(self) -> None:
         config = {

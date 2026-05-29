@@ -791,6 +791,40 @@ class SWESafeTriageLLMGenerator(SWETriageLLMGenerator):
         )
 
 
+class SWETestGuardLLMGenerator(SWESafeTriageLLMGenerator):
+    """Generate comments only when visible pytest failures support the finding."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI test-failure guard reviewer. Your default answer is "
+            "no comment. Generate a comment only when a visible previous pytest failure, the "
+            "current programmer diff, and the architect requirement all support the same small "
+            "Python source-code repair. Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, minimum: int, limit: int) -> str:
+        return (
+            f"Generate 0 or 1 comments; never exceed {limit}. Prefer 0 comments unless there is "
+            "a direct chain from visible failed nodeid or traceback to changed Python source code.\n\n"
+            "Test-guard rules:\n"
+            "1. A high-confidence comment must cite a visible pytest failure and a changed Python source line.\n"
+            "2. If no visible failure context is present, return no comments.\n"
+            "3. If the diff only changes docs, generated data, fixtures, tests, or unrelated files, return no comments.\n"
+            "4. Do not propose broad feature implementation, rewrites, or behavior outside the programmer patch.\n"
+            "5. Do not ask the programmer to edit tests or generated artifacts.\n"
+            "6. If the fix could plausibly add new failing tests, return no comments.\n"
+            "7. Do not mention hidden reference solutions, unavailable code, style, docs, naming, or preferences.\n\n"
+            "Required fields inside each comment:\n"
+            "Failing test: <visible nodeid or traceback symptom>\n"
+            "Finding: <one concrete root cause in changed Python source>\n"
+            "Evidence: <specific failure context plus specific diff evidence>\n"
+            "Expected revision: <smallest safe Python source-code correction>\n"
+            "Do not change: <tests, unrelated files, public APIs, generated data, and currently passing behavior>\n"
+            "Confidence: <0.0-1.0>\n\n"
+            f"{_example_prompt(example)}"
+        )
+
+
 class CavemanLLMGenerator(SWEContractLLMGenerator):
     """Generate blunt, low-noise SWE-CI repair comments."""
 
@@ -1174,6 +1208,37 @@ class SWESafeTriageLLMReranker(SWETriageLLMReranker):
         )
 
 
+class SWETestGuardLLMReranker(SWESafeTriageLLMReranker):
+    """Rank only comments tied to visible test failures and changed Python source."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI test-failure guard critic. False positives are very "
+            "expensive. Select only comments that connect a visible pytest failure to changed "
+            "Python source and a tiny safe revision. Return JSON only."
+        )
+
+    def _user_prompt(
+        self,
+        example: MRExample,
+        candidate_lines: list[str],
+        top_n: int,
+    ) -> str:
+        return (
+            "Use this strict scoring rubric:\n"
+            "- 0.90-1.00: explicit visible failed nodeid/traceback, exact changed Python evidence, tiny safe fix.\n"
+            "- 0.75-0.89: visible failure and changed source are connected, but some uncertainty remains.\n"
+            "- 0.40-0.74: plausible code review note, but failure link or source evidence is weak.\n"
+            "- 0.10-0.39: no visible failure link, broad rewrite, non-code artifact advice, style, docs, naming, or tests.\n"
+            "- 0.00: unrelated, duplicate, hidden-reference based, unsafe, or likely to increase regressions.\n"
+            "Keep any comment below 0.75 unless it includes Failing test, Finding, Evidence, "
+            "Expected revision, Do not change, and Confidence. Use the zero-based candidate_id values exactly.\n\n"
+            f"Rank at most {top_n} comments for a test-aware safe revision.\n\n"
+            f"{_example_prompt(example)}\n\nCandidate comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
 class CavemanLLMReranker(SWEContractLLMReranker):
     """Aggressively filter SWE-CI comments for local repair impact."""
 
@@ -1434,6 +1499,37 @@ class SWESafeTriageLLMRewriter(SWETriageLLMRewriter):
             "- Do not ask for tests, docs, generated-data edits, broad feature implementation, or unrelated files.\n"
             "- If the selected comment is broad, rewrite it as a narrow guard/check or preserve-current-behavior note.\n"
             "- The revision should be safe even if the comment is only partially correct.\n\n"
+            f"{_example_prompt(example)}\n\nSelected comments:\n"
+            + "\n".join(candidate_lines)
+        )
+
+
+class SWETestGuardLLMRewriter(SWESafeTriageLLMRewriter):
+    """Rewrite comments into a test-aware safe repair contract."""
+
+    def _system_prompt(self) -> str:
+        return (
+            "You are MergeMind's SWE-CI test-aware safe repair editor. Convert selected "
+            "comments into conservative instructions for an automated programmer. Preserve "
+            "only facts grounded in visible pytest failures and changed Python source. "
+            "Return JSON only."
+        )
+
+    def _user_prompt(self, example: MRExample, candidate_lines: list[str]) -> str:
+        return (
+            "For each candidate, set rewritten_comment to this exact Markdown contract:\n"
+            "Failing test: <visible nodeid or traceback symptom>\n"
+            "Finding: <one concrete root cause in changed Python source>\n"
+            "Evidence: <specific failure context plus specific diff evidence>\n"
+            "Expected revision: <smallest safe Python source-code correction>\n"
+            "Do not change: <tests, unrelated files, public APIs, generated data, and currently passing behavior>\n"
+            "Confidence: <0.0-1.0>\n\n"
+            "Rules:\n"
+            "- Keep each field to one concise sentence.\n"
+            "- Do not add hidden solution details, unseen tests, or new requirements.\n"
+            "- Do not ask for tests, docs, generated-data edits, broad feature implementation, or unrelated files.\n"
+            "- If the selected comment lacks visible failure evidence, rewrite it as a no-op verification note with low confidence.\n"
+            "- The revision must be safe even if the comment is only partially correct.\n\n"
             f"{_example_prompt(example)}\n\nSelected comments:\n"
             + "\n".join(candidate_lines)
         )

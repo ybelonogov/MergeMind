@@ -381,7 +381,19 @@ def _patch_run_for_mergemind(repo_path: Path) -> None:
                                 copy_dir_to_container(container_name, tmp_dir/"code", "/app")
                                 copy_file_to_container(container_name, current_dir/"requirement.xml", "/app")
                                 copy_file_to_container(container_name, mergemind_review["review_path"], "/app", rename="mergemind_review.md")
-                                original_changed_files = sorted(set(programmer_result.get("changed_files") or []))
+                                raw_changed_files = sorted(set(programmer_result.get("changed_files") or []))
+                                original_changed_files = sorted(
+                                    file
+                                    for file in raw_changed_files
+                                    if file.endswith(".py") and not file.startswith("tests/") and "/tests/" not in file
+                                )
+                                skipped_revision_files = sorted(set(raw_changed_files) - set(original_changed_files))
+                                if skipped_revision_files:
+                                    mergemind_review["revision_skipped_files"] = skipped_revision_files
+                                if not original_changed_files:
+                                    mergemind_review["revision_error"] = "No source-code files are eligible for MergeMind revision."
+                                    logger.info(review_prefix + "ℹ️ MergeMind revision skipped: no eligible source-code files.")
+                                    break
                                 allowed_files_path = task_dir / "mergemind_allowed_files.txt"
                                 allowed_files_path.write_text("\\n".join(original_changed_files) + "\\n", encoding="utf-8")
                                 copy_file_to_container(container_name, allowed_files_path, "/app", rename="mergemind_allowed_files.txt")

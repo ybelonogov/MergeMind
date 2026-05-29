@@ -10,6 +10,8 @@ from src.validation.swe_ci.assist_helper import (
     build_assist_example,
     build_code_diff,
     build_previous_failure_context,
+    pipeline_uses_failure_context,
+    pipeline_uses_python_only_diff,
     run_mergemind_assist,
 )
 
@@ -47,6 +49,29 @@ class SweCiAssistHelperTests(unittest.TestCase):
             diff = build_code_diff(before, after)
 
         self.assertEqual(diff, "")
+
+    def test_build_code_diff_can_limit_to_python_source(self) -> None:
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            before = base / "before"
+            after = base / "after"
+            (before / "pkg").mkdir(parents=True)
+            (after / "pkg").mkdir(parents=True)
+            (before / "pkg" / "app.py").write_text("value = 1\n", encoding="utf-8")
+            (after / "pkg" / "app.py").write_text("value = 2\n", encoding="utf-8")
+            (before / "pkg" / "data.md").write_text("old\n", encoding="utf-8")
+            (after / "pkg" / "data.md").write_text("new\n", encoding="utf-8")
+
+            diff = build_code_diff(before, after, allowed_suffixes={".py"})
+
+        self.assertIn("pkg/app.py", diff)
+        self.assertNotIn("pkg/data.md", diff)
+
+    def test_pipeline_feature_flags_for_test_guard(self) -> None:
+        self.assertTrue(pipeline_uses_failure_context("qwen35_rewriter_sweci_test_guard"))
+        self.assertTrue(pipeline_uses_python_only_diff("qwen35_rewriter_sweci_test_guard"))
+        self.assertTrue(pipeline_uses_failure_context("qwen35_caveman_test_triage"))
+        self.assertFalse(pipeline_uses_python_only_diff("qwen35_caveman_test_triage"))
 
     def test_assist_example_does_not_include_target_sha(self) -> None:
         example = build_assist_example(

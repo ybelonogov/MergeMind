@@ -120,7 +120,12 @@ def build_previous_failure_context(before_code_dir: str | Path, *, max_nodeids: 
     return "\n".join(lines).strip()
 
 
-def build_code_diff(before_code_dir: str | Path, after_code_dir: str | Path) -> str:
+def build_code_diff(
+    before_code_dir: str | Path,
+    after_code_dir: str | Path,
+    *,
+    allowed_suffixes: set[str] | None = None,
+) -> str:
     """Build a unified diff for source changes, excluding test files."""
 
     before_root = Path(before_code_dir)
@@ -129,6 +134,8 @@ def build_code_diff(before_code_dir: str | Path, after_code_dir: str | Path) -> 
     after_files = _iter_source_files(after_root)
     chunks: list[str] = []
     for relative in sorted(set(before_files) | set(after_files), key=lambda item: item.as_posix()):
+        if allowed_suffixes is not None and relative.suffix.lower() not in allowed_suffixes:
+            continue
         before_text = _read_text(before_files.get(relative))
         after_text = _read_text(after_files.get(relative))
         if before_text == after_text:
@@ -145,6 +152,16 @@ def build_code_diff(before_code_dir: str | Path, after_code_dir: str | Path) -> 
             )
         )
     return "\n".join(chunks) + ("\n" if chunks else "")
+
+
+def pipeline_uses_failure_context(pipeline: str) -> bool:
+    pipeline_name = str(pipeline)
+    return any(marker in pipeline_name for marker in {"test_triage", "test_guard"})
+
+
+def pipeline_uses_python_only_diff(pipeline: str) -> bool:
+    pipeline_name = str(pipeline)
+    return any(marker in pipeline_name for marker in {"test_guard"})
 
 
 def build_assist_example(
@@ -256,7 +273,11 @@ def _write_result(output_dir: Path, payload: dict[str, Any], predictions: list[C
 def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
     output_dir = Path(args.output_dir).resolve()
     started = time.perf_counter()
-    diff_text = build_code_diff(args.before_code_dir, args.after_code_dir)
+    diff_text = build_code_diff(
+        args.before_code_dir,
+        args.after_code_dir,
+        allowed_suffixes={".py"} if pipeline_uses_python_only_diff(args.pipeline) else None,
+    )
     if not diff_text.strip():
         return _write_result(
             output_dir,
@@ -273,7 +294,7 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
 
     requirement_text = Path(args.requirement_path).read_text(encoding="utf-8", errors="ignore")
     failure_context_text = ""
-    if "test_triage" in str(args.pipeline):
+    if pipeline_uses_failure_context(args.pipeline):
         failure_context_text = build_previous_failure_context(args.before_code_dir)
     config = apply_llm_provider(load_config(args.config), args.llm_provider)
     example = enrich_example(

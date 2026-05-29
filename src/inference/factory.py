@@ -25,6 +25,9 @@ from src.models.llm import (
     SWESafeTriageLLMGenerator,
     SWESafeTriageLLMReranker,
     SWESafeTriageLLMRewriter,
+    SWETestGuardLLMGenerator,
+    SWETestGuardLLMReranker,
+    SWETestGuardLLMRewriter,
     SWETriageLLMGenerator,
     SWETriageLLMReranker,
     SWETriageLLMRewriter,
@@ -47,6 +50,8 @@ QWEN_REWRITER_SWECI_TRIAGE_MODE = "qwen35_rewriter_sweci_triage"
 QWEN_REVIEW_TRIAGE_ALIAS = "qwen35_review_triage"
 QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE = "qwen35_rewriter_sweci_safe_triage"
 QWEN_REVIEW_SAFE_TRIAGE_ALIAS = "qwen35_review_safe_triage"
+QWEN_REWRITER_SWECI_TEST_GUARD_MODE = "qwen35_rewriter_sweci_test_guard"
+QWEN_REVIEW_TEST_GUARD_ALIAS = "qwen35_review_test_guard"
 QWEN_CAVEMAN_TOP1_MODE = "qwen35_caveman_top1"
 QWEN_CAVEMAN_TOP2_MODE = "qwen35_caveman_top2"
 QWEN_CAVEMAN_DIRECT_TOP1_MODE = "qwen35_caveman_direct_top1"
@@ -59,6 +64,7 @@ PIPELINE_ALIASES = {
     QWEN_REVIEW_CONTRACT_ALIAS: QWEN_REWRITER_SWECI_CONTRACT_MODE,
     QWEN_REVIEW_TRIAGE_ALIAS: QWEN_REWRITER_SWECI_TRIAGE_MODE,
     QWEN_REVIEW_SAFE_TRIAGE_ALIAS: QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+    QWEN_REVIEW_TEST_GUARD_ALIAS: QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
 }
 
 PIPELINE_MODES = {
@@ -78,6 +84,8 @@ PIPELINE_MODES = {
     QWEN_REVIEW_TRIAGE_ALIAS,
     QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
     QWEN_REVIEW_SAFE_TRIAGE_ALIAS,
+    QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
+    QWEN_REVIEW_TEST_GUARD_ALIAS,
     QWEN_CAVEMAN_TOP1_MODE,
     QWEN_CAVEMAN_TOP2_MODE,
     QWEN_CAVEMAN_DIRECT_TOP1_MODE,
@@ -107,6 +115,7 @@ def pipeline_uses_llm(mode: str) -> bool:
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
         QWEN_REWRITER_SWECI_TRIAGE_MODE,
         QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
         QWEN_CAVEMAN_TOP1_MODE,
         QWEN_CAVEMAN_TOP2_MODE,
         QWEN_CAVEMAN_DIRECT_TOP1_MODE,
@@ -210,6 +219,7 @@ def build_pipeline_components(
         QWEN_REWRITER_SWECI_CONTRACT_MODE,
         QWEN_REWRITER_SWECI_TRIAGE_MODE,
         QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
         QWEN_CAVEMAN_TOP1_MODE,
         QWEN_CAVEMAN_TOP2_MODE,
         QWEN_CAVEMAN_DIRECT_TOP1_MODE,
@@ -280,6 +290,16 @@ def build_pipeline_components(
         rewriter = SWESafeTriageLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
         return (
             SWESafeTriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_TEST_GUARD_MODE:
+        assert shared_client is not None
+        reranker = SWETestGuardLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWETestGuardLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWETestGuardLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
             RewritingReranker(reranker, rewriter),
             shared_client,
         )
