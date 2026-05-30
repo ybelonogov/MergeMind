@@ -2,6 +2,8 @@
 
 Date: 2026-05-29.
 
+Updated: 2026-05-30.
+
 Branch: `codex/mergemind-test-aware-reviewer`.
 
 ## Goal
@@ -128,6 +130,61 @@ Failed to load model "qwen3.6-27b@iq2_xxs". Error: Error loading model.
 ```
 
 The run was stopped manually to avoid spending GPU time on repeated model-load failures. This is an infrastructure/model-loading failure, not evidence for or against the new reviewer pipeline.
+
+## Smoke Rerun After Model Load
+
+Run id:
+
+- `test_guard_igrek51_max3_002`
+
+Task:
+
+- `igrek51__wat__ecddda__8efafa`
+
+Setting:
+
+- `max_iterations=3`
+- `model_name=qwen3.6-27b@iq2_xxs`
+- `pipeline=qwen35_rewriter_sweci_test_guard`
+- `mergemind_top_n=1`
+- `mergemind_min_score=0.80`
+- `mergemind_max_revision_epochs=1`
+- server artifact path: `/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/test_guard_igrek51_max3_002`
+
+Result:
+
+| metric | value |
+| --- | ---: |
+| actual iterations | 3 |
+| gap sequence | `5 -> 5 -> -1 -> 5` |
+| final gap | 5 |
+| best non-negative gap | 5 |
+| final failed-test set changed | no |
+| MergeMind raw comments | 1 |
+| MergeMind filtered comments | 0 |
+| MergeMind revisions applied | 0 |
+| visible coding tokens | 44475 |
+| MergeMind review tokens | 10232 |
+| total visible tokens | 54707 |
+| MergeMind LLM calls | 3 |
+
+The final failed tests were the same five nodeids as the initial failing set:
+
+```text
+tests/inspection/test_inspect.py::test_short_list_attr_preview
+tests/inspection/test_inspect.py::test_hide_private_attrs
+tests/inspection/test_instaload.py::test_load_instaload_snippet
+tests/inspection/test_instaload.py::test_load_from_magic_glyph
+tests/inspection/test_signature.py::test_signature_colors
+```
+
+The new guard did what it was designed to do on two epochs:
+
+- epoch 1: the programmer changed only `.md`/`.txt` files, so MergeMind review was skipped with `No non-test code diff was produced by the programmer`;
+- epoch 2: the programmer changed `wat/inspection/inspection.py`; MergeMind generated one test-aware comment, but the filtered comment count was `0`, so no revision was applied;
+- epoch 3: the programmer again changed only non-Python/generated text files, so MergeMind review was skipped.
+
+This is not a positive SWE-CI score result. The run did not reduce iterations, final gap, or best gap. It is a safety result: the test-aware pipeline avoided applying comments when the candidate patch was not a Python source-code repair or when the comment did not pass the stricter threshold. Compared with the earlier `qwen35_caveman_top1` holdout, this avoids the harmful revision pattern that increased the gap from `5` to `40`, but it also does not yet help solve `igrek51/wat`.
 
 ## Acceptance Criteria
 
