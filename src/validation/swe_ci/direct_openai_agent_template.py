@@ -258,6 +258,15 @@ def _extract_json(text: str) -> dict[str, Any]:
     return json.loads(text[start : end + 1])
 
 
+def _normalize_response_path(path: str) -> str:
+    path = path.strip().replace("\\", "/")
+    for prefix in ("/app/code/", "app/code/", "code/", "/app/", "app/"):
+        if path.startswith(prefix):
+            path = path[len(prefix) :]
+            break
+    return posixpath.normpath(path)
+
+
 def _apply_file_replacements(
     container_name: str,
     response_text: str,
@@ -277,8 +286,7 @@ def _apply_file_replacements(
         content = item.get("content")
         if not path or not isinstance(content, str):
             continue
-        path = path.removeprefix("/app/code/").removeprefix("code/")
-        normalized = posixpath.normpath(path)
+        normalized = _normalize_response_path(path)
         if normalized.startswith("../") or normalized == ".." or normalized.startswith("/"):
             raise RuntimeError(f"Unsafe path from direct_openai response: {path}")
         if normalized.startswith("tests/") or "/tests/" in normalized:
