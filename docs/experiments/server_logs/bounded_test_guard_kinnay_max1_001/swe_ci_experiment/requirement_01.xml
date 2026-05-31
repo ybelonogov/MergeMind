@@ -1,0 +1,26 @@
+<requirements>
+  <item id="1">
+    <location>nintendo/switch/dragons.py, class DragonsClient</location>
+    <description>The client raises a ValueError when attempting to set system version 2000.</description>
+    <contract>Update the client to support system version 2000. This requires configuring request paths (e.g., /v2/contents_authorization_token_for_aauth/issue) and headers (User-Agent: libcurl ... SDK 20.5.4.0) appropriate for this version.</contract>
+    <acceptance>tests/switch/test_dragons.py::test_contents_authorization_token_for_aauth_2000[asyncio]</acceptance>
+  </item>
+  <item id="2">
+    <location>nintendo/switch/aauth.py, class AAuthClient</location>
+    <description>The client raises a ValueError when attempting to set system version 2000.</description>
+    <contract>Update the client to support system version 2000. This requires configuring request paths (e.g., /v5/challenge) and headers (User-Agent: libcurl ... SDK 20.5.4.0) appropriate for this version.</contract>
+    <acceptance>tests/switch/test_aauth.py::test_challenge_2000[asyncio], tests/switch/test_aauth.py::test_gamecard_2000[asyncio]</acceptance>
+  </item>
+  <item id="3">
+    <location>nintendo/switch/baas.py, class BAASClient</location>
+    <description>The client raises a ValueError when attempting to set system version 2000.</description>
+    <contract>Update the client to support system version 2000. This requires configuring request headers (User-Agent: libcurl ... SDK 20.5.4.0) and payload structures appropriate for this version.</contract>
+    <acceptance>tests/switch/test_baas.py::test_login_2000[asyncio], tests/switch/test_baas.py::test_authenticate_2000[asyncio]</acceptance>
+  </item>
+  <item id="4">
+    <location>nintendo/switch/dauth.py, class DAuthClient</location>
+    <description>The client raises a ValueError when attempting to set system version 2000.</description>
+    <contract>Update the client to support system version 2000. This requires configuring request paths (e.g., /v8/...), headers (User-Agent: libcurl ... SDK 20.5.4.0), and payload structures appropriate for this version.</contract>
+    <acceptance>tests/switch/test_dauth.py::test_dauth_2000[asyncio], tests/switch/test_dauth.py::test_edge_token_2000[asyncio]</acceptance>
+  </item>
+</requirements>

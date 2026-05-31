@@ -1,0 +1,9 @@
+<requirements>
+    <requirement id="1">
+        <location>nintendo/switch/aauth.py</location>
+        <description>...</description>
+        <contract>...</contract>
+        <acceptance>...</acceptance>
+    </requirement>
+    ...
+</requirements>

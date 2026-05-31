@@ -1,0 +1,2108 @@
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================task id: kinnay__nintendoclients__e2b673__72846c====================
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | Task metadata:
+{'task_id': 'kinnay__nintendoclients__e2b673__72846c', 'repo_name': 'kinnay/NintendoClients', 'url': 'https://github.com/kinnay/NintendoClients.git', 'licence': '', 'current_sha': 'e2b673bac6d7781e83f83ae2c5d0c34a2092d72e', 'target_sha': '72846cda0b19717356c6855fc824715a0717350c', 'test_gap': '7', 'image_sha': '3a0c1619a90dd9b90cae310fd71a390fdf09f8348f08e901a75c2beb74285b4a', 'code_sha': ''}
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | Data source: /home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/swe_ci_datasets/kinnay__nintendoclients__e2b673__72846c/data/kinnay__nintendoclients__e2b673__72846c
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | Task directory: experiments/surgical_test_guard_kinnay_max3_001_kinnay__nintendoclients__e2b673__72846c/kinnay__nintendoclients__e2b673__72846c
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | (0/5) Initializing task directory...
+2026-05-30 16:24:07 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/5) ✅ Extracted the 'current' and 'target' directories.
+2026-05-30 16:24:23 | INFO | kinnay__nintendoclients__e2b673__72846c | (2/5) ✅ Ran pytest in directory 'current'.
+2026-05-30 16:24:39 | INFO | kinnay__nintendoclients__e2b673__72846c | (3/5) ✅ Ran pytest in directory 'target'.
+2026-05-30 16:24:39 | INFO | kinnay__nintendoclients__e2b673__72846c | (4/5) ✅ Generated directory 'nonpassed'.
+2026-05-30 16:24:39 | INFO | kinnay__nintendoclients__e2b673__72846c | (5/5) ✅ Updated iteration file.
+2026-05-30 16:24:39 | INFO | kinnay__nintendoclients__e2b673__72846c | ✅ Initialization Finish.
+2026-05-30 16:24:39 | INFO | kinnay__nintendoclients__e2b673__72846c | Evolve progress: 0 / 3
+2026-05-30 16:24:50 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 1====================
+2026-05-30 16:24:50 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:28:09 | INFO | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ✅ The architect agent has generated the requirements.
+2026-05-30 16:28:18 | INFO | kinnay__nintendoclients__e2b673__72846c | (3/7) (Attempt 1/10) ✅ The programmer agent has modified the code.
+2026-05-30 16:28:51 | INFO | kinnay__nintendoclients__e2b673__72846c | (3/7) (Attempt 1/10) ✅ MergeMind generated 1 review comment(s).
+2026-05-30 16:29:11 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 1/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:29:22 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 2/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:29:33 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 3/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:29:44 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 4/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:29:55 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 5/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:06 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 6/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:17 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 7/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:28 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 8/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:39 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 9/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:51 | ERROR | kinnay__nintendoclients__e2b673__72846c | (3b/7) (Review attempt 10/10) ⚠️ Error occurred when applying MergeMind review: RuntimeError('direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 185, in _run_locked
+    programmer_revision_result = call_cli_agent(
+                                 ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 482, in call_direct_openai
+    changed_files = _apply_surgical_edits(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 338, in _apply_surgical_edits
+    raise RuntimeError(
+RuntimeError: direct_openai surgical edit for nintendo/switch/aauth.py expected one old-text match, found 0.
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | (4/7) ✅ Ran pytest in programmer modified code. returncode=1, has_report=True
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | (5/7) ✅ Generated directory 'nonpassed'.
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | (6/7) ✅ Archived directory 'current', and rename directory 'tmp' to 'current'.
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | (7/7) ✅ Updated ineration file.
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 2====================
+2026-05-30 16:30:55 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:31:00 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:04 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 2/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:07 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 3/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:11 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 4/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:15 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 5/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:19 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 6/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:23 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 7/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:27 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 8/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:31 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 9/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:35 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 10/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:35 | INFO | kinnay__nintendoclients__e2b673__72846c | Evolve progress: 1 / 3
+2026-05-30 16:31:46 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 2====================
+2026-05-30 16:31:46 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:31:50 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:53 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 2/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:31:57 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 3/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:01 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 4/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:05 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 5/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:09 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 6/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:13 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 7/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:17 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 8/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:21 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 9/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:24 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 10/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:25 | INFO | kinnay__nintendoclients__e2b673__72846c | Evolve progress: 1 / 3
+2026-05-30 16:32:36 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 2====================
+2026-05-30 16:32:36 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:32:40 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:44 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 2/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:48 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 3/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:52 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 4/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:32:57 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 5/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:01 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 6/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:05 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 7/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:09 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 8/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:13 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 9/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:17 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 10/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:18 | INFO | kinnay__nintendoclients__e2b673__72846c | Evolve progress: 1 / 3
+2026-05-30 16:33:29 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 2====================
+2026-05-30 16:33:29 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:33:33 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:36 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 2/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:40 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 3/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:44 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 4/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:48 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 5/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:52 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 6/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:33:56 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 7/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:00 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 8/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:04 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 9/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:08 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 10/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:08 | INFO | kinnay__nintendoclients__e2b673__72846c | Evolve progress: 1 / 3
+2026-05-30 16:34:19 | INFO | kinnay__nintendoclients__e2b673__72846c | ====================Epoch 2====================
+2026-05-30 16:34:19 | INFO | kinnay__nintendoclients__e2b673__72846c | (1/7) ✅ Cleaned up temporary files.
+2026-05-30 16:34:23 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 1/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:27 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 2/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:31 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 3/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:34 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 4/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:38 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 5/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}
+2026-05-30 16:34:42 | ERROR | kinnay__nintendoclients__e2b673__72846c | (2/7) (Attempt 6/10) ⚠️ Error occurred when calling architect agent: RuntimeError('direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}')
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 217, in _chat
+    response_payload = _request_chat(payload, timeout)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 189, in _request_chat
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/run.py", line 104, in _run_locked
+    architect_result = call_cli_agent(
+                       ^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/tools.py", line 187, in call_cli_agent
+    return agent_func(container_name, prompt, work_dir=work_dir, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 383, in call_direct_openai
+    content, usage, elapsed = _chat(
+                              ^^^^^^
+  File "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/direct_openai.py", line 224, in _chat
+    raise RuntimeError(f"direct_openai HTTP {exc.code}: {body[:1000]}") from exc
+RuntimeError: direct_openai HTTP 400: {"error":"The number of tokens to keep from the initial prompt is greater than the context length (n_keep: 33147>= n_ctx: 32768). Try to load the model with a larger context length, or provide a shorter input."}

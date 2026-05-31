@@ -1,0 +1,46 @@
+========================= Configuration =========================
+{'agent': {'dockerfile': '/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/Dockerfile.direct_openai',
+           'node_version': '',
+           'npm_bin': '',
+           'npm_pkg': ''},
+ 'agent_name': 'direct_openai',
+ 'api_key': '***',
+ 'base_url': 'http://127.0.0.1:1234/v1',
+ 'config_file': 'config.toml',
+ 'docker': {'cpus': '',
+            'memory': '8192mb',
+            'memory_reservation': '4096mb',
+            'network': 'host',
+            'read_bps': '128mb',
+            'storage_disk': '/dev/nvme0n1',
+            'write_bps': '128mb'},
+ 'evolve': {'architect': {'max_try': 10, 'timeout': 3600},
+            'max_epoch': 3,
+            'max_workers': 16,
+            'programmer': {'max_try': 10, 'timeout': 3600}},
+ 'experiment_name': 'surgical_test_guard_kinnay_max3_001_kinnay__nintendoclients__e2b673__72846c',
+ 'hf_repo_id': 'skylenage-ai/SWE-CI',
+ 'hf_token': '***',
+ 'iflow': {'auth_type': 'openai-compatible'},
+ 'init': {'max_workers': 16},
+ 'model_name': 'qwen3.6-27b@iq2_xxs',
+ 'pytest': {'timeout': 3600},
+ 'save_root_dir': '/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/surgical_test_guard_kinnay_max3_001/swe_ci_datasets/kinnay__nintendoclients__e2b673__72846c',
+ 'splitting': 'lite'}
+=================================================================
+16:24:07 | INFO | main | ============================== Initializing tasks... ==============================
+16:24:39 | INFO | main | ✅ Initialize successful(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c
+16:24:39 | INFO | main | Totaling 1 tasks. 1 executed. 1 success, 0 fail.
+16:24:39 | INFO | main | ============================== Evolving... ==============================
+16:31:35 | ERROR | main | ❌ Evolution failed(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c | RuntimeError('(Epoch 2/3) ❌ Max attempts reached: Fail to call architect agent.')
+16:31:35 | INFO | main | Totaling 1 tasks. 1 executed. 0 success, 1 fail.
+16:31:35 | INFO | main | ============================== Evolving... ==============================
+16:32:25 | ERROR | main | ❌ Evolution failed(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c | RuntimeError('(Epoch 2/3) ❌ Max attempts reached: Fail to call architect agent.')
+16:32:25 | INFO | main | Totaling 1 tasks. 1 executed. 0 success, 1 fail.
+16:32:25 | INFO | main | ============================== Evolving... ==============================
+16:33:18 | ERROR | main | ❌ Evolution failed(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c | RuntimeError('(Epoch 2/3) ❌ Max attempts reached: Fail to call architect agent.')
+16:33:18 | INFO | main | Totaling 1 tasks. 1 executed. 0 success, 1 fail.
+16:33:18 | INFO | main | ============================== Evolving... ==============================
+16:34:08 | ERROR | main | ❌ Evolution failed(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c | RuntimeError('(Epoch 2/3) ❌ Max attempts reached: Fail to call architect agent.')
+16:34:08 | INFO | main | Totaling 1 tasks. 1 executed. 0 success, 1 fail.
+16:34:08 | INFO | main | ============================== Evolving... ==============================

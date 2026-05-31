@@ -1,0 +1,93 @@
+{
+  "results": [
+    {
+      "task_id": "kinnay__nintendoclients__e2b673__72846c",
+      "status": "success",
+      "started_at": "2026-05-30T16:49:41.930027+00:00",
+      "finished_at": "2026-05-30T16:57:52.989397+00:00",
+      "duration_seconds": 491.059,
+      "exit_code": 0,
+      "stdout_path": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/logs/kinnay__nintendoclients__e2b673__72846c/stdout.log",
+      "stderr_path": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/logs/kinnay__nintendoclients__e2b673__72846c/stderr.log",
+      "events_path": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/logs/kinnay__nintendoclients__e2b673__72846c/events.jsonl",
+      "metrics": {
+        "phase": "swe_ci.evaluate",
+        "pid": 189167,
+        "command": [
+          "/home/pashab/MergeMind-caveman-grid/.venv/bin/python",
+          "-u",
+          "-m",
+          "swe_ci.evaluate",
+          "--experiment_name",
+          "bounded_test_guard_kinnay_max1_002_kinnay__nintendoclients__e2b673__72846c",
+          "--splitting",
+          "lite",
+          "--save_root_dir",
+          "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/swe_ci_datasets/kinnay__nintendoclients__e2b673__72846c",
+          "--evolve.max_epoch",
+          "1",
+          "--api_key",
+          "***",
+          "--base_url",
+          "http://127.0.0.1:1234/v1",
+          "--model_name",
+          "qwen3.6-27b@iq2_xxs",
+          "--agent_name",
+          "direct_openai",
+          "--docker.network",
+          "host"
+        ],
+        "cwd": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/workdirs/assisted_swe_ci",
+        "docker_containers_stopped_on_timeout": [],
+        "swe_ci_output_dir": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/workdirs/assisted_swe_ci/experiments/bounded_test_guard_kinnay_max1_002_kinnay__nintendoclients__e2b673__72846c/kinnay__nintendoclients__e2b673__72846c",
+        "swe_ci_iteration_file": "/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/workdirs/assisted_swe_ci/experiments/bounded_test_guard_kinnay_max1_002_kinnay__nintendoclients__e2b673__72846c/kinnay__nintendoclients__e2b673__72846c/iteration.jsonl",
+        "swe_ci_iteration_count": 2,
+        "actual_iterations": 1,
+        "gap_sequence": [
+          7,
+          -1
+        ],
+        "initial_gap": 7,
+        "final_gap": -1,
+        "best_gap": 7,
+        "gap_zero": false,
+        "regressions_count": 0,
+        "invalid_iteration_count": 1,
+        "mergemind_assist_review_count": 1,
+        "mergemind_assist_success_count": 1,
+        "mergemind_assist_comment_count": 1,
+        "mergemind_assist_revision_count": 1,
+        "failed_test_nodeids_by_iteration": [
+          [
+            "tests/nex/test_common.py::TestDateTime::test_fromtimestamp",
+            "tests/nex/test_common.py::TestDateTime::test_make",
+            "tests/nex/test_common.py::TestDateTime::test_timestamp",
+            "tests/switch/test_aauth.py::test_challenge_2000[asyncio]",
+            "tests/switch/test_aauth.py::test_gamecard_2000[asyncio]",
+            "tests/switch/test_baas.py::test_authenticate_2000[asyncio]",
+            "tests/switch/test_baas.py::test_login_2000[asyncio]",
+            "tests/switch/test_dauth.py::test_dauth_2000[asyncio]",
+            "tests/switch/test_dauth.py::test_edge_token_2000[asyncio]",
+            "tests/switch/test_dragons.py::test_contents_authorization_token_for_aauth_2000[asyncio]"
+          ],
+          []
+        ],
+        "failed_test_counts_by_iteration": [
+          10,
+          0
+        ],
+        "coding_tokens": 44612,
+        "revision_tokens": 32768,
+        "mergemind_review_tokens": 18311,
+        "total_tokens": 95691,
+        "llm_call_count": 3,
+        "parse_error_rate": 0.0,
+        "tokens_per_successful_revision": 95691.0,
+        "official_evoscore": -1.0,
+        "official_solved_rate": 0.0,
+        "official_zero_regression": 0.0
+      },
+      "error_message": ""
+    }
+  ]
+}

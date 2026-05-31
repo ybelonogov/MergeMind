@@ -1,0 +1,26 @@
+<requirements>
+  <requirement id="1">
+    <location>nintendo/switch/aauth.py</location>
+    <description>The AAuthClient currently lacks support for system version 2000, raising a ValueError when this version is configured.</description>
+    <contract>Enable configuration of system version 2000. The client must update the User-Agent header to reflect SDK 20.5.4.0 and utilize the correct endpoint paths (e.g., /v5/challenge) associated with this version.</contract>
+    <acceptance>tests/switch/test_aauth.py::test_challenge_2000[asyncio], tests/switch/test_aauth.py::test_gamecard_2000[asyncio]</acceptance>
+  </requirement>
+  <requirement id="2">
+    <location>nintendo/switch/baas.py</location>
+    <description>The BAASClient currently lacks support for system version 2000, raising a ValueError when this version is configured.</description>
+    <contract>Enable configuration of system version 2000. The client must update the User-Agent header to reflect SDK 20.5.4.0 and modify request bodies to include specific parameters required by this version (e.g., naCountry, isPersistent in login requests).</contract>
+    <acceptance>tests/switch/test_baas.py::test_authenticate_2000[asyncio], tests/switch/test_baas.py::test_login_2000[asyncio]</acceptance>
+  </requirement>
+  <requirement id="3">
+    <location>nintendo/switch/dauth.py</location>
+    <description>The DAuthClient currently lacks support for system version 2000, raising a ValueError when this version is configured.</description>
+    <contract>Enable configuration of system version 2000. The client must update endpoints to /v8 paths and change request body formats from form-urlencoded to JSON for token requests, along with updating the User-Agent header.</contract>
+    <acceptance>tests/switch/test_dauth.py::test_dauth_2000[asyncio], tests/switch/test_dauth.py::test_edge_token_2000[asyncio]</acceptance>
+  </requirement>
+  <requirement id="4">
+    <location>nintendo/switch/dragons.py</location>
+    <description>The DragonsClient currently lacks support for system version 2000, raising a ValueError when this version is configured.</description>
+    <contract>Enable configuration of system version 2000. The client must update endpoints to /v2 paths and ensure the User-Agent header reflects SDK 20.5.4.0.</contract>
+    <acceptance>tests/switch/test_dragons.py::test_contents_authorization_token_for_aauth_2000[asyncio]</acceptance>
+  </requirement>
+</requirements>

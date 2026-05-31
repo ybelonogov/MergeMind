@@ -1,0 +1,48 @@
+========================= Configuration =========================
+{'agent': {'dockerfile': '/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/workdirs/assisted_swe_ci/src/swe_ci/benchmark/agents/Dockerfile.direct_openai',
+           'node_version': '',
+           'npm_bin': '',
+           'npm_pkg': ''},
+ 'agent_name': 'direct_openai',
+ 'api_key': '***',
+ 'base_url': 'http://127.0.0.1:1234/v1',
+ 'config_file': 'config.toml',
+ 'docker': {'cpus': '',
+            'memory': '8192mb',
+            'memory_reservation': '4096mb',
+            'network': 'host',
+            'read_bps': '128mb',
+            'storage_disk': '/dev/nvme0n1',
+            'write_bps': '128mb'},
+ 'evolve': {'architect': {'max_try': 10, 'timeout': 3600},
+            'max_epoch': 1,
+            'max_workers': 16,
+            'programmer': {'max_try': 10, 'timeout': 3600}},
+ 'experiment_name': 'bounded_test_guard_kinnay_max1_002_kinnay__nintendoclients__e2b673__72846c',
+ 'hf_repo_id': 'skylenage-ai/SWE-CI',
+ 'hf_token': '***',
+ 'iflow': {'auth_type': 'openai-compatible'},
+ 'init': {'max_workers': 16},
+ 'model_name': 'qwen3.6-27b@iq2_xxs',
+ 'pytest': {'timeout': 3600},
+ 'save_root_dir': '/home/pashab/MergeMind-caveman-grid/artifacts/swe_ci_runs/bounded_test_guard_kinnay_max1_002/swe_ci_datasets/kinnay__nintendoclients__e2b673__72846c',
+ 'splitting': 'lite'}
+=================================================================
+16:49:42 | INFO | main | ============================== Initializing tasks... ==============================
+16:50:07 | INFO | main | ✅ Initialize successful(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c
+16:50:07 | INFO | main | Totaling 1 tasks. 1 executed. 1 success, 0 fail.
+16:50:07 | INFO | main | ============================== Evolving... ==============================
+16:57:52 | INFO | main | ✅ Evolution complete(1/1). Task ID = kinnay__nintendoclients__e2b673__72846c
+16:57:52 | INFO | main | Totaling 1 tasks. 1 executed. 1 success, 0 fail.
+Total tasks: 1, avaliable: 1
+                                                                                
+                                 📊 Experiment:                                 
+   bounded_test_guard_kinnay_max1_002_kinnay__nintendoclients__e2b673__72846c   
+                                                                                
+╔══════════════════════════╤═══════════════════╤═════════════╤═════════════════╗
+║ Task ID                  │ EVOSCORE(GAMMA=1) │ SOLVED_RATE │ ZERO_REGRESSION ║
+╟──────────────────────────┼───────────────────┼─────────────┼─────────────────╢
+║ kinnay__nintendoclients… │           -1.0000 │      0.0000 │          0.0000 ║
+╟──────────────────────────┼───────────────────┼─────────────┼─────────────────╢
+║ AVERAGE                  │           -1.0000 │      0.0000 │          0.0000 ║
+╚══════════════════════════╧═══════════════════╧═════════════╧═════════════════╝
