@@ -5,8 +5,24 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.validation.swe_ci.reporter import write_report
+from src.validation.swe_ci.reporter import compute_metrics, write_report
 from src.validation.swe_ci.schemas import SweCiTaskRunResult
+
+
+def _result(task_id: str, final_gap: int) -> SweCiTaskRunResult:
+    return SweCiTaskRunResult(
+        task_id=task_id,
+        status="success",
+        started_at="2026-01-01T00:00:00+00:00",
+        finished_at="2026-01-01T00:00:01+00:00",
+        duration_seconds=1.0,
+        exit_code=0,
+        stdout_path="stdout.log",
+        stderr_path="stderr.log",
+        events_path="events.jsonl",
+        metrics={"actual_iterations": 1, "final_gap": final_gap},
+        error_message="",
+    )
 
 
 class SweCiReporterTests(unittest.TestCase):
@@ -41,6 +57,12 @@ class SweCiReporterTests(unittest.TestCase):
             self.assertIn("MergeMind comments: 2", summary)
             self.assertIn("Could not locate SWE-CI result file", summary)
             self.assertTrue(task_results_exists)
+
+    def test_average_final_gap_excludes_invalid_gaps(self) -> None:
+        metrics = compute_metrics([_result("valid", 4), _result("invalid", -1)])
+
+        self.assertEqual(metrics["average_final_gap"], 4)
+        self.assertEqual(metrics["invalid_final_gap_count"], 1)
 
 
 if __name__ == "__main__":

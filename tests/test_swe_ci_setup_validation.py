@@ -97,6 +97,34 @@ class SweCiSetupValidationTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
+    def test_accepts_mergemind_assisted_mode(self) -> None:
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            repo = base / "SWE-CI"
+            tasks = base / "tasks.jsonl"
+            config_path = base / "base.yaml"
+            _create_fake_swe_ci_repo(repo)
+            tasks.write_text("", encoding="utf-8")
+            config_path.write_text("paths:\n  data_dir: artifacts/data\n", encoding="utf-8")
+            config = SweCiRunConfig(
+                repo,
+                tasks,
+                base / "runs",
+                None,
+                3,
+                60,
+                "mergemind_assisted",
+                "run-1",
+                mergemind_config_path=config_path,
+                assisted_work_dir=base / "assisted-swe-ci",
+                docker_network="host",
+            )
+
+            with patch("src.validation.swe_ci.config.check_command_available", return_value=None):
+                errors = validate_run_config(config)
+
+        self.assertEqual(errors, [])
+
 
 if __name__ == "__main__":
     unittest.main()

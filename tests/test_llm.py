@@ -3,18 +3,30 @@
 from __future__ import annotations
 
 import json
+import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from src.data.schema import CandidateComment, MRExample
 from src.models.llm import (
+    CavemanLLMGenerator,
+    CavemanLLMRewriter,
+    CavemanTestTriageLLMGenerator,
     GENERATOR_SCHEMA,
     JUDGE_SCHEMA,
     LLMGenerator,
     LLMReranker,
     LLMRewriter,
     OpenAICompatibleLLMClient,
+    SWEContractLLMGenerator,
+    SWEContractLLMRewriter,
+    SWESafeTriageLLMGenerator,
+    SWESafeTriageLLMRewriter,
+    SWETestGuardLLMGenerator,
+    SWETestGuardLLMRewriter,
+    SWETriageLLMGenerator,
+    SWETriageLLMRewriter,
     SQLiteLLMCache,
     parse_json_payload,
 )
@@ -128,6 +140,31 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertFalse(response.parse_error)
         self.assertEqual(formats[0], {"type": "json_object"})
 
+    def test_client_writes_prompt_log_when_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            previous = os.environ.get("MERGEMIND_PROMPT_LOG_DIR")
+            os.environ["MERGEMIND_PROMPT_LOG_DIR"] = str(Path(temp_dir) / "prompt_logs")
+            try:
+                client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion('{"comments": []}'))
+                response = client.chat_json("generator", [{"role": "user", "content": "review this"}], GENERATOR_SCHEMA)
+            finally:
+                if previous is None:
+                    os.environ.pop("MERGEMIND_PROMPT_LOG_DIR", None)
+                else:
+                    os.environ["MERGEMIND_PROMPT_LOG_DIR"] = previous
+
+            log_path = Path(temp_dir) / "prompt_logs" / "generator.jsonl"
+            all_log_path = Path(temp_dir) / "prompt_logs" / "all.jsonl"
+            self.assertTrue(log_path.exists())
+            self.assertTrue(all_log_path.exists())
+            row = json.loads(log_path.read_text(encoding="utf-8").splitlines()[0])
+
+        self.assertFalse(response.parse_error)
+        self.assertEqual(row["role"], "generator")
+        self.assertEqual(row["messages"][0]["content"], "review this")
+        self.assertEqual(row["raw_text"], '{"comments": []}')
+        self.assertEqual(row["usage"]["total_tokens"], 15)
+
     def test_client_retries_malformed_json(self) -> None:
         calls = {"count": 0}
 
@@ -180,6 +217,191 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertIn("between 3 and 5", seen_prompts[0])
         self.assertIn("correctness", seen_prompts[0])
         self.assertIn("missing tests", seen_prompts[0])
+
+    def test_swe_contract_generator_prompt_is_repair_focused_without_target_sha(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWEContractLLMGenerator(client, max_candidates=4, min_candidates=2)
+
+        generator.generate(_example())
+
+        self.assertIn("increase failing tests", seen_prompts[0])
+        self.assertIn("hidden solution", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
+
+    def test_swe_triage_generator_caps_candidates_and_avoids_oracle_terms(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWETriageLLMGenerator(client, max_candidates=5, min_candidates=3)
+
+        generator.generate(_example())
+
+        self.assertEqual(generator.max_candidates, 3)
+        self.assertEqual(generator.min_candidates, 1)
+        self.assertIn("one strong root-cause finding", seen_prompts[0])
+        self.assertIn("smallest safe source-code repair", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
+
+    def test_caveman_generator_prompt_requires_contract_and_filters_noise(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = CavemanLLMGenerator(client, max_candidates=3, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("Caveman Reviewer", combined)
+        self.assertIn("Finding:", combined)
+        self.assertIn("Expected revision:", combined)
+        self.assertIn("Do not change:", combined)
+        self.assertIn("If confidence is low, say nothing", combined)
+        self.assertNotIn("target_sha", combined)
+        self.assertNotIn("oracle", combined.lower())
+
+    def test_safe_triage_prompt_prefers_no_comment_over_regression_risk(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWESafeTriageLLMGenerator(client, max_candidates=2, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("regression-guard reviewer", combined)
+        self.assertIn("Prefer 0 comments", combined)
+        self.assertIn("currently passing behavior", combined)
+        self.assertIn("not generated data", combined)
+        self.assertNotIn("target_sha", combined)
+        self.assertNotIn("oracle", combined.lower())
+
+    def test_test_guard_prompt_requires_visible_failure_and_python_source(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = SWETestGuardLLMGenerator(client, max_candidates=2, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("test-failure guard reviewer", combined)
+        self.assertIn("visible failed nodeid", combined)
+        self.assertIn("changed Python source", combined)
+        self.assertIn("return no comments", combined)
+        self.assertIn("Failing test:", combined)
+        self.assertNotIn("target_sha", combined)
+        self.assertNotIn("oracle", combined.lower())
+
+    def test_caveman_test_triage_prompt_mentions_visible_failures_without_target(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[0]["content"])
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        generator = CavemanTestTriageLLMGenerator(client, max_candidates=3, min_candidates=1)
+
+        generator.generate(_example())
+
+        combined = "\n".join(seen_prompts)
+        self.assertIn("visible previous pytest failures", combined)
+        self.assertNotIn("target_sha", combined)
+
+    def test_caveman_rewriter_requests_required_contract_fields(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"rewritten_comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = CavemanLLMRewriter(client)
+
+        rewriter.rewrite(_example(), [CandidateComment(text="Guard empty carts.", reranker_score=0.9)])
+
+        self.assertIn("Finding:", seen_prompts[0])
+        self.assertIn("Evidence:", seen_prompts[0])
+        self.assertIn("Expected revision:", seen_prompts[0])
+        self.assertIn("Confidence:", seen_prompts[0])
+
+    def test_safe_triage_rewriter_preserves_passing_behavior(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"rewritten_comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWESafeTriageLLMRewriter(client)
+
+        rewriter.rewrite(_example(), [CandidateComment(text="Avoid broad public modifier changes.", reranker_score=0.9)])
+
+        self.assertIn("currently passing behavior", seen_prompts[0])
+        self.assertIn("generated data", seen_prompts[0])
+        self.assertIn("smallest behavior-preserving correction", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
+
+    def test_test_guard_rewriter_requests_test_aware_contract(self) -> None:
+        seen_prompts: list[str] = []
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion('{"rewritten_comments": []}')
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWETestGuardLLMRewriter(client)
+
+        rewriter.rewrite(_example(), [CandidateComment(text="Tie failure to changed code.", reranker_score=0.9)])
+
+        self.assertIn("Failing test:", seen_prompts[0])
+        self.assertIn("changed Python source", seen_prompts[0])
+        self.assertIn("smallest safe Python source-code correction", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
 
     def test_llm_reranker_preserves_candidate_indices(self) -> None:
         payload = {
@@ -421,6 +643,84 @@ class LocalLLMComponentTests(unittest.TestCase):
         self.assertEqual(rewritten[0].text, "Keep the original comment.")
         self.assertEqual(rewriter.fallback_count, 1)
         self.assertTrue(any("llm_rewriter_fallback=true" == item for item in rewritten[0].evidence))
+
+    def test_swe_contract_rewriter_requests_revision_contract(self) -> None:
+        seen_prompts: list[str] = []
+        payload = {
+            "rewritten_comments": [
+                {
+                    "candidate_id": 0,
+                    "rewritten_comment": (
+                        "Finding: Empty carts can still fail.\n"
+                        "Evidence: The diff reads the first item.\n"
+                        "Expected revision: Guard the empty list before indexing.\n"
+                        "Do not change: Tests or unrelated checkout behavior."
+                    ),
+                    "essence": "Empty cart guard",
+                    "severity": "high",
+                    "confidence": 0.9,
+                    "reason": "Converted to repair guidance.",
+                }
+            ]
+        }
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion(json.dumps(payload))
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWEContractLLMRewriter(client)
+
+        rewritten = rewriter.rewrite(_example(), [CandidateComment(text="Guard empty carts.", reranker_score=0.9)])
+
+        self.assertIn("Finding:", rewritten[0].text)
+        self.assertIn("Expected revision:", rewritten[0].text)
+        self.assertIn("Do not change:", rewritten[0].text)
+        self.assertIn("automated programmer revision", rewriter._system_prompt())
+        self.assertIn("Do not ask the programmer to edit tests", seen_prompts[0])
+
+    def test_swe_triage_rewriter_requests_minimal_root_cause_contract(self) -> None:
+        seen_prompts: list[str] = []
+        payload = {
+            "rewritten_comments": [
+                {
+                    "candidate_id": 0,
+                    "rewritten_comment": (
+                        "Finding: The patch violates the snapshot update invariant.\n"
+                        "Evidence: The diff changes update handling without preserving old values.\n"
+                        "Expected revision: Preserve existing value normalization before writing the update.\n"
+                        "Do not change: Tests, public APIs, or unrelated snapshot formatting."
+                    ),
+                    "essence": "Snapshot update invariant",
+                    "severity": "high",
+                    "confidence": 0.88,
+                    "reason": "Converted to root-cause repair guidance.",
+                }
+            ]
+        }
+
+        def completion_fn(**kwargs: object) -> dict:
+            messages = kwargs["messages"]
+            assert isinstance(messages, list)
+            seen_prompts.append(messages[-1]["content"])
+            return _completion(json.dumps(payload))
+
+        client = OpenAICompatibleLLMClient(completion_fn=completion_fn)
+        rewriter = SWETriageLLMRewriter(client)
+
+        rewritten = rewriter.rewrite(
+            _example(),
+            [CandidateComment(text="Preserve update normalization.", reranker_score=0.9)],
+        )
+
+        self.assertIn("Finding:", rewritten[0].text)
+        self.assertIn("Expected revision:", rewritten[0].text)
+        self.assertIn("Do not change:", rewritten[0].text)
+        self.assertIn("root-cause repair editor", rewriter._system_prompt())
+        self.assertIn("smallest source-code edit", seen_prompts[0])
+        self.assertNotIn("target_sha", seen_prompts[0])
 
 
 if __name__ == "__main__":

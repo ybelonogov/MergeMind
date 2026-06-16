@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import unittest
 from pathlib import Path
 
-from src.validation.swe_ci.config import build_swe_ci_command
+from src.validation.swe_ci.config import build_swe_ci_command, build_swe_ci_env
+from src.validation.swe_ci.assisted import build_assisted_environment
 from src.validation.swe_ci.reporter import run_dir_for
 from src.validation.swe_ci.process_runner import redact_command
 from src.validation.swe_ci.schemas import SweCiRunConfig, SweCiTask
@@ -48,6 +50,40 @@ class SweCiCommandConfigTests(unittest.TestCase):
         self.assertIn("opencode", command)
         self.assertNotIn("secret-key", " ".join(redact_command(command)))
 
+    def test_redact_command_handles_hyphenated_secret_flags(self) -> None:
+        command = ["python", "script.py", "--api-key", "secret-key", "--hf-token", "hf-secret"]
+
+        redacted = redact_command(command)
+
+        self.assertEqual(redacted, ["python", "script.py", "--api-key", "***", "--hf-token", "***"])
+
+    def test_docker_network_is_added_to_command(self) -> None:
+        config = SweCiRunConfig(
+            swe_ci_repo_path=Path("SWE-CI"),
+            tasks_path=Path("tasks.jsonl"),
+            output_dir=Path("runs"),
+            limit=1,
+            max_iterations=3,
+            timeout_seconds=60,
+            mode="mergemind_assisted",
+            run_id="run-1",
+            docker_network="host",
+        )
+        task = SweCiTask(
+            task_id="task-1",
+            repo_name="owner/repo",
+            repo_url="https://github.com/owner/repo",
+            current_sha="abc",
+            target_sha="def",
+            image_sha="sha256:image",
+            test_gap={},
+        )
+
+        command = build_swe_ci_command(config, task, Path("out"))
+
+        self.assertIn("--docker.network", command)
+        self.assertIn("host", command)
+
     def test_absolute_task_dir_is_passed_to_swe_ci(self) -> None:
         config = SweCiRunConfig(
             swe_ci_repo_path=Path("SWE-CI"),
@@ -73,6 +109,33 @@ class SweCiCommandConfigTests(unittest.TestCase):
         save_root_dir = command[command.index("--save_root_dir") + 1]
 
         self.assertTrue(Path(save_root_dir).is_absolute())
+
+    def test_build_swe_ci_env_uses_platform_path_separator(self) -> None:
+        swe_ci_repo_path = Path("/repo/SWE-CI")
+        project_root = Path("/repo/MergeMind")
+
+        env = build_swe_ci_env(swe_ci_repo_path, project_root)
+
+        self.assertEqual(env["PYTHONPATH"], os.pathsep.join([str(swe_ci_repo_path / "src"), str(project_root)]))
+
+    def test_assisted_environment_includes_revision_guard_settings(self) -> None:
+        config = SweCiRunConfig(
+            swe_ci_repo_path=Path("SWE-CI"),
+            tasks_path=Path("tasks.jsonl"),
+            output_dir=Path("runs"),
+            limit=1,
+            max_iterations=3,
+            timeout_seconds=60,
+            mode="mergemind_assisted",
+            run_id="run-1",
+            mergemind_min_score=0.9,
+            mergemind_max_revision_epochs=2,
+        )
+
+        env = build_assisted_environment(config, Path("runs") / "run-1", Path.cwd())
+
+        self.assertEqual(env["MERGEMIND_MIN_SCORE"], "0.9")
+        self.assertEqual(env["MERGEMIND_MAX_REVISION_EPOCHS"], "2")
 
 
 if __name__ == "__main__":

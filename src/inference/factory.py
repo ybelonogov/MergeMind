@@ -2,13 +2,37 @@
 
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any
 
 from src.config import resolve_path
 from src.models.baseline import RetrievalGenerator, Reranker
 from src.data.schema import CandidateComment, MRExample
-from src.models.llm import LLMGenerator, LLMReranker, LLMRewriter, OpenAICompatibleLLMClient, build_llm_client
+from src.models.llm import (
+    CavemanDirectLLMGenerator,
+    CavemanLLMGenerator,
+    CavemanLLMReranker,
+    CavemanLLMRewriter,
+    CavemanTestTriageLLMGenerator,
+    LLMGenerator,
+    LLMReranker,
+    LLMRewriter,
+    OpenAICompatibleLLMClient,
+    SWEContractLLMGenerator,
+    SWEContractLLMReranker,
+    SWEContractLLMRewriter,
+    SWESafeTriageLLMGenerator,
+    SWESafeTriageLLMReranker,
+    SWESafeTriageLLMRewriter,
+    SWETestGuardLLMGenerator,
+    SWETestGuardLLMReranker,
+    SWETestGuardLLMRewriter,
+    SWETriageLLMGenerator,
+    SWETriageLLMReranker,
+    SWETriageLLMRewriter,
+    build_llm_client,
+)
 
 BASELINE_MODE = "baseline_retrieval_logistic"
 QWEN_GENERATOR_LOGISTIC_MODE = "qwen35_generator_logistic_reranker"
@@ -20,11 +44,27 @@ QWEN_FULL_REWRITER_MODE = "qwen35_full_with_rewriter"
 QWEN_FULL_REWRITER_ALIAS = "qwen35_rewriter"
 QWEN_FULL_REWRITER_JUDGE_MODE = "qwen35_full_with_rewriter_and_qwen35_judge"
 QWEN_FULL_REWRITER_JUDGE_ALIAS = "qwen35_rewriter_judge"
+QWEN_REWRITER_SWECI_CONTRACT_MODE = "qwen35_rewriter_sweci_contract"
+QWEN_REVIEW_CONTRACT_ALIAS = "qwen35_review_contract"
+QWEN_REWRITER_SWECI_TRIAGE_MODE = "qwen35_rewriter_sweci_triage"
+QWEN_REVIEW_TRIAGE_ALIAS = "qwen35_review_triage"
+QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE = "qwen35_rewriter_sweci_safe_triage"
+QWEN_REVIEW_SAFE_TRIAGE_ALIAS = "qwen35_review_safe_triage"
+QWEN_REWRITER_SWECI_TEST_GUARD_MODE = "qwen35_rewriter_sweci_test_guard"
+QWEN_REVIEW_TEST_GUARD_ALIAS = "qwen35_review_test_guard"
+QWEN_CAVEMAN_TOP1_MODE = "qwen35_caveman_top1"
+QWEN_CAVEMAN_TOP2_MODE = "qwen35_caveman_top2"
+QWEN_CAVEMAN_DIRECT_TOP1_MODE = "qwen35_caveman_direct_top1"
+QWEN_CAVEMAN_TEST_TRIAGE_MODE = "qwen35_caveman_test_triage"
 
 PIPELINE_ALIASES = {
     QWEN_FULL_ALIAS: QWEN_FULL_MODE,
     QWEN_FULL_REWRITER_ALIAS: QWEN_FULL_REWRITER_MODE,
     QWEN_FULL_REWRITER_JUDGE_ALIAS: QWEN_FULL_REWRITER_JUDGE_MODE,
+    QWEN_REVIEW_CONTRACT_ALIAS: QWEN_REWRITER_SWECI_CONTRACT_MODE,
+    QWEN_REVIEW_TRIAGE_ALIAS: QWEN_REWRITER_SWECI_TRIAGE_MODE,
+    QWEN_REVIEW_SAFE_TRIAGE_ALIAS: QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+    QWEN_REVIEW_TEST_GUARD_ALIAS: QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
 }
 
 PIPELINE_MODES = {
@@ -38,6 +78,18 @@ PIPELINE_MODES = {
     QWEN_FULL_REWRITER_ALIAS,
     QWEN_FULL_REWRITER_JUDGE_MODE,
     QWEN_FULL_REWRITER_JUDGE_ALIAS,
+    QWEN_REWRITER_SWECI_CONTRACT_MODE,
+    QWEN_REVIEW_CONTRACT_ALIAS,
+    QWEN_REWRITER_SWECI_TRIAGE_MODE,
+    QWEN_REVIEW_TRIAGE_ALIAS,
+    QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+    QWEN_REVIEW_SAFE_TRIAGE_ALIAS,
+    QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
+    QWEN_REVIEW_TEST_GUARD_ALIAS,
+    QWEN_CAVEMAN_TOP1_MODE,
+    QWEN_CAVEMAN_TOP2_MODE,
+    QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+    QWEN_CAVEMAN_TEST_TRIAGE_MODE,
 }
 
 
@@ -60,7 +112,30 @@ def pipeline_uses_llm(mode: str) -> bool:
         QWEN_FULL_JUDGE_MODE,
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
+        QWEN_REWRITER_SWECI_CONTRACT_MODE,
+        QWEN_REWRITER_SWECI_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
+        QWEN_CAVEMAN_TOP1_MODE,
+        QWEN_CAVEMAN_TOP2_MODE,
+        QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+        QWEN_CAVEMAN_TEST_TRIAGE_MODE,
     }
+
+
+def _apply_pipeline_overrides(config: dict[str, Any], canonical_mode: str) -> dict[str, Any]:
+    overrides = config.get("llm_pipeline_overrides", {})
+    if not isinstance(overrides, dict) or canonical_mode not in overrides:
+        return config
+    pipeline_overrides = overrides.get(canonical_mode, {})
+    if not isinstance(pipeline_overrides, dict):
+        return config
+    merged = copy.deepcopy(config)
+    merged.setdefault("llm", {})
+    llm_overrides = pipeline_overrides.get("llm", pipeline_overrides)
+    if isinstance(llm_overrides, dict):
+        merged["llm"].update(llm_overrides)
+    return merged
 
 
 def _load_retrieval_generator(config: dict[str, Any], project_root: Path) -> RetrievalGenerator:
@@ -73,29 +148,32 @@ def _load_baseline_reranker(config: dict[str, Any], project_root: Path) -> Reran
     return Reranker.load(model_dir / "reranker.pkl")
 
 
-def _llm_generation_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_generation_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_generator" if contract else "max_tokens_generator"
     return {
         "max_candidates": int(llm_config.get("max_candidates", config.get("model", {}).get("max_candidates", 5))),
         "min_candidates": int(llm_config.get("min_candidates", 3)),
         "temperature": float(llm_config.get("temperature_generator", 0.2)),
-        "max_tokens": int(llm_config.get("max_tokens_generator", 700)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 1200 if contract else 700)),
     }
 
 
-def _llm_reranker_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_reranker_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_reranker" if contract else "max_tokens_reranker"
     return {
         "temperature": float(llm_config.get("temperature_reranker", 0.0)),
-        "max_tokens": int(llm_config.get("max_tokens_reranker", 900)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 900)),
     }
 
 
-def _llm_rewriter_config(config: dict[str, Any]) -> dict[str, Any]:
+def _llm_rewriter_config(config: dict[str, Any], *, contract: bool = False) -> dict[str, Any]:
     llm_config = dict(config.get("llm", {}))
+    max_tokens_key = "max_tokens_contract_rewriter" if contract else "max_tokens_rewriter"
     return {
         "temperature": float(llm_config.get("temperature_rewriter", 0.0)),
-        "max_tokens": int(llm_config.get("max_tokens_rewriter", 700)),
+        "max_tokens": int(llm_config.get(max_tokens_key, 1200 if contract else 700)),
     }
 
 
@@ -128,6 +206,7 @@ def build_pipeline_components(
     canonical_mode = canonical_pipeline_mode(mode)
     if canonical_mode not in PIPELINE_MODES:
         raise ValueError(f"Unknown pipeline mode: {mode}")
+    config = _apply_pipeline_overrides(config, canonical_mode)
 
     shared_client = llm_client
     if canonical_mode in {
@@ -137,6 +216,14 @@ def build_pipeline_components(
         QWEN_FULL_JUDGE_MODE,
         QWEN_FULL_REWRITER_MODE,
         QWEN_FULL_REWRITER_JUDGE_MODE,
+        QWEN_REWRITER_SWECI_CONTRACT_MODE,
+        QWEN_REWRITER_SWECI_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE,
+        QWEN_REWRITER_SWECI_TEST_GUARD_MODE,
+        QWEN_CAVEMAN_TOP1_MODE,
+        QWEN_CAVEMAN_TOP2_MODE,
+        QWEN_CAVEMAN_DIRECT_TOP1_MODE,
+        QWEN_CAVEMAN_TEST_TRIAGE_MODE,
     }:
         shared_client = shared_client or build_llm_client(config, project_root)
 
@@ -173,6 +260,74 @@ def build_pipeline_components(
         rewriter = LLMRewriter(shared_client, **_llm_rewriter_config(config))
         return (
             LLMGenerator(shared_client, **_llm_generation_config(config)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_CONTRACT_MODE:
+        assert shared_client is not None
+        reranker = SWEContractLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWEContractLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWEContractLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_TRIAGE_MODE:
+        assert shared_client is not None
+        reranker = SWETriageLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWETriageLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWETriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_SAFE_TRIAGE_MODE:
+        assert shared_client is not None
+        reranker = SWESafeTriageLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWESafeTriageLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWESafeTriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_REWRITER_SWECI_TEST_GUARD_MODE:
+        assert shared_client is not None
+        reranker = SWETestGuardLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = SWETestGuardLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            SWETestGuardLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode in {QWEN_CAVEMAN_TOP1_MODE, QWEN_CAVEMAN_TOP2_MODE}:
+        assert shared_client is not None
+        reranker = CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = CavemanLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            CavemanLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            RewritingReranker(reranker, rewriter),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_CAVEMAN_DIRECT_TOP1_MODE:
+        assert shared_client is not None
+        return (
+            CavemanDirectLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
+            CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True)),
+            shared_client,
+        )
+
+    if canonical_mode == QWEN_CAVEMAN_TEST_TRIAGE_MODE:
+        assert shared_client is not None
+        reranker = CavemanLLMReranker(shared_client, **_llm_reranker_config(config, contract=True))
+        rewriter = CavemanLLMRewriter(shared_client, **_llm_rewriter_config(config, contract=True))
+        return (
+            CavemanTestTriageLLMGenerator(shared_client, **_llm_generation_config(config, contract=True)),
             RewritingReranker(reranker, rewriter),
             shared_client,
         )

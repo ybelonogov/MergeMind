@@ -48,6 +48,24 @@ def append_run_event(run_dir: str | Path, payload: dict[str, Any]) -> None:
 def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
     counts = Counter(result.status for result in results)
     durations = [result.duration_seconds for result in results]
+    actual_iterations = [
+        int(result.metrics["actual_iterations"])
+        for result in results
+        if isinstance(result.metrics.get("actual_iterations"), int)
+    ]
+    final_gaps = [
+        int(result.metrics["final_gap"])
+        for result in results
+        if isinstance(result.metrics.get("final_gap"), int) and int(result.metrics["final_gap"]) >= 0
+    ]
+    best_gaps = [
+        int(result.metrics["best_gap"])
+        for result in results
+        if isinstance(result.metrics.get("best_gap"), int)
+    ]
+    total_tokens = [float(result.metrics.get("total_tokens", 0) or 0) for result in results]
+    review_tokens = [float(result.metrics.get("mergemind_review_tokens", 0) or 0) for result in results]
+    llm_calls = [float(result.metrics.get("llm_call_count", 0) or 0) for result in results]
     task_count = len(results)
     review_payloads = [
         result.metrics.get("mergemind_review")
@@ -67,6 +85,22 @@ def compute_metrics(results: list[SweCiTaskRunResult]) -> dict[str, Any]:
         "mergemind_reviewed": review_status_counts.get("success", 0),
         "mergemind_review_skipped": review_status_counts.get("skipped", 0),
         "mergemind_comment_count": sum(int(payload.get("comment_count", 0)) for payload in review_payloads),
+        "average_actual_iterations": sum(actual_iterations) / len(actual_iterations) if actual_iterations else 0.0,
+        "average_final_gap": sum(final_gaps) / len(final_gaps) if final_gaps else 0.0,
+        "invalid_final_gap_count": sum(
+            1
+            for result in results
+            if isinstance(result.metrics.get("final_gap"), int) and int(result.metrics["final_gap"]) < 0
+        ),
+        "average_best_gap": sum(best_gaps) / len(best_gaps) if best_gaps else 0.0,
+        "gap_zero_count": sum(1 for result in results if result.metrics.get("gap_zero") is True),
+        "mergemind_assist_review_count": sum(int(result.metrics.get("mergemind_assist_review_count", 0) or 0) for result in results),
+        "mergemind_assist_success_count": sum(int(result.metrics.get("mergemind_assist_success_count", 0) or 0) for result in results),
+        "mergemind_assist_comment_count": sum(int(result.metrics.get("mergemind_assist_comment_count", 0) or 0) for result in results),
+        "mergemind_assist_revision_count": sum(int(result.metrics.get("mergemind_assist_revision_count", 0) or 0) for result in results),
+        "total_tokens": sum(total_tokens),
+        "mergemind_review_tokens": sum(review_tokens),
+        "llm_call_count": sum(llm_calls),
     }
 
 
@@ -89,14 +123,25 @@ def render_summary(run_id: str, run_dir: Path, results: list[SweCiTaskRunResult]
         f"- Skipped: {metrics['skipped']}",
         f"- Pass rate: {metrics['pass_rate']:.3f}",
         f"- Average duration seconds: {metrics['average_duration_seconds']:.3f}",
+        f"- Average actual iterations: {metrics['average_actual_iterations']:.3f}",
+        f"- Average final gap: {metrics['average_final_gap']:.3f}",
+        f"- Invalid final gap count: {metrics['invalid_final_gap_count']}",
+        f"- Average best gap: {metrics['average_best_gap']:.3f}",
+        f"- Gap zero count: {metrics['gap_zero_count']}",
         f"- MergeMind reviewed tasks: {metrics['mergemind_reviewed']}",
         f"- MergeMind skipped reviews: {metrics['mergemind_review_skipped']}",
         f"- MergeMind comments: {metrics['mergemind_comment_count']}",
+        f"- MergeMind assisted reviews: {metrics['mergemind_assist_success_count']}",
+        f"- MergeMind assisted comments: {metrics['mergemind_assist_comment_count']}",
+        f"- MergeMind assisted revisions: {metrics['mergemind_assist_revision_count']}",
+        f"- Total tokens: {metrics['total_tokens']:.0f}",
+        f"- MergeMind review tokens: {metrics['mergemind_review_tokens']:.0f}",
+        f"- MergeMind LLM calls: {metrics['llm_call_count']:.0f}",
         "",
         "## Tasks",
         "",
-        "| task_id | status | duration_sec | exit_code | mergemind_review | comments | stdout | stderr | error |",
-        "| --- | --- | ---: | ---: | --- | ---: | --- | --- | --- |",
+        "| task_id | status | iterations | final_gap | best_gap | duration_sec | tokens | review_tokens | exit_code | mergemind_review | comments | assisted_comments | stdout | stderr | error |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
     ]
     for result in results:
         stdout_link = _relative_link(run_dir, result.stdout_path)
@@ -104,11 +149,19 @@ def render_summary(run_id: str, run_dir: Path, results: list[SweCiTaskRunResult]
         review = result.metrics.get("mergemind_review") if isinstance(result.metrics, dict) else None
         review_status = str(review.get("status", "")) if isinstance(review, dict) else ""
         review_comments = int(review.get("comment_count", 0)) if isinstance(review, dict) else 0
+        assisted_comments = int(result.metrics.get("mergemind_assist_comment_count", 0) or 0)
+        iterations = result.metrics.get("actual_iterations", "")
+        final_gap = result.metrics.get("final_gap", "")
+        best_gap = result.metrics.get("best_gap", "")
+        total_tokens = result.metrics.get("total_tokens", "")
+        review_tokens = result.metrics.get("mergemind_review_tokens", "")
         error = result.error_message.replace("|", "\\|") if result.error_message else ""
         lines.append(
-            f"| {result.task_id} | {result.status} | {result.duration_seconds:.3f} | "
+            f"| {result.task_id} | {result.status} | {iterations} | {final_gap} | {best_gap} | {result.duration_seconds:.3f} | "
+            f"{total_tokens} | {review_tokens} | "
             f"{'' if result.exit_code is None else result.exit_code} | "
-            f"{review_status} | {review_comments} | [stdout]({stdout_link}) | [stderr]({stderr_link}) | {error} |"
+            f"{review_status} | {review_comments} | {assisted_comments} | "
+            f"[stdout]({stdout_link}) | [stderr]({stderr_link}) | {error} |"
         )
 
     errors = [result for result in results if result.error_message]

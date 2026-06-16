@@ -1,0 +1,34 @@
+{
+  "run_id": "curated_real_prs_qwen35_contract",
+  "llm_provider": "local_qwen36_27b_iq2",
+  "judge": true,
+  "limit_comments": 3,
+  "max_repository_files": 5,
+  "diff_lines": 80,
+  "pipelines": [
+    "qwen35_rewriter",
+    "qwen35_review_contract"
+  ],
+  "prs": [
+    {
+      "url": "https://github.com/Vaquum/Limen/pull/544",
+      "notes": "Merged Python PR with public inline review comments; performance/memory regression risk."
+    },
+    {
+      "url": "https://github.com/truong0812/CrewAI_Review_Bot/pull/17",
+      "notes": "Merged Python PR with human review body/comments; webhook and response-loop behavior."
+    },
+    {
+      "url": "https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-hexacore/pull/29",
+      "notes": "Merged PR with public inline comments; backend endpoint behavior."
+    },
+    {
+      "url": "https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-hexacore/pull/27",
+      "notes": "Merged PR with public inline comments; frontend/API gateway handling."
+    },
+    {
+      "url": "https://github.com/pipeshub-ai/pipeshub-ai/pull/2399",
+      "notes": "Merged PR with public inline comments; pagination and email visibility behavior."
+    }
+  ]
+}
