@@ -1,23 +1,50 @@
-# SWE-CI Pair30 Baseline vs MergeMind
+# SWE-CI pair30: baseline против MergeMind
 
-This experiment compares the same SWE-CI tasks in two modes:
+Этот документ описывает проверку MergeMind на фиксированном списке из 30 задач
+SWE-CI. Цель запуска — сравнить обычный режим SWE-CI с режимом, где после
+первой правки агент получает один комментарий MergeMind и делает дополнительную
+правку перед запуском тестов.
 
-- `baseline`: SWE-CI with `direct_openai`, no MergeMind comments.
-- `assisted`: SWE-CI with `direct_openai` plus MergeMind `qwen35_rewriter_sweci_triage`.
+## Режимы сравнения
 
-Both modes use `max_iterations=5`.
+- `baseline` — обычный SWE-CI запуск без MergeMind.
+- `assisted` — SWE-CI запуск с MergeMind между первой правкой агента и запуском
+  тестов.
 
-The repository stores the fixed task manifest, the runner scripts, and compact
-experiment artifacts. Raw SWE-CI logs and prompt logs are intentionally not
-committed here.
+Оба режима используют один и тот же список задач и одинаковый лимит итераций.
+В текущем запуске лимит равен `5`.
 
-## Prepare Tasks
+`direct_openai` — это backend агента для OpenAI-compatible endpoint. В текущих
+прогонах он использовался для локального/удаленного доступа к модели. Это
+инфраструктурная деталь, а не отдельная цель эксперимента.
 
-The fixed task list is committed in:
+## Что хранится в репозитории
 
-- `configs/swe_ci_nir_pair30_tasks.jsonl`
+Фиксированный список задач:
 
-Regenerate chunk files before a run:
+```text
+configs/swe_ci_nir_pair30_tasks.jsonl
+```
+
+Компактные артефакты:
+
+```text
+docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_smoke_cle_b_max1/
+docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/
+docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/paired_summary.md
+docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/paired_summary.json
+```
+
+Сырые workdirs, Docker outputs, stdout/stderr и prompt logs не коммитятся. В
+git лежат только компактные сводки и JSON-результаты, которые нужны для
+проверки чисел в статье.
+
+Важно: у большого прогона `commands.jsonl` неполный. Воспроизводить запуск надо
+по командам ниже, а не по этому файлу как единственному журналу.
+
+## Подготовка задач
+
+Перед запуском chunk-файлы можно пересоздать из общего списка:
 
 ```bash
 python scripts/prepare_swe_ci_pair_manifest.py \
@@ -28,43 +55,28 @@ python scripts/prepare_swe_ci_pair_manifest.py \
   --chunk-size 5
 ```
 
-This writes:
+Скрипт создает:
 
-- `configs/swe_ci_nir_pair30_tasks.jsonl`
-- `configs/swe_ci_nir_pair30_tasks_chunk_01.jsonl` ... `chunk_06.jsonl`
-- `configs/swe_ci_nir_pair30_tasks_manifest_info.json`
-
-## Smoke
-
-Before the full run, verify one task with `max_iterations=1`:
-
-```bash
-python scripts/run_swe_ci_pair_chunks.py \
-  --swe-ci-repo-path <swe_ci_root> \
-  --chunks-dir configs \
-  --chunk-glob swe_ci_nir_pair30_tasks_chunk_01.jsonl \
-  --output-root artifacts/swe_ci_runs \
-  --run-id nir_pair30_smoke \
-  --source-data-root <swe_ci_data_root> \
-  --max-iterations 1 \
-  --timeout-seconds 7200
+```text
+configs/swe_ci_nir_pair30_tasks_chunk_01.jsonl
+...
+configs/swe_ci_nir_pair30_tasks_chunk_06.jsonl
+configs/swe_ci_nir_pair30_tasks_manifest_info.json
 ```
 
-Check that:
+Chunk-файлы являются производными от
+`configs/swe_ci_nir_pair30_tasks.jsonl`; их можно регенерировать.
 
-- `paired_summary.md` and `paired_summary.json` are written.
-- baseline task artifacts contain `prompt_logs/<task_id>/direct_openai/*.jsonl`.
-- assisted epoch artifacts contain `mergemind_assist/<task_id>/epoch_*/prompt_logs/*.jsonl`.
+## Запуск pair30
 
-## Pair30 Run
-
-Keep the LM Studio reverse tunnel open on Windows:
+Если модель доступна через LM Studio на Windows, а SWE-CI запускается на Linux
+сервере, нужен reverse tunnel:
 
 ```powershell
 ssh -N -R 1234:127.0.0.1:1234 -p 7090 user@server
 ```
 
-Run chunks on the Linux server:
+Основной запуск:
 
 ```bash
 python scripts/run_swe_ci_pair_chunks.py \
@@ -87,45 +99,61 @@ python scripts/run_swe_ci_pair_chunks.py \
   --mergemind-max-revision-epochs 5
 ```
 
-The current committed artifact set is a partial pair30 run. It includes baseline
-chunks 01--03 and assisted chunks 01--03. After combining the completed chunks,
-the baseline side contains 15 task rows, the assisted side contains 11 task rows,
-and the paired comparison contains the tasks that are present in both sides.
+`scripts/run_swe_ci_pair_chunks.py` запускает каждый chunk дважды:
+`baseline` и `assisted`. После этого результаты объединяются и сравниваются.
 
-Committed compact artifacts:
+Итоговая структура runtime-артефактов:
 
-- `docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_smoke_cle_b_max1/`
-- `docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/`
-- `docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/paired_summary.md`
-- `docs/experiments/artifacts/pair30/swe_ci_runs/nir_pair30_qwen36_triage_max5/paired_summary.json`
+```text
+artifacts/swe_ci_runs/<run-id>/
+  baseline/chunk_XX/
+  assisted/chunk_XX/
+  baseline/all/
+  assisted/all/
+  paired_summary.md
+  paired_summary.json
+```
 
-Current partial-run summary:
+## Текущий сохраненный результат
 
-- baseline combined tasks: `15`
-- assisted combined tasks: `11`
-- compared successful task pairs: `10`
-- mean iteration delta: `0.000`
-- mean iterations-to-best-gap delta: `-0.200`
-- mean official EvoScore delta: `-0.041`
-- improved / worse / unchanged / incomplete: `1 / 5 / 5 / 4`
-- assisted comments: `46`
-- assisted revisions: `46`
-- assisted review tokens: `379598`
+Сейчас в репозитории сохранен частичный pair30-прогон по первым chunk'ам:
 
-These numbers describe only the partial run above. They must not be described as
-a completed 30-task result.
+- baseline combined tasks: `15`;
+- assisted combined tasks: `11`;
+- compared successful task pairs: `10`;
+- mean iteration delta: `0.000`;
+- mean iterations-to-best-gap delta: `-0.200`;
+- mean official EvoScore delta: `-0.041`;
+- improved / worse / unchanged / incomplete: `1 / 5 / 5 / 4`;
+- assisted comments: `46`;
+- assisted revisions: `46`;
+- assisted review tokens: `379598`.
 
-## Metrics
+Эти числа нельзя описывать как результат полного запуска на 30 задачах.
 
-The paired summary includes:
+## Метрики
 
-- gap trajectory for baseline and assisted;
-- iterations to best gap;
-- final gap and best gap;
-- official solved-rate and EvoScore deltas;
-- failed-test overlap, fixed failures, and new failures;
-- MergeMind comment/revision counts;
-- total tokens, review tokens, LLM calls, and duration;
-- task-level label: `improved`, `worse`, `unchanged`, or `incomplete`.
+- `actual_iterations` — сколько итераций выполнил агент.
+- `best_gap` — минимальное число падающих тестов за запуск.
+- `final_gap` — число падающих тестов в последней итерации.
+- `final_gap=-1` — невалидный финальный запуск; это не улучшение.
+- `official_evoscore` — официальный показатель SWE-CI.
+- `fixed_failure_count` — сколько финальных падений baseline исчезло.
+- `new_failure_count` — сколько новых финальных падений появилось.
+- `mergemind_assist_comment_count` — сколько комментариев MergeMind передано
+  агенту.
+- `mergemind_review_tokens` — стоимость работы MergeMind.
 
-`target_sha` is not passed to MergeMind prompts or review artifacts.
+`status` и `pass_rate` показывают, что wrapper/SWE-CI процесс отработал и был
+распарсен. Они не означают, что задача решена.
+
+## Что нельзя смешивать
+
+Положительный smoke-сигнал `cle-b/httpdbg` с финальным разрывом `11 -> 5`
+относится к ранней серии пробных SWE-CI запусков, а не к текущему частичному
+pair30-артефакту. В pair30 этот результат не надо выдавать за строку из
+`paired_summary.json`.
+
+Текущий pair30 нужен для более честной проверки: он показывает, что один
+положительный пример не доказывает устойчивое снижение числа итераций или
+улучшение качества на наборе задач.
