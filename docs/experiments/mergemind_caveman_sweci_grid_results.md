@@ -2,8 +2,6 @@
 
 ## Summary
 
-Branch: `codex/mergemind-caveman-sweci-grid`.
-
 Primary metric is SWE-CI behavior, not standalone PR-review quality. The smoke grid used the fixed low-gap task `cle-b__httpdbg__22e489__af88c4` with identical baseline and assisted settings:
 
 - SWE-CI agent: `direct_openai`

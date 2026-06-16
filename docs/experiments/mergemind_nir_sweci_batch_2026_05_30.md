@@ -2,8 +2,6 @@
 
 Date: 2026-05-30.
 
-Branch: `codex/mergemind-test-aware-reviewer`.
-
 Server worktree:
 
 - `/home/pashab/MergeMind-caveman-grid`

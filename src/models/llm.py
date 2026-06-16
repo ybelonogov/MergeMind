@@ -330,6 +330,8 @@ class OpenAICompatibleLLMClient:
         self._completion_fn = completion_fn
         self._list_models_fn = list_models_fn
         self.calls: list[LLMJSONResponse] = []
+        prompt_log_dir = os.getenv("MERGEMIND_PROMPT_LOG_DIR", "").strip()
+        self.prompt_log_dir = Path(prompt_log_dir) if prompt_log_dir else None
 
     def list_models(self) -> list[str]:
         if self._list_models_fn is not None:
@@ -408,6 +410,14 @@ class OpenAICompatibleLLMClient:
                 cache_hit=True,
             )
             self.calls.append(result)
+            self._write_prompt_log(
+                role=role,
+                messages=messages,
+                response_format=response_format,
+                params=params,
+                cache_key=cache_key,
+                result=result,
+            )
             return result
 
         last_error = ""
@@ -440,6 +450,14 @@ class OpenAICompatibleLLMClient:
                         },
                     )
                 self.calls.append(result)
+                self._write_prompt_log(
+                    role=role,
+                    messages=messages,
+                    response_format=response_format,
+                    params=params,
+                    cache_key=cache_key,
+                    result=result,
+                )
                 return result
             except Exception as exc:  # noqa: BLE001 - retries should catch client and parse failures.
                 last_error = str(exc)
@@ -452,7 +470,51 @@ class OpenAICompatibleLLMClient:
             error=last_error,
         )
         self.calls.append(result)
+        self._write_prompt_log(
+            role=role,
+            messages=messages,
+            response_format=response_format,
+            params=params,
+            cache_key=cache_key,
+            result=result,
+        )
         return result
+
+    def _write_prompt_log(
+        self,
+        *,
+        role: str,
+        messages: list[dict[str, str]],
+        response_format: dict[str, Any],
+        params: dict[str, Any],
+        cache_key: str,
+        result: LLMJSONResponse,
+    ) -> None:
+        if self.prompt_log_dir is None:
+            return
+        safe_role = re.sub(r"[^A-Za-z0-9_.-]+", "_", role).strip("_") or "llm"
+        self.prompt_log_dir.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": time.time(),
+            "role": role,
+            "model": self.model,
+            "base_url": self.base_url,
+            "cache_key_sha256": hashlib.sha256(cache_key.encode("utf-8")).hexdigest(),
+            "params": params,
+            "messages": messages,
+            "response_format": response_format,
+            "raw_text": result.raw_text,
+            "payload": result.payload,
+            "usage": result.usage,
+            "latency_seconds": result.latency_seconds,
+            "cache_hit": result.cache_hit,
+            "parse_error": result.parse_error,
+            "error": result.error,
+        }
+        line = json.dumps(entry, ensure_ascii=True)
+        for path in (self.prompt_log_dir / f"{safe_role}.jsonl", self.prompt_log_dir / "all.jsonl"):
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(line + "\n")
 
     def _extract_text(self, response: Any) -> str:
         choices = getattr(response, "choices", None)

@@ -229,12 +229,18 @@ class SweCiAssistedWorkdirTests(unittest.TestCase):
         self.assertIn('cfg.agent.dockerfile = str(agent_dir / "Dockerfile.direct_openai")', copied_config)
         self.assertIn("MergeMind review guidance", copied_direct_agent)
         self.assertIn("outside allowed revision set", copied_direct_agent)
-        self.assertIn("If no safe edit exists in those files", copied_direct_agent)
+        self.assertIn("If no safe edit exists in the allowed files", copied_direct_agent)
         self.assertIn("/app/mergemind_review.md", copied_direct_agent)
         self.assertIn("Allowed revision files", copied_direct_agent)
         self.assertIn("/app/mergemind_allowed_files.txt", copied_direct_agent)
         self.assertIn("Before-patch source snapshots", copied_direct_agent)
         self.assertIn("/app/mergemind_before_files.md", copied_direct_agent)
+        self.assertIn("swe_ci_surgical_edits", copied_direct_agent)
+        self.assertIn("bounded_replacement", copied_direct_agent)
+        self.assertIn("revision_max_changed_lines", copied_direct_agent)
+        self.assertIn("revision_error", copied_direct_agent)
+        self.assertIn("revision_transport", copied_direct_agent)
+        self.assertIn("Do not return full replacement files.", copied_direct_agent)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -272,6 +273,8 @@ def _write_result(output_dir: Path, payload: dict[str, Any], predictions: list[C
 
 def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
     output_dir = Path(args.output_dir).resolve()
+    prompt_log_dir = output_dir / "prompt_logs"
+    os.environ["MERGEMIND_PROMPT_LOG_DIR"] = str(prompt_log_dir)
     started = time.perf_counter()
     diff_text = build_code_diff(
         args.before_code_dir,
@@ -342,6 +345,7 @@ def run_mergemind_assist(args: argparse.Namespace) -> dict[str, Any]:
             "repo_name": args.repo_name,
             "repo_url": args.repo_url,
             "current_sha": args.current_sha,
+            "prompt_log_dir": str(prompt_log_dir),
             "comment_count": len(predictions),
             "raw_comment_count": len(raw_predictions),
             "filtered_comment_count": filtered_comment_count,

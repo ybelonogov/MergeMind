@@ -4,8 +4,6 @@ Date: 2026-05-29.
 
 Updated: 2026-05-30.
 
-Branch: `codex/mergemind-test-aware-reviewer`.
-
 ## Goal
 
 The previous SWE-CI experiments showed two useful facts:

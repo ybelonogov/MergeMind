@@ -6,9 +6,9 @@ This document tracks the concrete follow-up items from the supervisor feedback.
 
 ### 1. Repositories and Validation State
 
-Current validation branch:
+Current validation line:
 
-- `codex/mergemind-caveman-sweci-grid`
+- SWE-CI assisted runs with local Qwen, test-aware review comments, and guarded revision passes.
 
 Important validation documents:
 

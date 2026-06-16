@@ -12,7 +12,7 @@ from typing import Any
 from .monitor import append_jsonl, build_monitor_event, utc_now_iso
 from .schemas import SweCiTaskRunResult
 
-_SECRET_ARGS = {"--api_key", "--hf_token"}
+_SECRET_ARGS = {"--api_key", "--api-key", "--hf_token", "--hf-token"}
 
 
 def redact_command(command: list[str]) -> list[str]:

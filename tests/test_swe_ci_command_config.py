@@ -50,6 +50,13 @@ class SweCiCommandConfigTests(unittest.TestCase):
         self.assertIn("opencode", command)
         self.assertNotIn("secret-key", " ".join(redact_command(command)))
 
+    def test_redact_command_handles_hyphenated_secret_flags(self) -> None:
+        command = ["python", "script.py", "--api-key", "secret-key", "--hf-token", "hf-secret"]
+
+        redacted = redact_command(command)
+
+        self.assertEqual(redacted, ["python", "script.py", "--api-key", "***", "--hf-token", "***"])
+
     def test_docker_network_is_added_to_command(self) -> None:
         config = SweCiRunConfig(
             swe_ci_repo_path=Path("SWE-CI"),

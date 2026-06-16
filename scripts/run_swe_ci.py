@@ -44,6 +44,36 @@ def _safe_task_id(task_id: str) -> str:
     return "".join(char if char.isalnum() or char in ("-", "_", ".") else "_" for char in task_id)
 
 
+def _direct_openai_prompt_log_env(config: SweCiRunConfig, run_dir: Path, task_id: str) -> dict[str, str]:
+    if config.agent_name != "direct_openai":
+        return {}
+    safe_task_id = _safe_task_id(task_id)
+    log_dir = run_dir / "prompt_logs" / safe_task_id / "direct_openai"
+    return {
+        "SWE_CI_DIRECT_PROMPT_LOG_DIR": str(log_dir.resolve()),
+        "SWE_CI_DIRECT_TASK_ID": task_id,
+        "SWE_CI_DIRECT_RUN_ID": config.run_id,
+    }
+
+
+def _with_metric(result: SweCiTaskRunResult, key: str, value: object) -> SweCiTaskRunResult:
+    metrics = dict(result.metrics)
+    metrics[key] = value
+    return SweCiTaskRunResult(
+        task_id=result.task_id,
+        status=result.status,
+        started_at=result.started_at,
+        finished_at=result.finished_at,
+        duration_seconds=result.duration_seconds,
+        exit_code=result.exit_code,
+        stdout_path=result.stdout_path,
+        stderr_path=result.stderr_path,
+        events_path=result.events_path,
+        metrics=metrics,
+        error_message=result.error_message,
+    )
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run real SWE-CI tasks with MergeMind monitoring.")
     parser.add_argument("--swe-ci-repo-path", required=True, help="Path to the cloned SWE-CI repository.")
@@ -150,6 +180,9 @@ def _print_dry_run(config: SweCiRunConfig) -> int:
         print(f"cwd: {command_info['cwd']}")
         print(f"dataset_root: {command_info['dataset_root']}")
         print(f"official_task_dir: {command_info['official_task_dir']}")
+        prompt_env = _direct_openai_prompt_log_env(config, run_dir, task.task_id)
+        if prompt_env:
+            print(f"direct_openai_prompt_log_dir: {prompt_env['SWE_CI_DIRECT_PROMPT_LOG_DIR']}")
         print("command:")
         print(" ".join(redact_command(command_info["command"])))
         if config.mode == "mergemind_review_loop":
@@ -207,13 +240,17 @@ def main() -> int:
             },
         )
         command = build_swe_ci_command(config, task, dataset_root)
+        task_env = dict(env)
+        prompt_env = _direct_openai_prompt_log_env(config, run_dir, task.task_id)
+        if prompt_env:
+            task_env.update(prompt_env)
         process_result = run_process(
             command=command,
             task_id=task.task_id,
             task_log_dir=task_log_dir,
             timeout_seconds=config.timeout_seconds,
             cwd=execution_repo,
-            env=env,
+            env=task_env,
             phase="swe_ci.evaluate",
         )
         parsed_result = parse_swe_ci_result(
@@ -222,6 +259,12 @@ def main() -> int:
             swe_ci_repo_path=execution_repo,
             experiment_name=experiment_name_for_task(config, task),
         )
+        if prompt_env:
+            parsed_result = _with_metric(
+                parsed_result,
+                "direct_openai_prompt_log_dir",
+                prompt_env["SWE_CI_DIRECT_PROMPT_LOG_DIR"],
+            )
         if config.mode == "mergemind_review_loop":
             append_run_event(run_dir, {"event": "mergemind_review_start", "task_id": task.task_id})
             review_metrics = run_mergemind_patch_review(

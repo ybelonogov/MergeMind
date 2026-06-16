@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -138,6 +139,31 @@ class LocalLLMComponentTests(unittest.TestCase):
 
         self.assertFalse(response.parse_error)
         self.assertEqual(formats[0], {"type": "json_object"})
+
+    def test_client_writes_prompt_log_when_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            previous = os.environ.get("MERGEMIND_PROMPT_LOG_DIR")
+            os.environ["MERGEMIND_PROMPT_LOG_DIR"] = str(Path(temp_dir) / "prompt_logs")
+            try:
+                client = OpenAICompatibleLLMClient(completion_fn=lambda **_: _completion('{"comments": []}'))
+                response = client.chat_json("generator", [{"role": "user", "content": "review this"}], GENERATOR_SCHEMA)
+            finally:
+                if previous is None:
+                    os.environ.pop("MERGEMIND_PROMPT_LOG_DIR", None)
+                else:
+                    os.environ["MERGEMIND_PROMPT_LOG_DIR"] = previous
+
+            log_path = Path(temp_dir) / "prompt_logs" / "generator.jsonl"
+            all_log_path = Path(temp_dir) / "prompt_logs" / "all.jsonl"
+            self.assertTrue(log_path.exists())
+            self.assertTrue(all_log_path.exists())
+            row = json.loads(log_path.read_text(encoding="utf-8").splitlines()[0])
+
+        self.assertFalse(response.parse_error)
+        self.assertEqual(row["role"], "generator")
+        self.assertEqual(row["messages"][0]["content"], "review this")
+        self.assertEqual(row["raw_text"], '{"comments": []}')
+        self.assertEqual(row["usage"]["total_tokens"], 15)
 
     def test_client_retries_malformed_json(self) -> None:
         calls = {"count": 0}
